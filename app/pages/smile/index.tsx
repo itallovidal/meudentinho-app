@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function Login() {
+export function Smile() {
   return (
     <View style={styles.container}>
-      <Text>Login</Text>
+      <Text>Smile</Text>
     </View>
   );
 }

@@ -3,7 +3,7 @@ import { Text } from '@/components/ui/text';
 import { fetchHealthcheck } from '@/api/healthcheck';
 import { StyleSheet, View } from 'react-native';
 
-export default function Home() {
+export function Home() {
   const handleMockTest = async () => {
     try {
       const result = await fetchHealthcheck();
