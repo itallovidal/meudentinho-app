@@ -1,16 +1,26 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Home } from "@/pages/home/index";
+import { ArticlesStack } from "./ArticlesStack";
+import { SmileStack } from "./SmileStack";
+import { ProfileStack } from "./ProfileStack";
 
-import Home from '../pages/Home';
-import Login from '../pages/Login';
-import Signup from '../pages/Signup';
-
-const TabNavigator = createBottomTabNavigator({
-  initialRouteName: 'Home',
+export const TabNavigator = createBottomTabNavigator({
+  initialRouteName: "Home",
   screens: {
-    Home,
-    Login,
-    Signup,
+    Home: {
+      screen: Home,
+    },
+    Articles: {
+      screen: ArticlesStack,
+    },
+    Smile: {
+      screen: SmileStack,
+    },
+    Profile: {
+      screen: ProfileStack,
+    },
+  },
+  screenOptions: {
+    headerShown: false,
   },
 });
-
-export default TabNavigator;
