@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  BASE_API_URL: z.url().default("http://10.0.2.2:3000"),
+  BASE_API_URL: z.url(),
   ENVIRONMENT: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -9,7 +9,7 @@ const envSchema = z.object({
 
 const parsedEnv = envSchema.safeParse({
   BASE_API_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  ENVIRONMENT: process.env.ENVIRONMENT,
+  ENVIRONMENT: process.env.EXPO_ENVIRONMENT,
 });
 
 if (!parsedEnv.success) {
