@@ -18,12 +18,21 @@ export function Card({
       className={`w-full bg-base-100 rounded-lg p-4 border border-base-200 shadow-sm
         ${className}`}
       direction="row"
-      gap={"gap-2"}
+      gap={"gap-4"}
     >
-      <View className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg ">
+      <Wrapper
+        className="bg-primary-100 rounded-lg p-2"
+        align="center"
+        justify="center"
+      >
         {icon}
-      </View>
-      <Wrapper direction="column" align="start" gap={"gap-2"}>
+      </Wrapper>
+      <Wrapper
+        className="flex-1"
+        direction="column"
+        align="start"
+        gap={"gap-2"}
+      >
         <Text variant={"h3"}>{title}</Text>
         <Text>{children}</Text>
       </Wrapper>

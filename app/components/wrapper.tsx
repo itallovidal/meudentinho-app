@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { forwardRef } from "react";
+import { View, ViewProps } from "react-native";
 
 const directionClassNames = {
   row: "flex-row",
@@ -18,15 +19,7 @@ const justifyClassNames = {
   between: "justify-between",
 } as const;
 
-export function Wrapper({
-  children,
-  className = "",
-  direction = "row",
-  align = "start",
-  justify = "start",
-  gap = "gap-2",
-  style,
-}: {
+interface Args extends ViewProps {
   children: React.ReactNode;
   className?: View["props"]["className"];
   direction?: "row" | "column";
@@ -34,13 +27,29 @@ export function Wrapper({
   justify?: "start" | "center" | "end" | "between";
   gap?: `gap-${number}`;
   style?: View["props"]["style"];
-}) {
+}
+
+export const Wrapper = forwardRef<View, Args>(function Wrapper(
+  {
+    children,
+    className = "",
+    direction = "row",
+    align = "start",
+    justify = "start",
+    gap = "gap-2",
+    style,
+    ...rest
+  },
+  ref,
+) {
   return (
     <View
+      ref={ref}
       className={`flex ${directionClassNames[direction]} ${alignClassNames[align]} ${justifyClassNames[justify]} ${gap} ${className}`}
       style={style}
+      {...rest}
     >
       {children}
     </View>
   );
-}
+});
