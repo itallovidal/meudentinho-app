@@ -1,101 +1,85 @@
-import { Wrapper } from "@/components/wrapper";
+import {
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { Header } from "@/components/header";
-import { View } from "react-native";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import Entypo from "@expo/vector-icons/Entypo";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { Card } from "@/components/card";
 
-const buttons = ["Dentição", "Alimentação", "Higiene Oral"];
-
-// TODO: Refatorar para deixar mais simples e criar um componente para os cards dos artigos, para evitar repetição de código e facilitar a manutenção.
 export function Index() {
-  const [selectedButton, setSelectedButton] = useState(buttons[0]);
+  const categories = ["Higiene Oral", "Dentição", "Alimentação"];
 
   return (
-    <Wrapper
-      className="bg-base-100 flex-1"
-      direction="column"
-      align="center"
-      justify="start"
-    >
+    <ScrollView className="flex-1 bg-base-100">
       <Header />
-      <Wrapper
-        className="flex-1 w-full px-6 py-4 bg-base-200"
-        direction="column"
-        align="center"
-        justify="start"
-      >
+
+      <View className="px-6 py-4 bg-base-200">
+        {/* Search */}
         <View className="relative w-full">
-          <Input
+          <TextInput
             placeholder="Buscar artigos e guias"
-            className="bg-base-100 pr-12"
+            className="bg-base-100 pr-12 px-4 py-3 rounded-lg"
           />
-          <View className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Text className="text-base-500 text-2xl">⌕</Text>
-          </View>
+          <Text className="absolute right-3 top-1/2 -translate-y-1/2 text-base-500 text-2xl">
+            ⌕
+          </Text>
         </View>
-        <Wrapper
-          className="w-full mt-4 flex-wrap"
-          direction="row"
-          align="start"
-          justify="start"
+
+        {/* Category Scroll */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-4 -mx-6 px-6"
         >
-          {buttons.map((button, index) => (
-            <Button
-              variant={selectedButton === button ? "default" : "outline"}
-              size="lg"
-              className="mb-2"
-              key={index}
-              onPress={() => setSelectedButton(button)}
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg mr-2"
             >
-              <Text variant="h4">{button}</Text>
-            </Button>
+              <Text className="text-sm">{cat}</Text>
+            </TouchableOpacity>
           ))}
-        </Wrapper>
-        <View className="mt-6 w-full overflow-hidden rounded-3xl bg-primary-500 px-5 py-6">
-          <Badge
-            variant="outline"
-            className="mb-4 self-start border-base-100/20 bg-base-100/10 px-3 py-1"
-          >
-            <Text variant="small" className="text-base-100">
-              Destaque
-            </Text>
-          </Badge>
-          <Text variant="h2" className="text-base-100 border-0 pb-0">
+        </ScrollView>
+
+        {/* Featured Article */}
+        <View className="mt-6 w-full rounded-3xl bg-primary-500 px-5 py-6">
+          <Text className="text-xs text-base-100/80 mb-2">Destaque</Text>
+          <Text variant="h2" className="text-base-100">
             O Guia Completo da Regra dos 6 Anos
           </Text>
-          <View className="mt-2 flex-row items-center gap-2">
-            <Entypo name="back-in-time" size={20} color="white" />
-            <Text variant="small" className="text-base-100/90">
-              5 min de leitura
-            </Text>
+          <View className="mt-3 flex-row items-center gap-2">
+            <Entypo name="back-in-time" size={16} color="white" />
+            <Text className="text-xs text-base-100/80">5 min de leitura</Text>
           </View>
         </View>
-        <Text variant="h3" className="mt-6 self-start">
+
+        {/* Articles Section */}
+        <Text variant="h3" className="mt-6">
           Hábitos Orais
         </Text>
-        <Card
-          category="Higiene Oral"
-          title="Respiração Bucal: Sinais de alerta"
-        />
-        <Text variant="h3" className="mt-6 self-start">
-          Primeira Consulta
-        </Text>
-        <Card
-          category="Dentição"
-          title="Primeira Consulta: O que esperar e como se preparar"
-        />
 
-        <Button variant="default" size="lg" className="mt-6">
-          <AntDesign name="plus" size={18} color="white" />
-          <Text variant="h4">Criar Artigo</Text>
-        </Button>
-      </Wrapper>
-    </Wrapper>
+        {/* Article Card */}
+        <View className="mt-4 flex-row gap-3 bg-base-100 rounded-lg p-3 border border-base-200">
+          <Image className="w-20 h-20 rounded-lg bg-base-200" />
+          <View className="flex-1 justify-between">
+            <View>
+              <Text className="text-xs text-base-500 mb-1">Higiene Oral</Text>
+              <Text variant="h4">Respiração Bucal: Sinais de alerta</Text>
+            </View>
+            <Text className="text-xs text-base-400">5 min de leitura</Text>
+          </View>
+        </View>
+
+        {/* Create Button */}
+        <TouchableOpacity className="mt-6 mb-6 bg-primary-500 px-6 py-3 rounded-lg flex-row items-center justify-center gap-2">
+          <AntDesign name="plus" size={16} color="white" />
+          <Text className="text-white font-semibold">Criar Artigo</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
