@@ -5,12 +5,14 @@ import { Wrapper } from "./wrapper";
 export function Card({
   icon,
   title,
+  category,
   children,
   className = "",
 }: {
-  icon: React.ReactNode;
-  title: string;
-  children: string;
+  icon?: React.ReactNode;
+  title?: string;
+  category?: string;
+  children?: string;
   className?: string;
 }) {
   return (
