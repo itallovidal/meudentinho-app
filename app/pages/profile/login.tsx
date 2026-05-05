@@ -1,17 +1,24 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Wrapper } from "@/components/wrapper";
+import { Header } from "@/components/header";
+import { Text } from 'react-native';
 
 export function Login() {
   return (
-    <View style={styles.container}>
-      <Text>Login</Text>
-    </View>
+    <Wrapper
+      className="bg-base-100 flex-1"
+      direction="column"
+      align="center"
+      justify="start"
+    >
+      <Header />
+      <Wrapper
+        className="bg-base-100 flex-1"
+        direction="column"
+        align="center"
+        justify="center"
+      >
+        <Text>Login</Text>
+      </Wrapper>
+    </Wrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
