@@ -3,7 +3,7 @@ import { Home } from "@/pages/home/index";
 import { ArticlesStack } from "./ArticlesStack";
 import { SmileStack } from "./SmileStack";
 import { ProfileStack } from "./ProfileStack";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Foundation, MaterialIcons } from "@expo/vector-icons";
 
 export const TabNavigator = createBottomTabNavigator({
   initialRouteName: "Home",
@@ -11,32 +11,36 @@ export const TabNavigator = createBottomTabNavigator({
     Home: {
       screen: Home,
       options: {
+        tabBarLabel: "Início",
         tabBarIcon: ({ color, size }) => (
-          <Ionicons name="home" color={color} size={size} />
-        ),
-      },
-    },
-    Articles: {
-      screen: ArticlesStack,
-      options: {
-        tabBarIcon: ({ color, size }) => (
-          <Ionicons name="document-text" color={color} size={size} />
+          <Foundation name="home" color={color} size={size} />
         ),
       },
     },
     Smile: {
       screen: SmileStack,
       options: {
+        tabBarLabel: "Sorriso",
         tabBarIcon: ({ color, size }) => (
-          <Ionicons name="happy" color={color} size={size} />
+          <MaterialCommunityIcons name="tooth-outline" color={color} size={size} />
+        ),
+      },
+    },
+    Articles: {
+      screen: ArticlesStack,
+      options: {
+        tabBarLabel: "Artigos",
+        tabBarIcon: ({ color, size }) => (
+          <MaterialCommunityIcons name="book-open-variant-outline" color={color} size={size} />
         ),
       },
     },
     Profile: {
       screen: ProfileStack,
       options: {
+        tabBarLabel: "Perfil",
         tabBarIcon: ({ color, size }) => (
-          <Ionicons name="person" color={color} size={size} />
+          <MaterialIcons name="person-outline" color={color} size={size} />
         ),
       },
     },
