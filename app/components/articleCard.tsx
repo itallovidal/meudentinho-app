@@ -4,15 +4,7 @@ import { Wrapper } from "./wrapper";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
-
-export type ArticleCardProps = {
-  imageSrc: string;
-  title: string;
-  category: string;
-  readingTime: string;
-  id: string;
-  className?: string;
-};
+import { ArticlePreviewDTO } from "@/types/dtos";
 
 export function ArticleCard({
   imageSrc,
@@ -21,7 +13,7 @@ export function ArticleCard({
   readingTime,
   id,
   className = "",
-}: ArticleCardProps) {
+}: ArticlePreviewDTO) {
   const navigation =
     useNavigation<
       NativeStackNavigationProp<ArticlesStackParamList, "Article">

@@ -1,10 +1,8 @@
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useNavigation } from "@react-navigation/native";
-import { Pressable } from "react-native";
+import { LoginForm } from "@/components/forms/loginForm";
 
 export function Login() {
   const navigation = useNavigation();
@@ -25,23 +23,7 @@ export function Login() {
         </Text>
       </Wrapper>
 
-      <Wrapper direction="column" className="w-full" gap={"gap-6"}>
-        <Wrapper direction="column" className="w-full ">
-          <Text className="uppercase">Email </Text>
-          <Input placeholder="Digite seu email" />
-        </Wrapper>
-
-        <Wrapper direction="column" className="w-full">
-          <Text className="uppercase">Senha </Text>
-          <Input placeholder="Digite sua senha" />
-        </Wrapper>
-      </Wrapper>
-
-      <Separator className="my-4 max-w-5" />
-
-      <Button className="w-full mb-4">
-        <Text>Entrar</Text>
-      </Button>
+      <LoginForm />
 
       <Text variant={"small"}>Não possui uma conta?</Text>
       <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>
