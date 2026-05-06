@@ -9,6 +9,7 @@ import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import Entypo from "@expo/vector-icons/Entypo";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { ArticleCard } from "@/components/articleCard";
 
 export function Index() {
   const categories = ["Higiene Oral", "Dentição", "Alimentação"];
@@ -58,21 +59,18 @@ export function Index() {
         </View>
 
         {/* Articles Section */}
-        <Text variant="h3" className="mt-6">
+        <Text variant="h3" className="my-4">
           Hábitos Orais
         </Text>
 
         {/* Article Card */}
-        <View className="mt-4 flex-row gap-3 bg-base-100 rounded-lg p-3 border border-base-200">
-          <Image className="w-20 h-20 rounded-lg bg-base-200" />
-          <View className="flex-1 justify-between">
-            <View>
-              <Text className="text-xs text-base-500 mb-1">Higiene Oral</Text>
-              <Text variant="h4">Respiração Bucal: Sinais de alerta</Text>
-            </View>
-            <Text className="text-xs text-base-400">5 min de leitura</Text>
-          </View>
-        </View>
+        <ArticleCard
+        category="Higiene Oral"
+        imageSrc=""
+        title="Respiração Bucal: Sinais de alerta"
+        readingTime="5"
+        id="2"
+        />
 
         {/* Create Button */}
         <TouchableOpacity className="mt-6 mb-6 bg-primary-500 px-6 py-3 rounded-lg flex-row items-center justify-center gap-2">

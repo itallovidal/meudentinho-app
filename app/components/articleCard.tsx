@@ -1,31 +1,54 @@
+import { Image, TouchableNativeFeedback } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 
-export function ArticleCard({
-  image,
-  title,
-  category,
-  className = "",
-}: {
-  image: React.ReactNode;
+export type ArticleCardProps = {
+  imageSrc: string;
   title: string;
   category: string;
+  readingTime: string;
+  id: string;
   className?: string;
-}) {
+};
+
+export function ArticleCard({
+  imageSrc,
+  title,
+  category,
+  readingTime,
+  id,
+  className = "",
+}: ArticleCardProps) {
+  const navigation =
+    useNavigation<
+      NativeStackNavigationProp<ArticlesStackParamList, "Article">
+    >();
+
   return (
-    <Wrapper
-      className={`w-full overflow-hidden rounded-3xl bg-primary-500 px-5 py-6 ${className}`}
-      direction="column"
-      align="start"
-      justify="start"
+    <TouchableNativeFeedback
+      onPress={() => navigation.navigate("Article", { id })}
     >
-      {image}
-      <Text variant="h3" className="mt-4">
-        {title}
-      </Text>
-      <Text variant="h4" className="mt-2 text-base-300">
-        {category}
-      </Text>
-    </Wrapper>
+      <Wrapper
+        className={`bg-base-100 rounded-lg p-3 border border-base-200 ${className}`}
+        direction="row"
+        align="center"
+        justify="start"
+        gap="gap-3"
+      >
+        <Image className="w-24 h-full rounded-lg bg-base-200" src={imageSrc} />
+        <Wrapper className="flex-1" direction="column" justify="between">
+          <Text variant="small" className="text-base-500">
+            {category}
+          </Text>
+          <Text variant="h4">{title}</Text>
+          <Text variant="small" className="text-base-400">
+            {readingTime} min de leitura
+          </Text>
+        </Wrapper>
+      </Wrapper>
+    </TouchableNativeFeedback>
   );
 }
