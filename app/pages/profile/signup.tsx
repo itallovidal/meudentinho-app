@@ -1,18 +1,22 @@
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRef } from "react";
+import type { SignupDTO } from "@/types/dtos";
+import { ProfileForm } from "@/components/forms/profileForm";
 
 export function Signup() {
   const navigation = useNavigation();
   const scrollViewRef = useRef<ScrollView>(null);
   const formRef = useRef<View>(null);
+
+  async function onSubmit(data: SignupDTO) {
+    console.log("Dados válidos de cadastro:", data);
+  }
 
   function goToForm() {
     formRef.current?.measureLayout(
@@ -95,33 +99,7 @@ export function Signup() {
             </Text>
           </Wrapper>
 
-          <Wrapper direction="column" className="w-full" gap={"gap-6"}>
-            <Wrapper direction="column" className="w-full ">
-              <Text className="uppercase">Nome do Responsável </Text>
-              <Input placeholder="Digite seu nome completo" />
-            </Wrapper>
-
-            <Wrapper direction="column" className="w-full ">
-              <Text className="uppercase">Email </Text>
-              <Input placeholder="Digite seu email" />
-            </Wrapper>
-
-            <Wrapper direction="column" className="w-full">
-              <Text className="uppercase">Senha </Text>
-              <Input placeholder="Digite sua senha" />
-            </Wrapper>
-
-            <Wrapper direction="column" className="w-full">
-              <Text className="uppercase">Confirme sua Senha </Text>
-              <Input placeholder="Confirme sua senha" />
-            </Wrapper>
-          </Wrapper>
-
-          <Separator className="my-4 max-w-5" />
-
-          <Button className="w-full mb-4">
-            <Text>Criar Conta</Text>
-          </Button>
+          <ProfileForm onSubmit={onSubmit} />
 
           <Text variant={"small"}>Já tem uma conta?</Text>
           <Button

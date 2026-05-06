@@ -3,9 +3,14 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
+import { LoginDTO } from "@/types/dtos";
 
 export function Login() {
   const navigation = useNavigation();
+
+  async function onLogin(data: LoginDTO) {
+    console.log("Dados válidos de cadastro:", data);
+  }
 
   return (
     <Wrapper
@@ -23,7 +28,7 @@ export function Login() {
         </Text>
       </Wrapper>
 
-      <LoginForm />
+      <LoginForm onSubmit={onLogin} />
 
       <Text variant={"small"}>Não possui uma conta?</Text>
       <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>
