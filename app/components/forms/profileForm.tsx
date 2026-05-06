@@ -1,0 +1,105 @@
+import { Wrapper } from "@/components/wrapper";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { signupSchema } from "@/lib/schemas/profile";
+import type { SignupDTO } from "@/types/dtos";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { FormInput } from "../formInput";
+
+interface ProfileFormProps {
+  onSubmit: (data: SignupDTO) => void | Promise<void>;
+  defaultValues?: Partial<SignupDTO>;
+  submitLabel?: string;
+  submittingLabel?: string;
+}
+
+export function ProfileForm({
+  onSubmit,
+  defaultValues,
+  submitLabel = "Criar Conta",
+  submittingLabel = "Criando conta...",
+}: ProfileFormProps) {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupDTO>({
+    resolver: zodResolver(signupSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      ...defaultValues,
+    },
+  });
+
+  return (
+    <Wrapper align="center" direction="column" className="w-full" gap={"gap-6"}>
+      <FormInput
+        control={control}
+        errors={errors}
+        name="name"
+        label="Nome do Responsável"
+        inputProps={{
+          placeholder: "Digite seu nome completo",
+          autoCapitalize: "words",
+          autoCorrect: false,
+        }}
+      />
+
+      <FormInput
+        control={control}
+        errors={errors}
+        name="email"
+        label="Email"
+        inputProps={{
+          placeholder: "Digite seu email",
+          keyboardType: "email-address",
+          autoCapitalize: "none",
+          autoCorrect: false,
+        }}
+      />
+
+      <FormInput
+        control={control}
+        errors={errors}
+        name="password"
+        label="Senha"
+        inputProps={{
+          placeholder: "Digite sua senha",
+          secureTextEntry: true,
+          autoCapitalize: "none",
+          autoCorrect: false,
+        }}
+      />
+
+      <FormInput
+        control={control}
+        errors={errors}
+        name="confirmPassword"
+        label="Confirme sua Senha"
+        inputProps={{
+          placeholder: "Confirme sua senha",
+          secureTextEntry: true,
+          autoCapitalize: "none",
+          autoCorrect: false,
+        }}
+      />
+
+      <Separator className="my-4 max-w-5" />
+
+      <Button
+        onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
+        className="w-full mb-4"
+      >
+        <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
+      </Button>
+    </Wrapper>
+  );
+}

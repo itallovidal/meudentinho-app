@@ -8,7 +8,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 
-export function LoginForm() {
+interface Args {
+  onSubmit: (data: LoginDTO) => void | Promise<void>;
+}
+
+export function LoginForm({ onSubmit }: Args) {
   const {
     control,
     handleSubmit,
@@ -22,10 +26,6 @@ export function LoginForm() {
       password: "",
     },
   });
-
-  function onSubmit(data: LoginDTO) {
-    console.log("Dados válidos de login:", data);
-  }
 
   return (
     <Wrapper align="center" direction="column" className="w-full" gap={"gap-6"}>
