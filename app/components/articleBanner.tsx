@@ -39,7 +39,9 @@ export function ArticleBanner({
           className="absolute bottom-0 left-0 right-0 px-4 py-4"
         >
           <Badge>
-            <Text className="uppercase w-16 ">Destaque</Text>
+            <Text variant="default" className="uppercase ">
+              Destaque
+            </Text>
           </Badge>
           <Text variant="h2" className="text-base-100">
             {title}
