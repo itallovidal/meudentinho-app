@@ -7,21 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { AntDesign } from "@expo/vector-icons";
 import { Image, ScrollView } from "react-native";
 import { Markdown } from "react-native-remark";
+import { Articles } from "../../../mock/articles";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
-
-const markdown = `
-# Hello World! 👋
-
-This is a **Markdown** example with [a link](https://reactnative.dev).
-
-- List item 1
-- List item 2
-`;
 
 export function Article() {
   const route = useRoute<ArticleRouteProp>();
   const id = route.params?.id ?? "";
+
+  const article = Articles[id - 1];
 
   return (
     <Wrapper
@@ -32,56 +26,41 @@ export function Article() {
     >
       <Header hasBackButton />
 
-      {/* Article Content */}
-      <Wrapper
-        className="bg-base-100 flex-1 mx-8"
-        direction="column"
-        align="start"
-        justify="start"
-      >
-        {/* Badge and readingTime */}
-        <Wrapper direction="row" align="center" gap="gap-4">
-          <Badge variant="secondary" className="">
-            <Text>Higiene Oral</Text>
-          </Badge>
-          <Wrapper direction="row" align="center" gap="gap-1">
-            <AntDesign name="clock-circle" size={16} color="gray" />
-            <Text variant="small" className="text-base-500">
-              5 min de leitura
-            </Text>
+      <ScrollView>
+        <Wrapper
+          className="bg-base-100 flex-1 mx-8"
+          direction="column"
+          align="start"
+          justify="start"
+        >
+          <Wrapper direction="row" align="center" gap="gap-4">
+            <Badge variant="secondary" className="">
+              <Text>{article.category}</Text>
+            </Badge>
+            <Wrapper direction="row" align="center" gap="gap-1">
+              <AntDesign name="clock-circle" size={16} color="gray" />
+              <Text variant="small" className="text-base-500">
+                {article.readingTime} min de leitura
+              </Text>
+            </Wrapper>
+          </Wrapper>
+
+          <Wrapper
+            className="my-4"
+            direction="column"
+            align="start"
+            justify="start"
+            gap="gap-4"
+          >
+            <Image
+              src={article.imageSrc}
+              className="w-80 h-48 rounded-2xl bg-base-200"
+            />
+
+            <Markdown markdown={article.content} />
           </Wrapper>
         </Wrapper>
-
-        <ScrollView className="mt-4">
-          <Markdown
-            markdown={markdown}
-            customRenderers={{
-              // Override default renderers for mdast nodes.
-              // Checkout https://github.com/imwithye/react-native-remark/blob/main/src/renderers/index.tsx
-              // for the default renderers.
-              InlineCodeRenderer: ({ node }) => (
-                <Text style={{ color: "blue" }}>{node.value}</Text>
-              ),
-              // ThematicBreakRenderer: () => (
-              //   <View style={{ height: 5, backgroundColor: "red" }} />
-              // ),
-            }}
-            customStyles={{
-              // Override default styles
-              // Checkout https://github.com/imwithye/react-native-remark/blob/main/src/themes/default.tsx
-              // for the default styles.
-              inlineCode: {
-                color: "red",
-              },
-              text: {
-                color: "red",
-              },
-            }}
-            // onCodeCopy={(code) => Clipboard.setStringAsync(code)}
-            // onLinkPress={(url) => Linking.openURL(url)}
-          />
-        </ScrollView>
-      </Wrapper>
+      </ScrollView>
     </Wrapper>
   );
 }
