@@ -5,6 +5,7 @@ export const Articles = [
     imageSrc: "https://media.gazetadopovo.com.br/sites/2/2021/03/23111331/respiracao-boca-crian%C3%A7a-960x540.jpg",
     title: "Respiração Bucal: Sinais de alerta",
     readingTime: "5",
+    isSpotlight: true,
     content: `
 # Respiração Bucal: Sinais de Alerta
 
@@ -59,6 +60,7 @@ _Consulte sempre um profissional de saúde para diagnóstico e tratamento adequa
     imageSrc: "https://img.magnific.com/free-photo/smiley-little-girl-red-dress_23-2148984784.jpg",
     title: "O Guia Completo da Regra dos 6 Anos",
     readingTime: "7",
+    isSpotlight: false,
     content: `
 # O Guia Completo da Regra dos 6 Anos
 
