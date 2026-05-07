@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { ArticlePreviewDTO } from "@/types/dtos";
+import { AntDesign } from "@expo/vector-icons";
 
 export function ArticleCard({
   imageSrc,
@@ -36,9 +37,12 @@ export function ArticleCard({
             {category}
           </Text>
           <Text variant="h4">{title}</Text>
-          <Text variant="small" className="text-base-400">
-            {readingTime} min de leitura
-          </Text>
+          <Wrapper direction="row" align="center" justify="start" gap="gap-1">
+            <AntDesign name="clock-circle" size={12} color="gray" />
+            <Text variant="small" className="text-base-400">
+              {readingTime} min de leitura
+            </Text>
+          </Wrapper>
         </Wrapper>
       </Wrapper>
     </TouchableNativeFeedback>
