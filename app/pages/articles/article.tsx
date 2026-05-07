@@ -5,10 +5,19 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { Badge } from "@/components/ui/badge";
 import { AntDesign } from "@expo/vector-icons";
-import { Image } from "react-native";
-
+import { Image, ScrollView } from "react-native";
+import { Markdown } from "react-native-remark";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
+
+const markdown = `
+# Hello World! 👋
+
+This is a **Markdown** example with [a link](https://reactnative.dev).
+
+- List item 1
+- List item 2
+`;
 
 export function Article() {
   const route = useRoute<ArticleRouteProp>();
@@ -30,7 +39,7 @@ export function Article() {
         align="start"
         justify="start"
       >
-      {/* Badge and readingTime */}
+        {/* Badge and readingTime */}
         <Wrapper direction="row" align="center" gap="gap-4">
           <Badge variant="secondary" className="">
             <Text>Higiene Oral</Text>
@@ -43,22 +52,36 @@ export function Article() {
           </Wrapper>
         </Wrapper>
 
-        <Wrapper
-        className="flex-1"
-        direction="column"
-        align="start"
-        justify="start">
-        <Text variant="h2">O Guia Completo da Regra dos 6 Anos</Text>
-        <Image
-          className="w-80 h-48 rounded-lg bg-base-200 "
-          src=""
-
-        />
-        <Text>{`Id - ${id}`}</Text>
+        <ScrollView className="mt-4">
+          <Markdown
+            markdown={markdown}
+            customRenderers={{
+              // Override default renderers for mdast nodes.
+              // Checkout https://github.com/imwithye/react-native-remark/blob/main/src/renderers/index.tsx
+              // for the default renderers.
+              InlineCodeRenderer: ({ node }) => (
+                <Text style={{ color: "blue" }}>{node.value}</Text>
+              ),
+              // ThematicBreakRenderer: () => (
+              //   <View style={{ height: 5, backgroundColor: "red" }} />
+              // ),
+            }}
+            customStyles={{
+              // Override default styles
+              // Checkout https://github.com/imwithye/react-native-remark/blob/main/src/themes/default.tsx
+              // for the default styles.
+              inlineCode: {
+                color: "red",
+              },
+              text: {
+                color: "red",
+              },
+            }}
+            // onCodeCopy={(code) => Clipboard.setStringAsync(code)}
+            // onLinkPress={(url) => Linking.openURL(url)}
+          />
+        </ScrollView>
       </Wrapper>
-
-      </Wrapper>
-      
     </Wrapper>
   );
 }
