@@ -4,8 +4,8 @@ import { Wrapper } from "./wrapper";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
-import { ArticlePreviewDTO } from "@/types/dtos";
 import { AntDesign } from "@expo/vector-icons";
+import { ArticlePreviewDTO } from "@/types/dtos/article";
 
 export function ArticleCard({
   imageSrc,
