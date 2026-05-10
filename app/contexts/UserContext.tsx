@@ -1,27 +1,23 @@
-import { createContext, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
+import { BasicUser } from "@/types/domain";
+import { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
 
-type UserContextValue = {
-  user: unknown;
-  setUser: (user: unknown) => void;
-};
+export interface UserContextProps {
+  user: BasicUser | null;
+  authToken: string | null;
+  setUser: (user: BasicUser | null) => void;
+  setAuthToken: (token: string | null) => void;
+}
 
-const UserContext = createContext<UserContextValue | null>(null);
+export const UserContext = createContext<UserContextProps | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<unknown>(null);
+  const [user, setUser] = useState<BasicUser | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, authToken, setUser, setAuthToken }}>
       {children}
     </UserContext.Provider>
   );
-}
-
-export function useUser(): UserContextValue {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
 }

@@ -1,3 +1,5 @@
+// TODO: split this in multiple files: one for user, one for articles,
+
 export interface User {
   id: string;
   name: string;
@@ -8,6 +10,8 @@ export interface User {
   isAdmin: boolean;
   kids: Kid[];
 }
+
+export type BasicUser = Pick<User, "name" | "email" | "isAdmin">;
 
 interface Kid {
   id: string;

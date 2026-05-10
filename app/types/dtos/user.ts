@@ -10,11 +10,9 @@ export interface SignupDTO {
   confirmPassword: string;
 }
 
-export interface ArticlePreviewDTO {
-  imageSrc: string;
-  title: string;
-  category: string;
-  readingTime: string;
-  id: string;
-  className?: string;
+// TODO: add refresh token later
+export interface LoginResponseDTO {
+  name: string;
+  token: string;
+  isAdmin: boolean;
 }
