@@ -4,12 +4,31 @@ import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
 import { LoginDTO } from "@/types/dtos";
+import { loginUser } from "@/api/user/loginUser";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { ApiError } from "@/types/domain";
+import { useState } from "react";
 
 export function Login() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ProfileNavegationProp>();
+  const [error, setError] = useState<ApiError | null>(null);
 
-  async function onLogin(data: LoginDTO) {
-    console.log("Dados válidos de cadastro:", data);
+  async function onLogin(loginDTO: LoginDTO) {
+    try {
+      const { data } = await loginUser(loginDTO);
+
+      console.log("Login successful, user data:", data);
+
+      navigation.navigate("Profile", {
+        payload: data,
+      });
+    } catch (err: unknown) {
+      console.log("Login error:", err);
+      if (err instanceof ApiError) {
+        setError(err);
+        return;
+      }
+    }
   }
 
   return (
@@ -28,7 +47,7 @@ export function Login() {
         </Text>
       </Wrapper>
 
-      <LoginForm onSubmit={onLogin} />
+      <LoginForm submitError={error} onSubmit={onLogin} />
 
       <Text variant={"small"}>Não possui uma conta?</Text>
       <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>

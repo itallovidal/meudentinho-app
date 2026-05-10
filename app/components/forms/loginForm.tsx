@@ -7,12 +7,14 @@ import type { LoginDTO } from "@/types/dtos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
+import { ApiError } from "@/types/domain";
 
 interface Args {
   onSubmit: (data: LoginDTO) => void | Promise<void>;
+  submitError?: ApiError | null;
 }
 
-export function LoginForm({ onSubmit }: Args) {
+export function LoginForm({ onSubmit, submitError }: Args) {
   const {
     control,
     handleSubmit,
@@ -54,6 +56,10 @@ export function LoginForm({ onSubmit }: Args) {
           autoCorrect: false,
         }}
       />
+
+      {submitError && (
+        <Text className="text-red-600">{submitError.message}</Text>
+      )}
 
       <Separator className="my-4 max-w-5" />
 
