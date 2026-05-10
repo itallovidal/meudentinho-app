@@ -3,11 +3,11 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { loginSchema } from "@/lib/schemas/profile";
-import type { LoginDTO } from "@/types/dtos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
+import { LoginDTO } from "@/types/dtos/user";
 
 interface Args {
   onSubmit: (data: LoginDTO) => void | Promise<void>;

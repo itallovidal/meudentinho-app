@@ -3,10 +3,10 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { signupSchema } from "@/lib/schemas/profile";
-import type { SignupDTO } from "@/types/dtos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
+import { SignupDTO } from "@/types/dtos/user";
 
 interface ProfileFormProps {
   onSubmit: (data: SignupDTO) => void | Promise<void>;
