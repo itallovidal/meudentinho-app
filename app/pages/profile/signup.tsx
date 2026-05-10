@@ -19,7 +19,7 @@ export function Signup() {
   const formRef = useRef<View>(null);
 
   const [error, setError] = useState<ApiError | null>(null);
-  const { setUser, setAuthToken } = useContext(UserContext)!;
+  const { updateAppUser } = useContext(UserContext)!;
 
   async function onSubmit(signupDTO: SignupDTO) {
     try {
@@ -33,8 +33,7 @@ export function Signup() {
         isAdmin: data.isAdmin,
       };
 
-      setUser(basicUser);
-      setAuthToken(data.token);
+      updateAppUser(basicUser, data.token);
 
       navigation.navigate("Profile", {
         payload: basicUser,

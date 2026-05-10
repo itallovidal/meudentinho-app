@@ -6,14 +6,22 @@ import { LoginForm } from "@/components/forms/loginForm";
 import { loginUser } from "@/api/user/loginUser";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { LoginDTO } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const [error, setError] = useState<ApiError | null>(null);
-  const { setUser, setAuthToken } = useContext(UserContext)!;
+  const { updateAppUser, user } = useContext(UserContext)!;
+
+  useEffect(() => {
+    if (user) {
+      navigation.navigate("Profile", {
+        payload: user,
+      });
+    }
+  }, [user]);
 
   async function onLogin(loginDTO: LoginDTO) {
     try {
@@ -27,8 +35,7 @@ export function Login() {
         isAdmin: data.isAdmin,
       };
 
-      setUser(basicUser);
-      setAuthToken(data.token);
+      updateAppUser(basicUser, data.token);
 
       navigation.navigate("Profile", {
         payload: basicUser,

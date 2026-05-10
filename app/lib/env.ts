@@ -5,11 +5,13 @@ const envSchema = z.object({
   ENVIRONMENT: z
     .enum(["development", "production", "test"])
     .default("development"),
+  LOCAL_STORAGE_KEY_PREFIX: z.string().default("@meudentinho"),
 });
 
 const parsedEnv = envSchema.safeParse({
   BASE_API_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
   ENVIRONMENT: process.env.EXPO_ENVIRONMENT,
+  LOCAL_STORAGE_KEY_PREFIX: process.env.EXPO_PUBLIC_LOCAL_STORAGE_KEY,
 });
 
 if (!parsedEnv.success) {
