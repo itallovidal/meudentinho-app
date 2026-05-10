@@ -6,12 +6,12 @@ import { Login } from "@/pages/profile/login";
 import { Signup } from "@/pages/profile/signup";
 import { Profile } from "@/pages/profile/profile";
 import { RouteProp } from "@react-navigation/native";
+import { BasicUser } from "@/types/domain";
 
-// TODO: Change this payload!
 export type ProfileRouteParams = {
   Login: undefined;
   Signup: undefined;
-  Profile: { payload: any };
+  Profile: { payload: BasicUser };
 };
 
 export type ProfileNavegationProp =
