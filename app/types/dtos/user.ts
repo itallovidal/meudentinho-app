@@ -7,11 +7,11 @@ export interface SignupDTO {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
+  passwordConfirmation: string;
 }
 
 // TODO: add refresh token later
-export interface LoginResponseDTO {
+export interface UserAuthResponseDTO {
   name: string;
   token: string;
   isAdmin: boolean;

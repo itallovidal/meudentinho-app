@@ -1,20 +1,32 @@
 import { ENV } from "@/lib/env";
-import { ResponsePayload, User } from "@/types/domain";
-import { SignupDTO } from "@/types/dtos";
+import { ApiError, ResponsePayload, User } from "@/types/domain";
+import { SignupDTO, UserAuthResponseDTO } from "@/types/dtos/user";
+import { isApiError } from "@/types/predicates";
 
-export async function signUpUser(
+export async function signupUser(
   signUpDTO: SignupDTO,
-): Promise<ResponsePayload<User>> {
+): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/user/signup`, {
     method: "POST",
     body: JSON.stringify(signUpDTO),
   });
 
-  if (response.status !== 201) {
-    throw new Error("Failed to sign up user");
+  const payload =
+    (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
+
+  console.log("Signup response payload:", payload);
+
+  if (payload.status !== 201 && isApiError(payload.error)) {
+    console.log("Signup failed with error:", payload.error);
+    throw new ApiError(payload.error.message, payload.error.code);
   }
 
-  const data = await response.json();
+  if (payload.status !== 201) {
+    throw new ApiError(
+      "Erro inesperado ocorreu durante o registro",
+      "INTERNAL_SERVER_ERROR",
+    );
+  }
 
-  return data;
+  return payload;
 }

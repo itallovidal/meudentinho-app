@@ -5,17 +5,47 @@ import { ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRef } from "react";
-import type { SignupDTO } from "@/types/dtos";
+import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
+import { SignupDTO } from "@/types/dtos/user";
+import { signupUser } from "@/api/user/signupUser";
+import { UserContext } from "@/contexts/UserContext";
+import { ApiError } from "@/types/domain";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 
 export function Signup() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ProfileNavegationProp>();
   const scrollViewRef = useRef<ScrollView>(null);
   const formRef = useRef<View>(null);
 
-  async function onSubmit(data: SignupDTO) {
-    console.log("Dados válidos de cadastro:", data);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { setUser, setAuthToken } = useContext(UserContext)!;
+
+  async function onSubmit(signupDTO: SignupDTO) {
+    try {
+      const { data } = await signupUser(signupDTO);
+
+      console.log("Signup successful, user data:", data);
+
+      const basicUser = {
+        name: data.name,
+        email: signupDTO.email,
+        isAdmin: data.isAdmin,
+      };
+
+      setUser(basicUser);
+      setAuthToken(data.token);
+
+      navigation.navigate("Profile", {
+        payload: basicUser,
+      });
+    } catch (err: unknown) {
+      console.log("Signup error:", err);
+      if (err instanceof ApiError) {
+        setError(err);
+        return;
+      }
+    }
   }
 
   function goToForm() {
@@ -99,7 +129,7 @@ export function Signup() {
             </Text>
           </Wrapper>
 
-          <ProfileForm onSubmit={onSubmit} />
+          <ProfileForm submitError={error} onSubmit={onSubmit} />
 
           <Text variant={"small"}>Já tem uma conta?</Text>
           <Button

@@ -16,11 +16,11 @@ export const signupSchema = z
     password: z
       .string({ message: "A senha é obrigatória." })
       .min(6, "A senha deve ter no mínimo 6 caracteres."),
-    confirmPassword: z
+    passwordConfirmation: z
       .string({ message: "A confirmação de senha é obrigatória." })
       .min(6, "A confirmação de senha deve ter no mínimo 6 caracteres."),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.passwordConfirmation, {
     message: "As senhas não conferem.",
-    path: ["confirmPassword"],
+    path: ["passwordConfirmation"],
   });

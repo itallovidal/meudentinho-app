@@ -7,9 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { SignupDTO } from "@/types/dtos/user";
+import { ApiError } from "@/types/domain";
 
 interface ProfileFormProps {
   onSubmit: (data: SignupDTO) => void | Promise<void>;
+  submitError?: ApiError | null;
   defaultValues?: Partial<SignupDTO>;
   submitLabel?: string;
   submittingLabel?: string;
@@ -20,6 +22,7 @@ export function ProfileForm({
   defaultValues,
   submitLabel = "Criar Conta",
   submittingLabel = "Criando conta...",
+  submitError,
 }: ProfileFormProps) {
   const {
     control,
@@ -33,7 +36,7 @@ export function ProfileForm({
       name: "",
       email: "",
       password: "",
-      confirmPassword: "",
+      passwordConfirmation: "",
       ...defaultValues,
     },
   });
@@ -81,7 +84,7 @@ export function ProfileForm({
       <FormInput
         control={control}
         errors={errors}
-        name="confirmPassword"
+        name="passwordConfirmation"
         label="Confirme sua Senha"
         inputProps={{
           placeholder: "Confirme sua senha",
@@ -90,6 +93,10 @@ export function ProfileForm({
           autoCorrect: false,
         }}
       />
+
+      {submitError && (
+        <Text className="text-red-600">{submitError.message}</Text>
+      )}
 
       <Separator className="my-4 max-w-5" />
 

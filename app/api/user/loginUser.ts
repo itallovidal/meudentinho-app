@@ -1,17 +1,18 @@
 import { ENV } from "@/lib/env";
 import { ApiError, ResponsePayload, User } from "@/types/domain";
-import { LoginDTO, LoginResponseDTO } from "@/types/dtos/user";
+import { LoginDTO, UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function loginUser(
   loginDTO: LoginDTO,
-): Promise<ResponsePayload<LoginResponseDTO>> {
+): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/user/login`, {
     method: "POST",
     body: JSON.stringify(loginDTO),
   });
 
-  const payload = (await response.json()) as ResponsePayload<LoginResponseDTO>;
+  const payload =
+    (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
 
   console.log("Login response payload:", payload);
 
@@ -22,7 +23,7 @@ export async function loginUser(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "An unexpected error occurred during login",
+      "Erro inesperado ocorreu durante o login",
       "INTERNAL_SERVER_ERROR",
     );
   }
