@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
-import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  ArrowsClockwiseIcon,
+  BookOpenIcon,
+  MailboxIcon,
+} from "phosphor-react-native";
 import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupDTO } from "@/types/dtos/user";
@@ -12,6 +16,7 @@ import { signupUser } from "@/api/user/signupUser";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { THEME } from "@/lib/theme";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -20,6 +25,8 @@ export function Signup() {
 
   const [error, setError] = useState<ApiError | null>(null);
   const { updateAppUser } = useContext(UserContext)!;
+
+  const colors = THEME.light;
 
   async function onSubmit(signupDTO: SignupDTO) {
     try {
@@ -79,30 +86,23 @@ export function Signup() {
           </Text>
           <Wrapper direction="column" className="w-full" gap={"gap-4"}>
             <Card
-              icon={<AntDesign name="sync" size={24} />}
+              icon={<ArrowsClockwiseIcon color={colors.primary400} />}
               title="Sincronize seus dados"
             >
-              Acesse o histórico dental em qualquer dispositivo, a qualquer
-              momento.
+              Acesse o histórico dental em qualquer dispositivo.
             </Card>
             <Card
-              icon={<Feather name="mail" size={24} />}
+              icon={<MailboxIcon color={colors.primary400} />}
               title="Atualizações por e-mail"
             >
-              Receba relatórios do desenvolvimento do seu filho diretamente na
-              sua caixa de entrada.
+              Receba relatórios de seus filhos diretamente na sua caixa de
+              entrada.
             </Card>
             <Card
-              icon={
-                <MaterialCommunityIcons
-                  name="book-open-page-variant-outline"
-                  size={24}
-                />
-              }
+              icon={<BookOpenIcon color={colors.primary400} />}
               title="Conteúdo exclusivo"
             >
-              Novos artigos e guias especializados em odontopediatria toda
-              semana.
+              Novos artigos e guias especializados odontopediatria toda semana.
             </Card>
           </Wrapper>
 

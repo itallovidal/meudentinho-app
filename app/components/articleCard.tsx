@@ -4,7 +4,7 @@ import { Wrapper } from "./wrapper";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
-import { AntDesign } from "@expo/vector-icons";
+import { Clock } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 
 export function ArticleCard({
@@ -38,7 +38,7 @@ export function ArticleCard({
           </Text>
           <Text variant="h4">{title}</Text>
           <Wrapper direction="row" align="center" justify="start" gap="gap-1">
-            <AntDesign name="clock-circle" size={12} color="gray" />
+            <Clock size={12} color="gray" />
             <Text variant="small" className="text-base-400">
               {readingTime} min de leitura
             </Text>

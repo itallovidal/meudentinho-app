@@ -3,7 +3,15 @@ import { Home } from "@/pages/home/index";
 import { ArticlesStack } from "./ArticlesStack";
 import { SmileStack } from "./SmileStack";
 import { ProfileStack } from "./ProfileStack";
-import { MaterialCommunityIcons, Foundation, MaterialIcons } from "@expo/vector-icons";
+import {
+  HouseIcon,
+  ToothIcon,
+  BookOpenIcon,
+  UserIcon,
+} from "phosphor-react-native";
+import { THEME } from "@/lib/theme";
+
+const colors = THEME.light;
 
 export const TabNavigator = createBottomTabNavigator({
   initialRouteName: "Home",
@@ -12,8 +20,10 @@ export const TabNavigator = createBottomTabNavigator({
       screen: Home,
       options: {
         tabBarLabel: "Início",
-        tabBarIcon: ({ color, size }) => (
-          <Foundation name="home" color={color} size={size} />
+        tabBarActiveTintColor: colors.primary400,
+        tabBarInactiveTintColor: colors.base300,
+        tabBarIcon: ({ focused }) => (
+          <HouseIcon color={focused ? colors.primary400 : colors.base300} />
         ),
       },
     },
@@ -21,8 +31,10 @@ export const TabNavigator = createBottomTabNavigator({
       screen: SmileStack,
       options: {
         tabBarLabel: "Sorriso",
-        tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name="tooth-outline" color={color} size={size} />
+        tabBarActiveTintColor: colors.primary400,
+        tabBarInactiveTintColor: colors.base300,
+        tabBarIcon: ({ focused }) => (
+          <ToothIcon color={focused ? colors.primary400 : colors.base300} />
         ),
       },
     },
@@ -30,8 +42,11 @@ export const TabNavigator = createBottomTabNavigator({
       screen: ArticlesStack,
       options: {
         tabBarLabel: "Artigos",
-        tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name="book-open-variant-outline" color={color} size={size} />
+        tabBarActiveTintColor: colors.primary400,
+        tabBarInactiveTintColor: colors.base300,
+
+        tabBarIcon: ({ focused }) => (
+          <BookOpenIcon color={focused ? colors.primary400 : colors.base300} />
         ),
       },
     },
@@ -39,8 +54,10 @@ export const TabNavigator = createBottomTabNavigator({
       screen: ProfileStack,
       options: {
         tabBarLabel: "Perfil",
-        tabBarIcon: ({ color, size }) => (
-          <MaterialIcons name="person-outline" color={color} size={size} />
+        tabBarActiveTintColor: colors.primary400,
+        tabBarInactiveTintColor: colors.base300,
+        tabBarIcon: ({ focused }) => (
+          <UserIcon color={focused ? colors.primary400 : colors.base300} />
         ),
       },
     },

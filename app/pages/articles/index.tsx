@@ -1,13 +1,12 @@
 import { View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
-import Entypo from "@expo/vector-icons/Entypo";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import { Plus } from "phosphor-react-native";
 import { ArticleCard } from "@/components/articleCard";
 import { Articles } from "../../../mock/articles";
 import { Wrapper } from "@/components/wrapper";
 import { Input } from "@/components/ui/input";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { MagnifyingGlassIcon } from "phosphor-react-native";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArticleBanner } from "@/components/articleBanner";
@@ -40,11 +39,10 @@ export function Index() {
               placeholder="Buscar artigos e guias"
               className="bg-base-100 rounded-lg"
             />
-            <FontAwesome
-              name="search"
+            <MagnifyingGlassIcon
               size={16}
               color="gray"
-              className="absolute right-4"
+              style={{ position: "absolute", right: 16 }}
             />
           </Wrapper>
 
@@ -87,7 +85,7 @@ export function Index() {
           ))}
 
           <Button className="w-full" variant={"default"}>
-            <AntDesign name="plus" size={16} color="white" />
+            <Plus size={16} color="white" />
             <Text variant={"default"}>Criar Artigo</Text>
           </Button>
         </Wrapper>

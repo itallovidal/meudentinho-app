@@ -1,6 +1,6 @@
 import { Image, TouchableNativeFeedback, View } from "react-native";
 import { Text } from "./ui/text";
-import { AntDesign } from "@expo/vector-icons";
+import { Clock } from "phosphor-react-native";
 import { Wrapper } from "./wrapper";
 import { Badge } from "./ui/badge";
 import { useNavigation } from "@react-navigation/native";
@@ -47,7 +47,7 @@ export function ArticleBanner({
             {title}
           </Text>
           <View className="mt-3 flex-row items-center gap-2">
-            <AntDesign name="clock-circle" size={16} color="white" />
+            <Clock size={16} color="white" />
             <Text className="text-xs text-base-100/80">
               {readingTime} min de leitura
             </Text>

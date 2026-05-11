@@ -7,43 +7,51 @@ import {
 } from "@/navigation/ProfileStack";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Card } from "@/components/card";
-import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  ShieldCheckIcon,
+  ShareNetworkIcon,
+  StarIcon,
+  UserCircleIcon,
+  UsersThreeIcon,
+} from "phosphor-react-native";
 import { ENV } from "@/lib/env";
+import { THEME } from "@/lib/theme";
 
 export function Profile() {
   const route = useRoute<ProfileRouteProp>();
   const payload = route.params?.payload;
   const navigation = useNavigation<ProfileNavegationProp>();
+  const colors = THEME.light;
 
   console.log("Profile screen received payload:", payload);
 
   const profileOptions = [
     {
-      icon: <AntDesign name="sync" size={24} />,
+      icon: <UserCircleIcon color={colors.primary400} />,
       title: "Gerencie sua conta",
       description: "Administre seus dados pessoais.",
       handlePress: () => navigation.navigate("Login"),
     },
     {
-      icon: <AntDesign name="sync" size={24} />,
+      icon: <UsersThreeIcon color={colors.primary400} />,
       title: "Gerencie Dependentes",
       description: "Administre seus dependentes.",
       handlePress: () => navigation.navigate("Login"),
     },
     {
-      icon: <AntDesign name="sync" size={24} />,
+      icon: <ShieldCheckIcon color={colors.primary400} />,
       title: "Políticas de privacidade",
       description: "Leia e entenda nossa política.",
       handlePress: () => navigation.navigate("Login"),
     },
     {
-      icon: <AntDesign name="sync" size={24} />,
+      icon: <StarIcon color={colors.primary400} />,
       title: "Avalie o App",
       description: "Ajude-nos a melhorar continuamente.",
       handlePress: () => navigation.navigate("Login"),
     },
     {
-      icon: <AntDesign name="sync" size={24} />,
+      icon: <ShareNetworkIcon color={colors.primary400} />,
       title: "Compartilhe sua experiência",
       description: "Compartilhe sua experiência.",
       handlePress: () => navigation.navigate("Signup"),
