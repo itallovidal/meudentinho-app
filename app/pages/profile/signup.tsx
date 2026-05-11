@@ -73,9 +73,10 @@ export function Signup() {
         justify="center"
       >
         <Wrapper
-          className="px-4 py-4 w-full bg-base-100"
+          className="px-4 py-4 w-full h-[85vh] bg-base-100"
           direction="column"
-          gap={"gap-2"}
+          justify="center"
+          gap={"gap-4"}
         >
           <Text className="mb-0" variant={"h2"}>
             Crie sua conta
@@ -84,7 +85,7 @@ export function Signup() {
             Acompanhe a saúde bucal do seu filho com a tecnologia e o carinho
             que ele merece.
           </Text>
-          <Wrapper direction="column" className="w-full" gap={"gap-4"}>
+          <Wrapper direction="column" className="w-full" gap={"gap-6"}>
             <Card
               icon={<ArrowsClockwiseIcon color={colors.primary400} />}
               title="Sincronize seus dados"
@@ -123,8 +124,7 @@ export function Signup() {
               Bem vindo à família
             </Text>
             <Text className="mb-6 mt-0 text-muted">
-              Acompanhe a saúde bucal do seu filho com a tecnologia e o carinho
-              que ele merece.
+              Preencha os dados abaixo para começar o acompanhamento.
             </Text>
           </Wrapper>
 
