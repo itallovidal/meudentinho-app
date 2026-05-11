@@ -8,6 +8,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { Image, ScrollView } from "react-native";
 import { Markdown } from "react-native-remark";
 import { Articles } from "../../../mock/articles";
+import { ClockIcon } from "phosphor-react-native";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
 
@@ -38,7 +39,7 @@ export function Article() {
               <Text>{article.category}</Text>
             </Badge>
             <Wrapper direction="row" align="center" gap="gap-1">
-              <AntDesign name="clock-circle" size={16} color="gray" />
+              <ClockIcon size={16} color="gray" weight="regular" />
               <Text variant="small" className="text-base-500">
                 {article.readingTime} min de leitura
               </Text>
