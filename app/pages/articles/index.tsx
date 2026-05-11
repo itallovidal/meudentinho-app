@@ -42,6 +42,7 @@ export function Index() {
             <MagnifyingGlassIcon
               size={16}
               color="gray"
+              weight="regular"
               style={{ position: "absolute", right: 16 }}
             />
           </Wrapper>
@@ -84,10 +85,6 @@ export function Index() {
             />
           ))}
 
-          <Button className="w-full" variant={"default"}>
-            <Plus size={16} color="white" />
-            <Text variant={"default"}>Criar Artigo</Text>
-          </Button>
         </Wrapper>
       </ScrollView>
     </Wrapper>

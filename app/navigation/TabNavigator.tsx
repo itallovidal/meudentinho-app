@@ -23,7 +23,7 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <HouseIcon color={focused ? colors.primary400 : colors.base300} />
+          <HouseIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"} />
         ),
       },
     },
@@ -34,7 +34,7 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <ToothIcon color={focused ? colors.primary400 : colors.base300} />
+          <ToothIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
         ),
       },
     },
@@ -46,7 +46,7 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarInactiveTintColor: colors.base300,
 
         tabBarIcon: ({ focused }) => (
-          <BookOpenIcon color={focused ? colors.primary400 : colors.base300} />
+          <BookOpenIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
         ),
       },
     },
@@ -57,7 +57,7 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <UserIcon color={focused ? colors.primary400 : colors.base300} />
+          <UserIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
         ),
       },
     },
