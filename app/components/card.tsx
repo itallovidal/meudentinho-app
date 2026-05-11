@@ -1,20 +1,25 @@
 import { View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
+import { Link, useNavigation } from "@react-navigation/native";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 
 export function Card({
   icon,
   title,
   children,
   className = "",
+  handlePress,
 }: {
   icon: React.ReactNode;
   title: string;
   children: string;
   className?: string;
+  handlePress?: () => void;
 }) {
   return (
     <Wrapper
+      onTouchStart={() => handlePress?.()}
       className={`w-full bg-base-100 rounded-lg p-4 border border-base-200 shadow-sm
         ${className}`}
       direction="row"
@@ -33,7 +38,7 @@ export function Card({
         align="start"
         gap={"gap-2"}
       >
-        <Text variant={"h3"}>{title}</Text>
+        <Text variant={"h4"}>{title}</Text>
         <Text>{children}</Text>
       </Wrapper>
     </Wrapper>

@@ -6,12 +6,14 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   LOCAL_STORAGE_KEY_PREFIX: z.string().default("@meudentinho"),
+  APP_VERSION: z.string().default("0.1.0"),
 });
 
 const parsedEnv = envSchema.safeParse({
   BASE_API_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
   ENVIRONMENT: process.env.EXPO_ENVIRONMENT,
   LOCAL_STORAGE_KEY_PREFIX: process.env.EXPO_PUBLIC_LOCAL_STORAGE_KEY,
+  APP_VERSION: process.env.EXPO_APP_VERSION,
 });
 
 if (!parsedEnv.success) {
