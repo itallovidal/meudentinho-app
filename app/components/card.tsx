@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { Link, useNavigation } from "@react-navigation/native";
@@ -18,8 +18,8 @@ export function Card({
   handlePress?: () => void;
 }) {
   return (
-    <Wrapper
-      onTouchStart={() => handlePress?.()}
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
+      <Wrapper
       className={`w-full bg-base-100 rounded-lg p-4 border border-base-200 shadow-sm
         ${className}`}
       direction="row"
@@ -42,5 +42,6 @@ export function Card({
         <Text>{children}</Text>
       </Wrapper>
     </Wrapper>
+    </TouchableOpacity>
   );
 }
