@@ -1,18 +1,20 @@
-import { View, ScrollView, TouchableOpacity, Image } from "react-native";
+import { ScrollView } from "react-native";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
-import { Plus } from "phosphor-react-native";
 import { ArticleCard } from "@/components/articleCard";
 import { Articles } from "../../../mock/articles";
 import { Wrapper } from "@/components/wrapper";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "phosphor-react-native";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ArticleBanner } from "@/components/articleBanner";
 
 export function Index() {
   const categories = ["Higiene Oral", "Dentição", "Alimentação"];
+
+  const ArticlesByCategory = (category: string) => {
+    return Articles.filter((article) => article.category === category);
+  };
 
   return (
     <Wrapper
@@ -63,28 +65,49 @@ export function Index() {
             ))}
           </ScrollView>
 
-          <ArticleBanner
-            imageSrc="https://img.magnific.com/free-photo/smiley-little-girl-red-dress_23-2148984784.jpg"
-            title="O Guia Completo da Regra dos 6 Anos"
-            readingTime="7"
-            id="2"
-          ></ArticleBanner>
-
-          <Text variant="h3" className="my-4">
-            Hábitos Orais
-          </Text>
-
-          {Articles.map((article) => (
-            <ArticleCard
+          {Articles.filter((article) => article.isSpotlight).map((article) => (
+            <ArticleBanner
               key={article.id}
-              category={article.category}
-              imageSrc={article.imageSrc}
               title={article.title}
               readingTime={article.readingTime}
+              imageSrc={article.imageSrc}
               id={article.id}
             />
           ))}
 
+          {categories.map((category) => {
+            if (ArticlesByCategory(category).length === 0) {
+              return null;
+            }
+
+            return (
+              <Wrapper
+                key={category}
+                direction="column"
+                align="start"
+                justify="start"
+                gap="gap-3"
+              >
+                <Text variant="h3" className="mt-2">
+                  {category}
+                </Text>
+
+                {ArticlesByCategory(category).map(
+                  (article) =>
+                    !article.isSpotlight && (
+                      <ArticleCard
+                        key={article.id}
+                        title={article.title}
+                        category={article.category}
+                        readingTime={article.readingTime}
+                        imageSrc={article.imageSrc}
+                        id={article.id}
+                      />
+                    ),
+                )}
+              </Wrapper>
+            );
+          })}
         </Wrapper>
       </ScrollView>
     </Wrapper>

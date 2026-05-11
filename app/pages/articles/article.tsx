@@ -4,7 +4,6 @@ import { Text } from "@/components/ui/text";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { Badge } from "@/components/ui/badge";
-import { AntDesign } from "@expo/vector-icons";
 import { Image, ScrollView } from "react-native";
 import { Markdown } from "react-native-remark";
 import { Articles } from "../../../mock/articles";
@@ -16,7 +15,7 @@ export function Article() {
   const route = useRoute<ArticleRouteProp>();
   const id = route.params?.id ?? "";
 
-  const article = Articles[id - 1];
+  const article = Articles[Number(id) - 1];
 
   return (
     <Wrapper
@@ -47,15 +46,15 @@ export function Article() {
           </Wrapper>
 
           <Wrapper
-            className="my-4"
+            className="my-4 w-full"
             direction="column"
-            align="start"
+            align="center"
             justify="start"
             gap="gap-4"
           >
             <Image
               src={article.imageSrc}
-              className="w-80 h-48 rounded-2xl bg-base-200"
+              className="w-full h-56 rounded-2xl bg-base-200"
             />
 
             <Markdown markdown={article.content} />
