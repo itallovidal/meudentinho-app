@@ -45,4 +45,6 @@ yarn-error.*
 .idea/
 
 # env
-.env
+*.env
+*.env.*
+!*.env.example
