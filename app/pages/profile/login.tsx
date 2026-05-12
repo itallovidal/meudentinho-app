@@ -1,12 +1,12 @@
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
 import { loginUser } from "@/api/user/loginUser";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { LoginDTO } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 
@@ -15,13 +15,16 @@ export function Login() {
   const [error, setError] = useState<ApiError | null>(null);
   const { updateAppUser, user } = useContext(UserContext)!;
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     if (user) {
-      navigation.navigate("Profile", {
-        payload: user,
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Profile", params: { payload: user } }],
       });
     }
-  }, [user]);
+  }, [user]),
+);
 
   async function onLogin(loginDTO: LoginDTO) {
     try {
@@ -37,8 +40,9 @@ export function Login() {
 
       updateAppUser(basicUser, data.token);
 
-      navigation.navigate("Profile", {
-        payload: basicUser,
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Profile", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
       console.log("Login error:", err);

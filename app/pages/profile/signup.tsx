@@ -42,8 +42,9 @@ export function Signup() {
 
       updateAppUser(basicUser, data.token);
 
-      navigation.navigate("Profile", {
-        payload: basicUser,
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Profile", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
       console.log("Signup error:", err);
