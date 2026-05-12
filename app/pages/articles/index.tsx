@@ -1,4 +1,4 @@
-import { ScrollView } from "react-native";
+import { ScrollView, RefreshControl } from "react-native";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { ArticleCard } from "@/components/articleCard";
@@ -7,14 +7,17 @@ import { Wrapper } from "@/components/wrapper";
 // import { MagnifyingGlassIcon } from "phosphor-react-native";
 // import { Badge } from "@/components/ui/badge";
 import { ArticleBanner } from "@/components/articleBanner";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getArticles";
+import { SkeletonArticleCard } from "@/components/skeletons/skeletonArticleCard";
+import { SkeletonArticleBanner } from "@/components/skeletons/skeletonArticleBanner";
 
 export function Index() {
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const articlesByCategory = useMemo(() => {
     const map: Record<string, ArticlePreviewDTO[]> = {};
@@ -33,6 +36,17 @@ export function Index() {
 
     return map;
   }, [articles, categories]);
+
+  async function onLoad() {
+    setIsLoading(true);
+    try {
+      await Promise.all([loadCategories(), loadArticles()]);
+    } catch (error) {
+      console.log("Erro ao recarregar dados:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   // TODO: turn into a hook later?
   async function loadCategories() {
@@ -55,11 +69,43 @@ export function Index() {
   }
 
   useEffect(() => {
-    loadCategories();
-    loadArticles();
+    onLoad();
   }, []);
 
   const latestArticle = articles.at(0);
+
+  if (!articles.length || !categories.length) {
+    return (
+      <Wrapper
+        direction="column"
+        align="start"
+        justify="start"
+        className="bg-base-100 flex-1 w-full"
+        gap="gap-2"
+      >
+        <Header />
+        <ScrollView
+          className="flex-1 w-full"
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={onLoad} />
+          }
+        >
+          <Wrapper
+            className="flex-1 px-6 py-4 bg-base-200"
+            direction="column"
+            align="start"
+            justify="start"
+            gap="gap-3"
+          >
+            <SkeletonArticleBanner />
+            <SkeletonArticleCard />
+            <SkeletonArticleCard />
+            <SkeletonArticleCard />
+          </Wrapper>
+        </ScrollView>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper
@@ -69,7 +115,12 @@ export function Index() {
       className="bg-base-100 flex-1 w-full"
     >
       <Header />
-      <ScrollView className="flex-1 w-full">
+      <ScrollView
+        className="flex-1 w-full"
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={onLoad} />
+        }
+      >
         <Wrapper
           className="flex-1 px-6 py-4 bg-base-200 "
           direction="column"
