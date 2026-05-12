@@ -25,9 +25,9 @@ export default function App() {
           <SafeAreaView className="flex-1 bg-base-100">
             <Navigation />
           </SafeAreaView>
-          <PortalHost />
         </UserProvider>
       </IconContext.Provider>
+      <PortalHost />
     </SafeAreaProvider>
   );
 }

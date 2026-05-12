@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Home } from "@/pages/home/index";
 import { ArticlesStack } from "./ArticlesStack";
+import type { ArticlesStackParamList } from "./ArticlesStack";
 import { SmileStack } from "./SmileStack";
 import { ProfileStack } from "./ProfileStack";
 import {
@@ -10,10 +11,26 @@ import {
   UserIcon,
 } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
+import { NavigatorScreenParams, RouteProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const colors = THEME.light;
 
-export const TabNavigator = createBottomTabNavigator({
+export type TabNavigatorRouteParams = {
+  Home: undefined;
+  Smile: undefined;
+  Articles: NavigatorScreenParams<ArticlesStackParamList> | undefined;
+  Profile: undefined;
+};
+
+export type TabNavigatorNavigationProp = BottomTabNavigationProp<
+  TabNavigatorRouteParams,
+  "Home"
+>;
+
+export type TabNavigatorRouteProp = RouteProp<TabNavigatorRouteParams, "Home">;
+
+export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   initialRouteName: "Home",
   screens: {
     Home: {
@@ -23,7 +40,10 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <HouseIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"} />
+          <HouseIcon
+            color={focused ? colors.primary400 : colors.base300}
+            weight={focused ? "fill" : "duotone"}
+          />
         ),
       },
     },
@@ -34,7 +54,10 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <ToothIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
+          <ToothIcon
+            color={focused ? colors.primary400 : colors.base300}
+            weight={focused ? "fill" : "duotone"}
+          />
         ),
       },
     },
@@ -46,7 +69,10 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarInactiveTintColor: colors.base300,
 
         tabBarIcon: ({ focused }) => (
-          <BookOpenIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
+          <BookOpenIcon
+            color={focused ? colors.primary400 : colors.base300}
+            weight={focused ? "fill" : "duotone"}
+          />
         ),
       },
     },
@@ -57,7 +83,10 @@ export const TabNavigator = createBottomTabNavigator({
         tabBarActiveTintColor: colors.primary400,
         tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
-          <UserIcon color={focused ? colors.primary400 : colors.base300} weight={focused ? "fill" : "duotone"}  />
+          <UserIcon
+            color={focused ? colors.primary400 : colors.base300}
+            weight={focused ? "fill" : "duotone"}
+          />
         ),
       },
     },
