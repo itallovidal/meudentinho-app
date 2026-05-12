@@ -6,6 +6,13 @@ import { Badge } from "./ui/badge";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ArticlesStackParamList } from "@/navigation/ArticlesStack";
+import { LinearGradient } from "expo-linear-gradient";
+
+const BANNER_GRADIENT_COLORS = [
+  "hsla(213, 53.4%, 20.2%, 0.96)",
+  "hsla(213, 53.4%, 20.2%, 0.72)",
+  "hsla(213, 53.4%, 20.2%, 0)",
+] as const;
 
 interface ArticleBannerProps {
   imageSrc: string;
@@ -29,8 +36,14 @@ export function ArticleBanner({
     <TouchableNativeFeedback
       onPress={() => navigation.navigate("Article", { id })}
     >
-      <View className="mt-6 w-full rounded-3xl bg-base-500">
+      <View className="mt-6 w-full overflow-hidden rounded-3xl bg-base-500">
         <Image src={imageSrc} className="w-full h-60 rounded-3xl" />
+        <LinearGradient
+          colors={BANNER_GRADIENT_COLORS}
+          start={{ x: 0.5, y: 1 }}
+          end={{ x: 0.5, y: 0 }}
+          className="absolute inset-0 rounded-3xl"
+        />
         <Wrapper
           direction="column"
           align="start"
