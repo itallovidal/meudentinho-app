@@ -7,10 +7,12 @@ import { Signup } from "@/pages/profile/signup";
 import { Profile } from "@/pages/profile/profile";
 import { RouteProp } from "@react-navigation/native";
 import { BasicUser } from "@/types/domain";
+import { AdminPage } from "@/pages/profile/adminPage";
 
 export type ProfileRouteParams = {
   Login: undefined;
   Signup: undefined;
+  AdminPage: undefined;
   Profile: { payload: BasicUser };
 };
 
@@ -25,6 +27,7 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     Login,
     Signup,
     Profile,
+    AdminPage,
   },
   screenOptions: {
     headerShown: false,
