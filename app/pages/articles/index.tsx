@@ -7,17 +7,22 @@ import { Wrapper } from "@/components/wrapper";
 // import { MagnifyingGlassIcon } from "phosphor-react-native";
 // import { Badge } from "@/components/ui/badge";
 import { ArticleBanner } from "@/components/articleBanner";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getArticles";
 import { SkeletonArticleCard } from "@/components/skeletons/skeletonArticleCard";
 import { SkeletonArticleBanner } from "@/components/skeletons/skeletonArticleBanner";
+import { useFocusEffect } from "@react-navigation/native";
+
+const PULLING_INTERVAL = 5000;
 
 export function Index() {
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const articleTimeout = useRef(0);
+  const isScreenFocused = useRef(false);
 
   const articlesByCategory = useMemo(() => {
     const map: Record<string, ArticlePreviewDTO[]> = {};
@@ -37,14 +42,46 @@ export function Index() {
     return map;
   }, [articles, categories]);
 
+  useFocusEffect(
+    useCallback(() => {
+      isScreenFocused.current = true;
+      onLoad();
+
+      return () => {
+        isScreenFocused.current = false;
+        if (articleTimeout.current) {
+          console.log("Clearing articleList timeout");
+          clearTimeout(articleTimeout.current);
+          articleTimeout.current = 0;
+        }
+      };
+    }, []),
+  );
+
   async function onLoad() {
-    setIsLoading(true);
+    if (!isScreenFocused.current) return;
+
+    try {
+      await Promise.all([loadCategories(), loadArticles()]);
+    } catch (error) {
+      console.log("Erro ao carregar dados:", error);
+      if (isScreenFocused.current) {
+        const timeout = setTimeout(() => {
+          onLoad();
+        }, PULLING_INTERVAL);
+        articleTimeout.current = timeout as unknown as number;
+      }
+    }
+  }
+
+  async function onRefresh() {
+    setIsRefreshing(true);
     try {
       await Promise.all([loadCategories(), loadArticles()]);
     } catch (error) {
       console.log("Erro ao recarregar dados:", error);
     } finally {
-      setIsLoading(false);
+      setIsRefreshing(false);
     }
   }
 
@@ -68,10 +105,6 @@ export function Index() {
     setArticles(data);
   }
 
-  useEffect(() => {
-    onLoad();
-  }, []);
-
   const latestArticle = articles.at(0);
 
   if (!articles.length || !categories.length) {
@@ -87,7 +120,7 @@ export function Index() {
         <ScrollView
           className="flex-1 w-full"
           refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={onLoad} />
+            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
           }
         >
           <Wrapper
@@ -118,7 +151,7 @@ export function Index() {
       <ScrollView
         className="flex-1 w-full"
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={onLoad} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
         <Wrapper
