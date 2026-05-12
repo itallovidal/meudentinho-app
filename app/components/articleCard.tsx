@@ -4,7 +4,7 @@ import { Wrapper } from "./wrapper";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
-import { Clock, ClockIcon } from "phosphor-react-native";
+import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 
 const MAX_TITLE_LENGTH = 45;

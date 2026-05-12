@@ -1,6 +1,6 @@
 import { Image, TouchableNativeFeedback, View } from "react-native";
 import { Text } from "./ui/text";
-import { Clock, ClockIcon } from "phosphor-react-native";
+import { ClockIcon } from "phosphor-react-native";
 import { Wrapper } from "./wrapper";
 import { Badge } from "./ui/badge";
 import { useNavigation } from "@react-navigation/native";
