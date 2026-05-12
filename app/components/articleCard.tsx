@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
+import { THEME } from "@/lib/theme";
 
 const MAX_TITLE_LENGTH = 45;
 
@@ -26,6 +27,8 @@ export function ArticleCard({
       ? title.slice(0, MAX_TITLE_LENGTH - 3) + "..."
       : title;
 
+    const colors = THEME.light;
+
   return (
     <TouchableNativeFeedback
       onPress={() => navigation.navigate("Article", { id })}
@@ -44,7 +47,7 @@ export function ArticleCard({
         <Wrapper className="flex-1" direction="column" justify="between">
           <Text className="font-bold">{formatedTitle}</Text>
           <Wrapper direction="row" align="center" justify="start" gap="gap-1">
-            <ClockIcon size={12} weight="regular" />
+            <ClockIcon size={12} weight="regular" color={colors.base500} />
             <Text variant="small" className="text-base-400">
               {readingTime} min de leitura
             </Text>
