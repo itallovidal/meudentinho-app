@@ -10,13 +10,19 @@ import { THEME } from "@/lib/theme";
 
 const MAX_TITLE_LENGTH = 45;
 
+interface ArticleCardProps extends ArticlePreviewDTO {
+  className?: string;
+  onPress?: (articleId: string) => void;
+}
+
 export function ArticleCard({
   imageCoverURL,
   title,
   readingTime,
   id,
   className = "",
-}: ArticlePreviewDTO) {
+  onPress,
+}: ArticleCardProps) {
   const navigation =
     useNavigation<
       NativeStackNavigationProp<ArticlesStackParamList, "Article">
@@ -31,7 +37,14 @@ export function ArticleCard({
 
   return (
     <TouchableNativeFeedback
-      onPress={() => navigation.navigate("Article", { id })}
+      onPress={() => {
+        if (onPress) {
+          onPress(id);
+          return;
+        }
+
+        navigation.navigate("Article", { id });
+      }}
     >
       <Wrapper
         className={`bg-base-100 rounded-lg p-3 border border-base-200 ${className}`}
