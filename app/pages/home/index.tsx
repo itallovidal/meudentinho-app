@@ -28,10 +28,7 @@ export function Home() {
         align="center"
         justify="center"
       >
-        <Text>Home</Text>
-        <Button onPress={handleMockTest}>
-          <Text>testar mock!</Text>
-        </Button>
+        <Text>Em breve..</Text>
       </Wrapper>
     </Wrapper>
   );

@@ -1,6 +1,6 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import { Text } from 'react-native';
+import { Text } from "react-native";
 
 export function Smile() {
   return (
@@ -17,7 +17,7 @@ export function Smile() {
         align="center"
         justify="center"
       >
-        <Text>Index</Text>
+        <Text>Em breve..</Text>
       </Wrapper>
     </Wrapper>
   );
