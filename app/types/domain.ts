@@ -17,6 +17,7 @@ interface Kid {
   id: string;
   name: string;
   birthDate: Date;
+  gender: "male" | "female";
   createdAt: Date;
   updatedAt: Date;
   parentId: string;
