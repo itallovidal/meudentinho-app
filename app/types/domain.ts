@@ -24,16 +24,6 @@ interface Kid {
   prematureWeeks?: number;
 }
 
-export interface Article {
-  imageSrc: string;
-  title: string;
-  category: string;
-  readingTime: string;
-  id: string;
-  className?: string;
-  text: string;
-}
-
 const API_ERROR_CODES = {
   UserNotFoundError: "USER_NOT_FOUND",
   InvalidCredentialsError: "INVALID_CREDENTIALS",
@@ -80,4 +70,16 @@ export interface ResponsePayload<T> {
   data: T;
   error?: ErrorPayload;
   meta?: MetaApiPayload;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  categories: string[];
+  imageCoverURL: string;
+  createdAt: Date;
+  updatedAt: Date;
+  readingTime: string;
 }
