@@ -10,19 +10,18 @@ interface HeaderProps {
 }
 
 export function Header({ hasBackButton }: HeaderProps) {
-
   const navigation = useNavigation();
 
   return (
     <Wrapper className="px-8 py-4 w-full bg-base-100" justify="between">
-      {hasBackButton && 
-      <Button variant="ghost" onPress={ () => navigation.goBack() }>
-        <CaretLeftIcon weight="regular" />
-      </Button>
-      }
+      {hasBackButton && (
+        <Button variant="ghost" onPress={() => navigation.goBack()}>
+          <CaretLeftIcon weight="regular" />
+        </Button>
+      )}
 
       <Text className=" text-primary-500 font-bold">Meu Dentinho</Text>
-      <BellIcon weight="regular" />
+      {/* <BellIcon weight="regular" /> */}
     </Wrapper>
   );
 }
