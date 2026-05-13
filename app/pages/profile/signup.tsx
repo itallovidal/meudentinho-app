@@ -44,7 +44,7 @@ export function Signup() {
 
       navigation.reset({
         index: 0,
-        routes: [{ name: "Profile", params: { payload: basicUser } }],
+        routes: [{ name: "Index", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
       console.log("Signup error:", err);

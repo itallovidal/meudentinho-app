@@ -20,7 +20,7 @@ export function Login() {
     if (user) {
       navigation.reset({
         index: 0,
-        routes: [{ name: "Profile", params: { payload: user } }],
+        routes: [{ name: "Index", params: { payload: user } }],
       });
     }
   }, [user]),
@@ -42,7 +42,7 @@ export function Login() {
 
       navigation.reset({
         index: 0,
-        routes: [{ name: "Profile", params: { payload: basicUser } }],
+        routes: [{ name: "Index", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
       console.log("Login error:", err);
