@@ -21,7 +21,6 @@ export interface KidRequestDTO {
   name: string;
   birthDate: string;
   prematureWeeks?: string;
-  parentId: string;
   gender: "male" | "female";
 }
 
@@ -33,5 +32,6 @@ export interface KidResponseDTO {
   parentId: string;
   gender: "male" | "female";
   isPremature: boolean;
-  className?: string;
+  createdAt: string;
+  updatedAt: string;
 }
