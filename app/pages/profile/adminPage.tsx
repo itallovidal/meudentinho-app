@@ -1,5 +1,7 @@
 import { createNewArticle } from "@/api/article/createNewArticle";
 import { ArticleForm } from "@/components/forms/articleForm";
+import { Header } from "@/components/header";
+import { Wrapper } from "@/components/wrapper";
 import { ApiError } from "@/types/domain";
 import { ArticleRequestDTO } from "@/types/dtos/article";
 import { useNavigation } from "@react-navigation/native";
@@ -27,8 +29,16 @@ export function AdminPage() {
   }
 
   return (
-    <ScrollView className="px-4 my-4">
+    <Wrapper
+      direction="column"
+      align="start"
+      justify="start"
+      gap="gap-0"
+      className="flex-1 bg-base-200"
+    >
+      <Header hasBackButton />
+
       <ArticleForm submitError={error} onSubmit={onSubmit} />
-    </ScrollView>
+    </Wrapper>
   );
 }
