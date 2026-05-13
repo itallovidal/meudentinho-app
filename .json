@@ -1,0 +1,18 @@
+{
+  "status": 201,
+  "data": {
+    "id": "824c487e-1520-4cc5-8dae-499f0804eeaf",
+    "name": "John",
+    "birthDate": "2023-01-15T00:00:00Z",
+    "prematureWeeks": "0",
+    "createdAt": "2026-05-13T18:27:28.969336924-03:00",
+    "updatedAt": "2026-05-13T18:27:28.969336973-03:00",
+    "parentId": "791118de-5447-4aec-a38b-8624b9c1a6a2",
+    "gender": "male"
+  }
+}
+  "name": "John",
+  "birthDate": "2023-01-15T00:00:00Z",
+  "prematureWeeks": "0",
+  "parentId": "791118de-5447-4aec-a38b-8624b9c1a6a2",
+  "gender": "male"

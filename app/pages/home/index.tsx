@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
-import { RequestKidDTO } from "@/types/dtos/kid";
+import { KidRequestDTO } from "@/types/dtos/user";
 import { useEffect, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { getAllArticlePreview } from "@/api/article/getArticles";
@@ -35,7 +35,7 @@ export function Home() {
     setArticles(data);
   }
 
-  async function onRegisterKid(kidDTO: RequestKidDTO) {
+  async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
       throw new Error("Simulated registration error", {
         cause: kidDTO,

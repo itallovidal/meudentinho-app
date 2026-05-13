@@ -13,16 +13,16 @@ export interface User {
 
 export type BasicUser = Pick<User, "name" | "email" | "isAdmin">;
 
-interface Kid {
+export interface Kid {
   id: string;
   name: string;
   birthDate: Date;
   gender: "male" | "female";
-  createdAt: Date;
-  updatedAt: Date;
-  parentId: string;
   isPremature: boolean;
   prematureWeeks?: number;
+  parentId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const API_ERROR_CODES = {
@@ -31,6 +31,7 @@ const API_ERROR_CODES = {
   InvalidPayloadError: "INVALID_PAYLOAD",
   InternalServerError: "INTERNAL_SERVER_ERROR",
   UserCreationError: "USER_CREATION_ERROR",
+  ResponseParseError: "RESPONSE_PARSE_ERROR",
 } as const;
 
 export interface ErrorPayload {
