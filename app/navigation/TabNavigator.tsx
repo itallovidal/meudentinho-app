@@ -15,6 +15,8 @@ import { NavigatorScreenParams, RouteProp } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const colors = THEME.light;
+const focusedColor = colors.primary400;
+const unfocusedColor = colors.base500;
 
 export type TabNavigatorRouteParams = {
   Home: undefined;
@@ -37,11 +39,9 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       screen: Home,
       options: {
         tabBarLabel: "Início",
-        tabBarActiveTintColor: colors.primary400,
-        tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
           <HouseIcon
-            color={focused ? colors.primary400 : colors.base300}
+            color={focused ? focusedColor : unfocusedColor}
             weight={focused ? "fill" : "duotone"}
           />
         ),
@@ -51,11 +51,9 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       screen: SmileStack,
       options: {
         tabBarLabel: "Sorriso",
-        tabBarActiveTintColor: colors.primary400,
-        tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
           <ToothIcon
-            color={focused ? colors.primary400 : colors.base300}
+            color={focused ? focusedColor : unfocusedColor}
             weight={focused ? "fill" : "duotone"}
           />
         ),
@@ -65,12 +63,10 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       screen: ArticlesStack,
       options: {
         tabBarLabel: "Artigos",
-        tabBarActiveTintColor: colors.primary400,
-        tabBarInactiveTintColor: colors.base300,
 
         tabBarIcon: ({ focused }) => (
           <BookOpenIcon
-            color={focused ? colors.primary400 : colors.base300}
+            color={focused ? focusedColor : unfocusedColor}
             weight={focused ? "fill" : "duotone"}
           />
         ),
@@ -80,11 +76,9 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       screen: ProfileStack,
       options: {
         tabBarLabel: "Perfil",
-        tabBarActiveTintColor: colors.primary400,
-        tabBarInactiveTintColor: colors.base300,
         tabBarIcon: ({ focused }) => (
           <UserIcon
-            color={focused ? colors.primary400 : colors.base300}
+            color={focused ? focusedColor : unfocusedColor}
             weight={focused ? "fill" : "duotone"}
           />
         ),
@@ -93,5 +87,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   },
   screenOptions: {
     headerShown: false,
+    tabBarActiveTintColor: colors.primary400,
+    tabBarInactiveTintColor: colors.base500,
   },
 });
