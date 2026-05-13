@@ -16,15 +16,15 @@ export function Login() {
   const { updateAppUser, user } = useContext(UserContext)!;
 
   useFocusEffect(
-  useCallback(() => {
-    if (user) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Index", params: { payload: user } }],
-      });
-    }
-  }, [user]),
-);
+    useCallback(() => {
+      if (user) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Index", params: { payload: user } }],
+        });
+      }
+    }, [user]),
+  );
 
   async function onLogin(loginDTO: LoginDTO) {
     try {
@@ -55,7 +55,7 @@ export function Login() {
 
   return (
     <Wrapper
-      className="flex-1 px-4 w-full bg-base-100"
+      className="w-full flex-1 bg-base-100 px-4"
       direction="column"
       align="center"
       justify="center"

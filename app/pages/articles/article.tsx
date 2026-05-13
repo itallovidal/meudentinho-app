@@ -74,7 +74,7 @@ export function Article() {
   if (!article) {
     return (
       <Wrapper
-        className="bg-base-100 flex-1"
+        className="flex-1 bg-base-100"
         direction="column"
         align="center"
         justify="start"
@@ -83,14 +83,14 @@ export function Article() {
         <Header hasBackButton />
 
         <Wrapper
-          className="bg-base-100 flex-1 mx-8"
+          className="mx-8 flex-1 bg-base-100"
           direction="column"
           align="start"
           justify="start"
           gap="gap-2"
         >
           <Wrapper
-            className="flex-1 w-full h-24 my-4"
+            className="my-4 h-24 w-full flex-1"
             direction="row"
             align="center"
             gap="gap-2"
@@ -121,7 +121,7 @@ export function Article() {
 
   return (
     <Wrapper
-      className="bg-base-100 flex-1"
+      className="flex-1 bg-base-100"
       direction="column"
       align="start"
       justify="start"
@@ -131,7 +131,7 @@ export function Article() {
 
       <ScrollView>
         <Wrapper
-          className="bg-base-100 flex-1 mx-8"
+          className="mx-8 flex-1 bg-base-100"
           direction="column"
           align="start"
           justify="start"
@@ -158,7 +158,7 @@ export function Article() {
           >
             <Image
               src={article.imageCoverURL}
-              className="w-full h-56 rounded-2xl bg-base-200"
+              className="h-56 w-full rounded-2xl bg-base-200"
             />
 
             <Markdown markdown={article.content} />

@@ -46,13 +46,13 @@ export function ArticleBanner({
       }}
     >
       <View className="mt-6 w-full overflow-hidden rounded-lg bg-base-500">
-        <Image src={imageSrc} className="w-full h-60 rounded-lg" />
+        <Image src={imageSrc} className="h-60 w-full rounded-lg" />
         <LinearGradient
           colors={BANNER_GRADIENT_COLORS}
           start={{ x: 0.2, y: 1 }}
           end={{ x: 0.3, y: 0.5 }}
           className="rounded-lg"
-          style={{ position: 'absolute', width: '100%', height: '100%' }}
+          style={{ position: "absolute", width: "100%", height: "100%" }}
         />
         <Wrapper
           direction="column"
@@ -68,17 +68,12 @@ export function ArticleBanner({
               </Text>
             </Badge>
 
-            <Badge
-              variant="secondary"
-              className="bg-base-500"
-            >
+            <Badge variant="secondary" className="bg-base-500">
               <ClockIcon size={16} color="white" weight="regular" />
-              <Text className="text-xs text-base-100">
-                {readingTime} min
-              </Text>
+              <Text className="text-xs text-base-100">{readingTime} min</Text>
             </Badge>
           </Wrapper>
-          <Text variant="h4" className="text-base-100 w-2/3">
+          <Text variant="h4" className="w-2/3 text-base-100">
             {title}
           </Text>
         </Wrapper>

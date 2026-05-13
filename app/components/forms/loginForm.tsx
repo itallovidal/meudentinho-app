@@ -66,7 +66,7 @@ export function LoginForm({ onSubmit, submitError }: Args) {
       <Button
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
-        className="w-full mb-4"
+        className="mb-4 w-full"
       >
         <Text>{isSubmitting ? "Entrando..." : "Entrar"}</Text>
       </Button>

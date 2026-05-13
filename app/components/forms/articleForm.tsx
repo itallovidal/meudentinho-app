@@ -101,7 +101,7 @@ export function ArticleForm({
   }
 
   return (
-    <ScrollView className="flex-1 w-full">
+    <ScrollView className="w-full flex-1">
       <Wrapper
         align="center"
         direction="column"
@@ -190,7 +190,7 @@ export function ArticleForm({
         <Button
           onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting}
-          className="w-full mb-4"
+          className="mb-4 w-full"
         >
           <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
         </Button>

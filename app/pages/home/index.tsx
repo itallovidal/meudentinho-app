@@ -53,18 +53,23 @@ export function Home() {
   const latestArticle = articles[0];
 
   return (
-    <Wrapper gap="gap-0" direction="column" className="flex-1">
+    <Wrapper
+      direction="column"
+      align="start"
+      justify="start"
+      className="flex-1"
+    >
       <Header />
-      <ScrollView className=" flex-1 px-4">
+      <ScrollView className="w-full flex-1">
         <Wrapper
-          className="bg-base-200 flex-1 my-4"
+          className="mx-6 my-4 flex-1"
           direction="column"
           align="start"
           justify="start"
           gap="gap-2"
         >
           <Wrapper
-            className="flex-1 my-4"
+            className="my-4 flex-1"
             direction="column"
             align="start"
             justify="start"
@@ -76,7 +81,7 @@ export function Home() {
               desenvolvimento dentário da criança de forma personalizada.
             </Text>
 
-            <View className="p-4 bg-base-100 rounded-lg">
+            <View className="rounded-lg bg-base-100 p-4">
               <RegisterKidForm
                 onSubmit={onRegisterKid}
                 submitError={registerKidError}

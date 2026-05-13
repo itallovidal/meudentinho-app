@@ -5,7 +5,7 @@ import { Wrapper } from "../wrapper";
 export function SkeletonArticleBanner() {
   return (
     <View className="mt-6 w-full overflow-hidden rounded-3xl bg-base-300">
-      <Skeleton className="w-full h-60 rounded-3xl" />
+      <Skeleton className="h-60 w-full rounded-3xl" />
       <Wrapper
         direction="column"
         align="start"
@@ -19,11 +19,10 @@ export function SkeletonArticleBanner() {
           <Skeleton className="h-4 w-24 rounded-md" />
         </View>
 
-        <View className="w-full gap-1 mt-1">
+        <View className="mt-1 w-full gap-1">
           <Skeleton className="h-7 w-3/4 rounded-md" />
           <Skeleton className="h-7 w-1/2 rounded-md" />
         </View>
-
       </Wrapper>
     </View>
   );

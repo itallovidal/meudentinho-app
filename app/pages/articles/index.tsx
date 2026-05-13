@@ -119,12 +119,12 @@ export function Index() {
         direction="column"
         align="start"
         justify="start"
-        className="bg-base-200 flex-1 w-full"
+        className="w-full flex-1 bg-base-200"
         gap="gap-2"
       >
         <Header />
         <ScrollView
-          className="flex-1 w-full"
+          className="w-full flex-1"
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
           }
@@ -151,17 +151,17 @@ export function Index() {
       direction="column"
       align="start"
       justify="start"
-      className="bg-base-200 flex-1 w-full"
+      className="flex-1"
     >
       <Header />
       <ScrollView
-        className="flex-1 w-full"
+        className="w-full flex-1"
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
         <Wrapper
-          className="flex-1 px-6 py-4"
+          className="mx-6 my-4 flex-1"
           direction="column"
           align="start"
           justify="start"

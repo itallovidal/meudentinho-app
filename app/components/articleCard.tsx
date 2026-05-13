@@ -40,18 +40,18 @@ export function ArticleCard({
       }}
     >
       <Wrapper
-        className={`bg-base-100 rounded-lg p-3 border border-base-200 ${className}`}
+        className={`rounded-lg border border-base-200 bg-base-100 p-3 ${className}`}
         direction="row"
         align="center"
         justify="start"
         gap="gap-3"
       >
         <Image
-          className="w-24 h-24 rounded-lg bg-base-200"
+          className="h-24 w-24 rounded-lg bg-base-200"
           source={{ uri: imageCoverURL }}
         />
         <Wrapper className="flex-1" direction="column" justify="between">
-          <Text className="font-bold mb-3" numberOfLines={2}>
+          <Text className="mb-3 font-bold" numberOfLines={2}>
             {title}
           </Text>
           <Wrapper direction="row" align="center" justify="start" gap="gap-1">

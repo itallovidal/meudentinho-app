@@ -16,7 +16,7 @@ export function Header({ hasBackButton }: HeaderProps) {
 
   return (
     <Wrapper
-      className="px-8 py-4 w-full bg-base-100"
+      className="w-full bg-base-100 px-8 py-4"
       align="center"
       justify="between"
     >
@@ -26,7 +26,7 @@ export function Header({ hasBackButton }: HeaderProps) {
         </TouchableNativeFeedback>
       )}
 
-      <Text className="text-primary-500 font-bold">Meu Dentinho</Text>
+      <Text className="font-bold text-primary-500">Meu Dentinho</Text>
 
       {/* <BellIcon weight="regular" /> */}
 

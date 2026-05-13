@@ -126,7 +126,7 @@ export function RegisterKidForm({
       <Button
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
-        className="w-full mb-4"
+        className="mb-4 w-full"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>
