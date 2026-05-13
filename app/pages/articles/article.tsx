@@ -53,6 +53,7 @@ export function Article() {
     try {
       const { data } = await getArticleById(id);
       setArticle(data);
+      console.log("Article loaded successfully! ID:", data.id);
     } catch (error) {
       console.log("Erro ao carregar artigo:", error);
       if (isScreenFocused.current) {
@@ -124,6 +125,7 @@ export function Article() {
       direction="column"
       align="start"
       justify="start"
+      gap="gap-0"
     >
       <Header hasBackButton />
 
@@ -133,6 +135,7 @@ export function Article() {
           direction="column"
           align="start"
           justify="start"
+          gap="gap-2"
         >
           <Wrapper direction="row" align="center" gap="gap-4">
             <Badge variant="secondary" className="">

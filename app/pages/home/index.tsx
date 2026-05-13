@@ -30,7 +30,8 @@ export function Home() {
 
   async function loadArticles() {
     const { data } = await getAllArticlePreview();
-    console.log("Articles fetched:", data);
+    // console.log("Articles fetched:", data);
+    console.log("Fetched articles");
 
     setArticles(data);
   }
@@ -54,18 +55,20 @@ export function Home() {
   return (
     <Wrapper gap="gap-0" direction="column" className="flex-1">
       <Header />
-      <ScrollView className="mb-4 flex-1 px-4">
+      <ScrollView className=" flex-1 px-4">
         <Wrapper
-          className="bg-base-200 flex-1 "
+          className="bg-base-200 flex-1 my-4"
           direction="column"
           align="start"
           justify="start"
+          gap="gap-2"
         >
           <Wrapper
             className="flex-1 my-4"
             direction="column"
             align="start"
             justify="start"
+            gap="gap-2"
           >
             <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
             <Text>

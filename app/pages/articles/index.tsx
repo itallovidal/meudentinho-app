@@ -23,6 +23,7 @@ export function Index() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const articleTimeout = useRef(0);
   const isScreenFocused = useRef(false);
+  const dataLoaded = useRef(false);
 
   const articlesByCategory = useMemo(() => {
     const map: Record<string, ArticlePreviewDTO[]> = {};
@@ -60,9 +61,11 @@ export function Index() {
 
   async function onLoad() {
     if (!isScreenFocused.current) return;
+    if (dataLoaded.current) return;
 
     try {
       await Promise.all([loadCategories(), loadArticles()]);
+      dataLoaded.current = true;
     } catch (error) {
       console.log("Erro ao carregar dados:", error);
       if (isScreenFocused.current) {
@@ -78,6 +81,7 @@ export function Index() {
     setIsRefreshing(true);
     try {
       await Promise.all([loadCategories(), loadArticles()]);
+      dataLoaded.current = true;
     } catch (error) {
       console.log("Erro ao recarregar dados:", error);
     } finally {
@@ -88,6 +92,7 @@ export function Index() {
   // TODO: turn into a hook later?
   async function loadCategories() {
     const { data } = await getAllCategories();
+    console.log("Fetched categories");
 
     setCategories(
       data.map((cat) => ({
@@ -100,7 +105,8 @@ export function Index() {
 
   async function loadArticles() {
     const { data } = await getAllArticlePreview();
-    console.log("Articles fetched:", data);
+    // console.log("Articles fetched:", data);
+    console.log("Fetched articles");
 
     setArticles(data);
   }
@@ -113,7 +119,7 @@ export function Index() {
         direction="column"
         align="start"
         justify="start"
-        className="bg-base-100 flex-1 w-full"
+        className="bg-base-200 flex-1 w-full"
         gap="gap-2"
       >
         <Header />
@@ -124,7 +130,7 @@ export function Index() {
           }
         >
           <Wrapper
-            className="flex-1 px-6 py-4 bg-base-200"
+            className="flex-1 px-6 py-4"
             direction="column"
             align="start"
             justify="start"
@@ -145,7 +151,7 @@ export function Index() {
       direction="column"
       align="start"
       justify="start"
-      className="bg-base-100 flex-1 w-full"
+      className="bg-base-200 flex-1 w-full"
     >
       <Header />
       <ScrollView
@@ -155,7 +161,7 @@ export function Index() {
         }
       >
         <Wrapper
-          className="flex-1 px-6 py-4 bg-base-200 "
+          className="flex-1 px-6 py-4"
           direction="column"
           align="start"
           justify="start"
@@ -207,7 +213,7 @@ export function Index() {
           {categories.map((category) => {
             return (
               articlesByCategory[category.name] &&
-              articlesByCategory[category.name].length && (
+              articlesByCategory[category.name].length > 0 && (
                 <Wrapper
                   key={category.id}
                   direction="column"
