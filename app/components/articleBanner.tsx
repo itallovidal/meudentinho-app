@@ -51,7 +51,8 @@ export function ArticleBanner({
           colors={BANNER_GRADIENT_COLORS}
           start={{ x: 0.2, y: 1 }}
           end={{ x: 0.3, y: 0.5 }}
-          className="absolute inset-0 rounded-lg"
+          className="rounded-lg"
+          style={{ position: 'absolute', width: '100%', height: '100%' }}
         />
         <Wrapper
           direction="column"
@@ -67,12 +68,15 @@ export function ArticleBanner({
               </Text>
             </Badge>
 
-            <Wrapper>
+            <Badge
+              variant="secondary"
+              className="bg-base-500"
+            >
               <ClockIcon size={16} color="white" weight="regular" />
-              <Text className="text-xs text-base-100/80">
-                {readingTime} min de leitura
+              <Text className="text-xs text-base-100">
+                {readingTime} min
               </Text>
-            </Wrapper>
+            </Badge>
           </Wrapper>
           <Text variant="h4" className="text-base-100 w-2/3">
             {title}
