@@ -32,6 +32,10 @@ export function RegisterKidForm({
     !defaultValues?.birthDate,
   );
 
+  const [isPremature, setIsPremature] = useState(
+    Boolean(defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0"),
+  );
+
   const {
     control,
     handleSubmit,
@@ -45,14 +49,11 @@ export function RegisterKidForm({
     defaultValues: {
       birthDate: "",
       gender: "male",
-      isPremature: false,
-      parentId: "",
       ...defaultValues,
     },
   });
 
   const gender = watch("gender");
-  const isPremature = watch("isPremature");
   const birthDate = watch("birthDate");
 
   useEffect(() => {
@@ -63,6 +64,14 @@ export function RegisterKidForm({
 
     setIsEditingBirthDate(false);
   }, [defaultValues?.birthDate]);
+
+  useEffect(() => {
+    setIsPremature(
+      Boolean(
+        defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
+      ),
+    );
+  }, [defaultValues?.prematureWeeks]);
 
   useEffect(() => {
     if (!isPremature) {
@@ -123,9 +132,13 @@ export function RegisterKidForm({
         ))}
       </Wrapper>
 
+      {isEditingBirthDate && (
+        <CustomCalendar onDayPress={(day) => chooseBirthDate(day.dateString)} />
+      )}
+
       <Wrapper direction="column" className="w-full" gap="gap-2">
         <Text className="font-bold">Idade</Text>
-        <Input editable={false} value={ageValue} placeholder="Anos" />
+
         <Text className="text-base-500" variant="small">
           Data de nascimento:{" "}
           {birthDate
@@ -145,18 +158,14 @@ export function RegisterKidForm({
               : "Alterar data de nascimento"}
           </Text>
         </Button>
-      </Wrapper>
 
-      {isEditingBirthDate && (
-        <CustomCalendar onDayPress={(day) => chooseBirthDate(day.dateString)} />
-      )}
+        <Input editable={false} value={ageValue} placeholder="Anos" />
+      </Wrapper>
 
       <Wrapper direction="row" align="center" justify="start" gap="gap-2">
         <Checkbox
           value={isPremature}
-          onValueChange={(checked: boolean) =>
-            setValue("isPremature", checked, { shouldDirty: true })
-          }
+          onValueChange={(checked: boolean) => setIsPremature(checked)}
           color={isPremature ? "#4630EB" : undefined}
         />
         <Text className="font-bold">A criança nasceu prematura?</Text>
@@ -168,9 +177,7 @@ export function RegisterKidForm({
           name="prematureWeeks"
           render={({ field: { onChange, onBlur, value } }) => (
             <Wrapper direction="column" className="w-full">
-              <Text className="mb-1 font-bold">
-                Semanas de Prematuridade
-              </Text>
+              <Text className="mb-1 font-bold">Semanas de Prematuridade</Text>
               <Input
                 onBlur={onBlur}
                 onChangeText={onChange}
