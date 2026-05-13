@@ -75,10 +75,15 @@ export function Home() {
             justify="start"
             gap="gap-2"
           >
-            <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
+            <Text className="font-bolder" variant={"h3"}>
+              Bem Vindo!
+            </Text>
+            <Text className="font-bold">
+              Por enquanto, não há crianças registradas.
+            </Text>
+
             <Text>
-              Precisamos de alguns dados básicos para começar a acompanhar o
-              desenvolvimento dentário da criança de forma personalizada.
+              Registre o primeiro dependente para começar o acompanhamento!
             </Text>
 
             <View className="rounded-lg bg-base-100 p-4">
