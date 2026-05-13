@@ -3,11 +3,15 @@ import { ApiError, ResponsePayload } from "@/types/domain";
 import { ArticleRequestDTO } from "@/types/dtos/article";
 import { isApiError } from "@/types/predicates";
 
-export async function createNewArticle(articleRequestDTO: ArticleRequestDTO) {
+export async function createNewArticle(
+  articleRequestDTO: ArticleRequestDTO,
+  authToken: string,
+) {
   const response = await fetch(`${ENV.BASE_API_URL}/articles`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
     },
     body: JSON.stringify(articleRequestDTO),
   });
