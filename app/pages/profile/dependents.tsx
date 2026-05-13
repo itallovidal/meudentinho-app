@@ -46,8 +46,7 @@ export function Dependents() {
         return;
       }
 
-      const userId = getUserIdFromToken(authToken);
-      await createKid({ ...data, parentId: userId }, userId, authToken);
+      await createKid(data, authToken);
       await loadKids();
       setShowCreateForm(false);
       Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
@@ -74,8 +73,6 @@ export function Dependents() {
               name: dependent.name,
               birthDate: dependent.birthDate,
               gender: dependent.gender,
-              isPremature: dependent.isPremature,
-              parentId: dependent.parentId,
               prematureWeeks: dependent.prematureWeeks ?? undefined,
             }}
             submitLabel="Salvar dependente"
@@ -154,6 +151,7 @@ export function Dependents() {
     </Wrapper>
   );
 
+  // TODO: improve this to append new kid in the list, avoiding to another fetch
   async function loadKids() {
     if (!authToken) {
       setKids([]);
@@ -161,7 +159,7 @@ export function Dependents() {
     }
 
     const userId = getUserIdFromToken(authToken);
-    const { data } = await getAllKids(userId, authToken);
-    setKids(data || []);
+    // const { data } = await getAllKids(userId, authToken);
+    // setKids(data || []);
   }
 }
