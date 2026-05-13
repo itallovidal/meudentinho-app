@@ -1,5 +1,5 @@
-import { Skeleton } from "../ui/skeleton";
-import { Wrapper } from "../wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Wrapper } from "@/components/wrapper";
 
 export function SkeletonImage({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   return (

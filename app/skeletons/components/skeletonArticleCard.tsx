@@ -1,6 +1,6 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { Wrapper } from "@/components/wrapper";
 import { View } from "react-native";
-import { Skeleton } from "../ui/skeleton";
-import { Wrapper } from "../wrapper";
 
 export function SkeletonArticleCard() {
   return (
