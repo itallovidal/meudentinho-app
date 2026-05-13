@@ -3,16 +3,19 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { KidRequestDTO } from "@/types/dtos/user";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { getAllArticlePreview } from "@/api/article/getArticles";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleBanner } from "@/components/articleBanner";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { ArticleCard } from "@/components/articleCard";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import { UserContext } from "@/contexts/UserContext";
+import { getUserIdFromToken } from "@/lib/utils";
+import { createKid } from "@/api/user/kids";
 
 export function Home() {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
@@ -20,6 +23,7 @@ export function Home() {
     null,
   );
   const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
+  const { authToken } = useContext(UserContext)!;
 
   function handleOpenArticle(articleId: string) {
     navigation.navigate("Articles", {
@@ -30,17 +34,23 @@ export function Home() {
 
   async function loadArticles() {
     const { data } = await getAllArticlePreview();
-    console.log("Articles fetched:", data);
-
     setArticles(data);
   }
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
-      throw new Error("Simulated registration error", {
-        cause: kidDTO,
-      });
+      if (!authToken) {
+        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      const newKid = await createKid(kidDTO, authToken);
+      console.log("New kid created:", newKid);
+
+      // TODO: create better modals
+      Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
     } catch (error) {
+      console.error("Error creating dependent:", error);
       setRegisterKidError(error as ApiError);
     }
   }
