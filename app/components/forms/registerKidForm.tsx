@@ -91,6 +91,8 @@ export function RegisterKidForm({
         ))}
       </Wrapper>
 
+      <Text className="w-full font-bold">Data de Nascimento</Text>
+
       <CustomCalendar onDayPress={(day) => chooseBirthDate(day.dateString)} />
 
       <Wrapper direction="row" align="center" justify="start" gap="gap-2">
