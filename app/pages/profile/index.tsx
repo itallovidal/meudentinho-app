@@ -21,7 +21,7 @@ import { UserContext } from "@/contexts/UserContext";
 import { ENV } from "@/lib/env";
 import { THEME } from "@/lib/theme";
 
-export function Profile() {
+export function Index() {
   const route = useRoute<ProfileRouteProp>();
   const payload = route.params?.payload;
   const navigation = useNavigation<ProfileNavegationProp>();
