@@ -3,17 +3,16 @@ import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { ArticleCard } from "@/components/articleCard";
 import { Wrapper } from "@/components/wrapper";
-// import { Input } from "@/components/ui/input";
-// import { MagnifyingGlassIcon } from "phosphor-react-native";
-// import { Badge } from "@/components/ui/badge";
 import { ArticleBanner } from "@/components/articleBanner";
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getArticles";
-import { SkeletonArticleCard } from "@/components/skeletons/skeletonArticleCard";
-import { SkeletonArticleBanner } from "@/components/skeletons/skeletonArticleBanner";
 import { useFocusEffect } from "@react-navigation/native";
+import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
+// import { Input } from "@/components/ui/input";
+// import { MagnifyingGlassIcon } from "phosphor-react-native";
+// import { Badge } from "@/components/ui/badge";
 
 const PULLING_INTERVAL = 5000;
 
@@ -115,34 +114,10 @@ export function Index() {
 
   if (!articles.length || !categories.length) {
     return (
-      <Wrapper
-        direction="column"
-        align="start"
-        justify="start"
-        className="w-full flex-1 bg-base-200"
-        gap="gap-2"
-      >
-        <Header />
-        <ScrollView
-          className="w-full flex-1"
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-          }
-        >
-          <Wrapper
-            className="flex-1 px-6 py-4"
-            direction="column"
-            align="start"
-            justify="start"
-            gap="gap-3"
-          >
-            <SkeletonArticleBanner />
-            <SkeletonArticleCard />
-            <SkeletonArticleCard />
-            <SkeletonArticleCard />
-          </Wrapper>
-        </ScrollView>
-      </Wrapper>
+      <SkeletonArticleListPage
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+      />
     );
   }
 
