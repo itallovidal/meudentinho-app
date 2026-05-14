@@ -1,115 +1,27 @@
 import { ScrollView, RefreshControl } from "react-native";
 import { Header } from "@/components/header";
-import { Text } from "@/components/ui/text";
-import { ArticleCard } from "@/components/articleCard";
 import { Wrapper } from "@/components/wrapper";
-import { ArticleBanner } from "@/components/articleBanner";
-import { useMemo, useState, useRef, useCallback } from "react";
-import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
-import { getAllCategories } from "@/api/article/getAllCategories";
-import { getAllArticlePreview } from "@/api/article/getArticles";
-import { useFocusEffect } from "@react-navigation/native";
+import { useArticles } from "@/hooks/useArticles";
+import { ArticleListRender } from "@/components/articleListRender";
 import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
+// import { Text } from "@/components/ui/text";
 // import { Input } from "@/components/ui/input";
 // import { MagnifyingGlassIcon } from "phosphor-react-native";
 // import { Badge } from "@/components/ui/badge";
 
-const PULLING_INTERVAL = 5000;
-
 export function Index() {
-  const [categories, setCategories] = useState<ArticleCategory[]>([]);
-  const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const articleTimeout = useRef(0);
-  const isScreenFocused = useRef(false);
-  const dataLoaded = useRef(false);
+  const {
+    articles,
+    categories,
+    articlesByCategory,
+    latestArticle,
+    isLoading,
+    isRefreshing,
+    onRefresh,
+  } = useArticles({ withCategories: true });
+  console.log(articlesByCategory);
 
-  const articlesByCategory = useMemo(() => {
-    const map: Record<string, ArticlePreviewDTO[]> = {};
-
-    categories.forEach((cat) => {
-      map[cat.name] = [];
-    });
-
-    const [latest, ...list] = articles;
-
-    list.forEach((article) => {
-      if (map[article.categories]) {
-        map[article.categories].push(article);
-      }
-    });
-
-    return map;
-  }, [articles, categories]);
-
-  useFocusEffect(
-    useCallback(() => {
-      isScreenFocused.current = true;
-      onLoad();
-
-      return () => {
-        isScreenFocused.current = false;
-        if (articleTimeout.current) {
-          console.log("Clearing articleList timeout");
-          clearTimeout(articleTimeout.current);
-          articleTimeout.current = 0;
-        }
-      };
-    }, []),
-  );
-
-  async function onLoad() {
-    if (!isScreenFocused.current) return;
-    if (dataLoaded.current) return;
-
-    try {
-      await Promise.all([loadCategories(), loadArticles()]);
-      dataLoaded.current = true;
-    } catch (error) {
-      console.log("Erro ao carregar dados:", error);
-      if (isScreenFocused.current) {
-        const timeout = setTimeout(() => {
-          onLoad();
-        }, PULLING_INTERVAL);
-        articleTimeout.current = timeout as unknown as number;
-      }
-    }
-  }
-
-  async function onRefresh() {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([loadCategories(), loadArticles()]);
-      dataLoaded.current = true;
-    } catch (error) {
-      console.log("Erro ao recarregar dados:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }
-
-  // TODO: turn into a hook later?
-  async function loadCategories() {
-    const { data } = await getAllCategories();
-    console.log("Fetched categories");
-
-    setCategories(
-      data.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        isSelected: false,
-      })),
-    );
-  }
-
-  async function loadArticles() {
-    const { data } = await getAllArticlePreview();
-    setArticles(data);
-  }
-
-  const latestArticle = articles.at(0);
-
-  if (!articles.length || !categories.length) {
+  if (isLoading) {
     return (
       <SkeletonArticleListPage
         onRefresh={onRefresh}
@@ -172,46 +84,13 @@ export function Index() {
             ))}
           </ScrollView> */}
 
-          {latestArticle && (
-            <ArticleBanner
-              key={latestArticle.id}
-              title={latestArticle.title}
-              readingTime={latestArticle.readingTime}
-              imageSrc={latestArticle.imageCoverURL}
-              id={latestArticle.id}
-            />
-          )}
-
-          {categories.map((category) => {
-            return (
-              articlesByCategory[category.name] &&
-              articlesByCategory[category.name].length > 0 && (
-                <Wrapper
-                  key={category.id}
-                  direction="column"
-                  align="start"
-                  justify="start"
-                  gap="gap-3"
-                >
-                  <Text variant="h3" className="mt-2">
-                    {category.name}
-                  </Text>
-
-                  {articlesByCategory[category.name].length > 0 &&
-                    articlesByCategory[category.name].map((article) => (
-                      <ArticleCard
-                        key={article.id}
-                        title={article.title}
-                        categories={article.categories}
-                        readingTime={article.readingTime}
-                        imageCoverURL={article.imageCoverURL}
-                        id={article.id}
-                      />
-                    ))}
-                </Wrapper>
-              )
-            );
-          })}
+          <ArticleListRender
+            latestArticle={latestArticle}
+            articles={articles.slice(1)}
+            categories={categories}
+            articlesByCategory={articlesByCategory}
+            hasCategoryTitle={true}
+          />
         </Wrapper>
       </ScrollView>
     </Wrapper>

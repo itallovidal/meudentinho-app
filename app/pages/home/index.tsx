@@ -3,18 +3,16 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
-import { getAllArticlePreview } from "@/api/article/getArticles";
-import { ArticlePreviewDTO } from "@/types/dtos/article";
-import { ArticleBanner } from "@/components/articleBanner";
 import { Alert, ScrollView, View } from "react-native";
-import { ArticleCard } from "@/components/articleCard";
 import { Button } from "@/components/ui/button";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
 import { createKid, getAllKids } from "@/api/user/kids";
+import { useArticles } from "@/hooks/useArticles";
+import { ArticleListRender } from "@/components/articleListRender";
 
 export function Home() {
   const [isVisible, setVisible] = useState(true);
@@ -23,15 +21,9 @@ export function Home() {
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
-  const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
   const { authToken } = useContext(UserContext)!;
 
-  function handleOpenArticle(articleId: string) {
-    navigation.navigate("Articles", {
-      screen: "Article",
-      params: { id: articleId },
-    });
-  }
+  const { articles, latestArticle } = useArticles({ withCategories: false });
 
   async function loadKids() {
     const { data } = await getAllKids(authToken!);
@@ -41,11 +33,6 @@ export function Home() {
     if (data.length > 0) {
       setVisible(false);
     }
-  }
-
-  async function loadArticles() {
-    const { data } = await getAllArticlePreview();
-    setArticles(data);
   }
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
@@ -65,15 +52,13 @@ export function Home() {
       setRegisterKidError(error as ApiError);
     }
   }
+
   useFocusEffect(
     useCallback(() => {
-      loadArticles();
       console.log("Loading kids...");
       loadKids();
     }, []),
   );
-
-  const latestArticle = articles[0];
 
   return (
     <Wrapper
@@ -83,26 +68,22 @@ export function Home() {
       className="flex-1"
     >
       <Header />
-      <ScrollView className="mb-4 flex-1 w-full px-4">
+      <ScrollView className="w-full flex-1">
         <Wrapper
-          className="bg-base-200 flex-1 w-full"
+          className="mx-6 my-4 flex-1"
           direction="column"
           align="start"
           justify="start"
           gap="gap-2"
         >
           <Wrapper
-            className="flex-1 my-4 w-full"
+            className="my-4 flex-1"
             direction="column"
             align="start"
             justify="start"
             gap="gap-2"
           >
             <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
-            {/* <Text>
-              Precisamos de alguns dados básicos para começar a acompanhar o
-              desenvolvimento dentário da criança de forma personalizada.
-            </Text> */}
 
             {isVisible && (
               <View className="w-full">
@@ -126,28 +107,12 @@ export function Home() {
           <Text variant={"h4"} className="mt-4">
             Dicas e Artigos
           </Text>
-          {latestArticle && (
-            <ArticleBanner
-              key={latestArticle.id}
-              title={latestArticle.title}
-              readingTime={latestArticle.readingTime}
-              imageSrc={latestArticle.imageCoverURL}
-              id={latestArticle.id}
-              onPress={handleOpenArticle}
-            />
-          )}
 
-          {[...articles.slice(1)].map((article) => (
-            <ArticleCard
-              key={article.id}
-              title={article.title}
-              categories={article.categories}
-              readingTime={article.readingTime}
-              imageCoverURL={article.imageCoverURL}
-              id={article.id}
-              onPress={handleOpenArticle}
-            />
-          ))}
+          <ArticleListRender
+            latestArticle={latestArticle}
+            articles={articles.slice(1)}
+            hasCategoryTitle={false}
+          />
 
           <Button
             className="w-full"
