@@ -4,10 +4,9 @@ import { KidResponseDTO, KidRequestDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function getAllKids(
-  userId: string,
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO[]>> {
-  const response = await fetch(`${ENV.BASE_API_URL}/users/${userId}/kids`, {
+  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -45,7 +44,7 @@ export async function createKid(
     birthDate: new Date(kidDTO.birthDate).toISOString(),
   };
 
-  const response = await fetch(`${ENV.BASE_API_URL}/user/kids`, {
+  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
     method: "POST",
     body: JSON.stringify(payloadToSend),
     headers: {
@@ -54,8 +53,6 @@ export async function createKid(
       "Content-Type": "application/json",
     },
   });
-
-  console.log("Create awlkdja;lwkjd;ad", response);
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
 

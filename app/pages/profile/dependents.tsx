@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { getUserIdFromToken } from "@/lib/utils";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import React, { useContext, useEffect, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
 export function Dependents() {
-  const { authToken } = useContext(UserContext)!;
   const [loading, setLoading] = useState(true);
+  const { authToken } = useContext(UserContext)!;
   const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -151,15 +150,8 @@ export function Dependents() {
     </Wrapper>
   );
 
-  // TODO: improve this to append new kid in the list, avoiding to another fetch
   async function loadKids() {
-    if (!authToken) {
-      setKids([]);
-      return;
-    }
-
-    const userId = getUserIdFromToken(authToken);
-    // const { data } = await getAllKids(userId, authToken);
-    // setKids(data || []);
+    const { data } = await getAllKids(authToken!);
+    setKids(data || []);
   }
 }
