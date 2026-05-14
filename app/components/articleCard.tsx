@@ -2,15 +2,13 @@ import { Image, TouchableNativeFeedback } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { THEME } from "@/lib/theme";
+import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 
 interface ArticleCardProps extends ArticlePreviewDTO {
   className?: string;
-  onPress?: (articleId: string) => void;
 }
 
 export function ArticleCard({
@@ -19,25 +17,19 @@ export function ArticleCard({
   readingTime,
   id,
   className = "",
-  onPress,
 }: ArticleCardProps) {
-  const navigation =
-    useNavigation<
-      NativeStackNavigationProp<ArticlesStackParamList, "Article">
-    >();
+  const navigation = useNavigation<TabNavigatorNavigationProp>();
 
   const colors = THEME.light;
 
   return (
     <TouchableNativeFeedback
-      onPress={() => {
-        if (onPress) {
-          onPress(id);
-          return;
-        }
-
-        navigation.navigate("Article", { id });
-      }}
+      onPress={() =>
+        navigation.navigate("Articles", {
+          screen: "Article",
+          params: { id: id },
+        })
+      }
     >
       <Wrapper
         className={`rounded-lg border border-base-200 bg-base-100 p-3 ${className}`}

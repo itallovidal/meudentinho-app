@@ -4,9 +4,8 @@ import { ClockIcon } from "phosphor-react-native";
 import { Wrapper } from "./wrapper";
 import { Badge } from "./ui/badge";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { LinearGradient } from "expo-linear-gradient";
+import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 
 const BANNER_GRADIENT_COLORS = [
   "rgba(0, 0, 0, 0.96)",
@@ -19,7 +18,6 @@ interface ArticleBannerProps {
   title: string;
   readingTime: string;
   id: string;
-  onPress?: (articleId: string) => void;
 }
 
 export function ArticleBanner({
@@ -27,23 +25,17 @@ export function ArticleBanner({
   title,
   readingTime,
   id,
-  onPress,
 }: ArticleBannerProps) {
-  const navigation =
-    useNavigation<
-      NativeStackNavigationProp<ArticlesStackParamList, "Article">
-    >();
+  const navigation = useNavigation<TabNavigatorNavigationProp>();
 
   return (
     <TouchableNativeFeedback
-      onPress={() => {
-        if (onPress) {
-          onPress(id);
-          return;
-        }
-
-        navigation.navigate("Article", { id });
-      }}
+      onPress={() =>
+        navigation.navigate("Articles", {
+          screen: "Article",
+          params: { id: id },
+        })
+      }
     >
       <View className="mt-6 w-full overflow-hidden rounded-lg bg-base-500">
         <Image src={imageSrc} className="h-60 w-full rounded-lg" />
