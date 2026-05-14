@@ -16,3 +16,22 @@ export interface UserAuthResponseDTO {
   token: string;
   isAdmin: boolean;
 }
+
+export interface KidRequestDTO {
+  name: string;
+  birthDate: string;
+  prematureWeeks?: string;
+  gender: "male" | "female";
+}
+
+export interface KidResponseDTO {
+  id: string;
+  name: string;
+  birthDate: string;
+  prematureWeeks?: string;
+  parentId: string;
+  gender: "male" | "female";
+  isPremature: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

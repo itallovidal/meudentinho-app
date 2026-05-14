@@ -9,8 +9,8 @@ import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
 import { LoginDTO } from "@/types/dtos/user";
 
-interface Args {
-  onSubmit: (data: LoginDTO) => void | Promise<void>;
+interface LoginFormProps {
+  onSubmit: (data: Record<string, any>) => void | Promise<void>;
   submitError?: ApiError | null;
 }
 

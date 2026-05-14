@@ -2,24 +2,29 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
-import { RequestKidDTO } from "@/types/dtos/kid";
-import { useEffect, useState } from "react";
+import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { getAllArticlePreview } from "@/api/article/getArticles";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleBanner } from "@/components/articleBanner";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { ArticleCard } from "@/components/articleCard";
 import { Button } from "@/components/ui/button";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import { UserContext } from "@/contexts/UserContext";
+import { createKid, getAllKids } from "@/api/user/kids";
 
 export function Home() {
+  const [isVisible, setVisible] = useState(true);
+  const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
   const [articles, setArticles] = useState<ArticlePreviewDTO[]>([]);
+  const { authToken } = useContext(UserContext)!;
 
   function handleOpenArticle(articleId: string) {
     navigation.navigate("Articles", {
@@ -28,27 +33,45 @@ export function Home() {
     });
   }
 
-  async function loadArticles() {
-    const { data } = await getAllArticlePreview();
-    // console.log("Articles fetched:", data);
-    console.log("Fetched articles");
+  async function loadKids() {
+    const { data } = await getAllKids(authToken!);
+    setKids(data || []);
 
-    setArticles(data);
-  }
-
-  async function onRegisterKid(kidDTO: RequestKidDTO) {
-    try {
-      throw new Error("Simulated registration error", {
-        cause: kidDTO,
-      });
-    } catch (error) {
-      setRegisterKidError(error as ApiError);
+    console.log("Loaded kids:", data.length);
+    if (data.length > 0) {
+      setVisible(false);
     }
   }
 
-  useEffect(() => {
-    loadArticles();
-  }, []);
+  async function loadArticles() {
+    const { data } = await getAllArticlePreview();
+    setArticles(data);
+  }
+
+  async function onRegisterKid(kidDTO: KidRequestDTO) {
+    try {
+      if (!authToken) {
+        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      const newKid = await createKid(kidDTO, authToken);
+      console.log("New kid created:", newKid);
+
+      // TODO: create better modals
+      Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
+    } catch (error) {
+      console.error("Error creating dependent:", error);
+      setRegisterKidError(error as ApiError);
+    }
+  }
+  useFocusEffect(
+    useCallback(() => {
+      loadArticles();
+      console.log("Loading kids...");
+      loadKids();
+    }, []),
+  );
 
   const latestArticle = articles[0];
 
@@ -60,38 +83,44 @@ export function Home() {
       className="flex-1"
     >
       <Header />
-      <ScrollView className="w-full flex-1">
+      <ScrollView className="mb-4 flex-1 w-full px-4">
         <Wrapper
-          className="mx-6 my-4 flex-1"
+          className="bg-base-200 flex-1 w-full"
           direction="column"
           align="start"
           justify="start"
           gap="gap-2"
         >
           <Wrapper
-            className="my-4 flex-1"
+            className="flex-1 my-4 w-full"
             direction="column"
             align="start"
             justify="start"
             gap="gap-2"
           >
-            <Text className="font-bolder" variant={"h3"}>
-              Bem Vindo!
-            </Text>
-            <Text className="font-bold">
-              Por enquanto, não há crianças registradas.
-            </Text>
+            <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
+            {/* <Text>
+              Precisamos de alguns dados básicos para começar a acompanhar o
+              desenvolvimento dentário da criança de forma personalizada.
+            </Text> */}
 
-            <Text>
-              Registre o primeiro dependente para começar o acompanhamento!
-            </Text>
-
-            <View className="rounded-lg bg-base-100 p-4">
-              <RegisterKidForm
-                onSubmit={onRegisterKid}
-                submitError={registerKidError}
-              />
-            </View>
+            {isVisible && (
+              <View className="w-full">
+                <View className="w-full">
+                  <Text>
+                    Precisamos de alguns dados básicos para começar a acompanhar
+                    o desenvolvimento dentário da criança de forma
+                    personalizada.
+                  </Text>
+                </View>
+                <View className="w-full p-4 bg-base-100 rounded-lg">
+                  <RegisterKidForm
+                    onSubmit={onRegisterKid}
+                    submitError={registerKidError}
+                  />
+                </View>
+              </View>
+            )}
           </Wrapper>
 
           <Text variant={"h4"} className="mt-4">

@@ -104,9 +104,6 @@ export function Index() {
 
   async function loadArticles() {
     const { data } = await getAllArticlePreview();
-    // console.log("Articles fetched:", data);
-    console.log("Fetched articles");
-
     setArticles(data);
   }
 
