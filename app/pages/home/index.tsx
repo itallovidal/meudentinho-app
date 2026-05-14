@@ -2,8 +2,8 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
-import { KidRequestDTO } from "@/types/dtos/user";
-import { useContext, useEffect, useState } from "react";
+import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { getAllArticlePreview } from "@/api/article/getArticles";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
@@ -11,13 +11,14 @@ import { ArticleBanner } from "@/components/articleBanner";
 import { Alert, ScrollView, View } from "react-native";
 import { ArticleCard } from "@/components/articleCard";
 import { Button } from "@/components/ui/button";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { getUserIdFromToken } from "@/lib/utils";
-import { createKid } from "@/api/user/kids";
+import { createKid, getAllKids } from "@/api/user/kids";
 
 export function Home() {
+  const [isVisible, setVisible] = useState(true);
+  const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
@@ -30,6 +31,16 @@ export function Home() {
       screen: "Article",
       params: { id: articleId },
     });
+  }
+
+  async function loadKids() {
+    const { data } = await getAllKids(authToken!);
+    setKids(data || []);
+
+    console.log("Loaded kids:", data.length);
+    if (data.length > 0) {
+      setVisible(false);
+    }
   }
 
   async function loadArticles() {
@@ -54,41 +65,55 @@ export function Home() {
       setRegisterKidError(error as ApiError);
     }
   }
-
-  useEffect(() => {
-    loadArticles();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadArticles();
+      console.log("Loading kids...");
+      loadKids();
+    }, []),
+  );
 
   const latestArticle = articles[0];
 
   return (
     <Wrapper gap="gap-0" direction="column" className="flex-1">
       <Header />
-      <ScrollView className="mb-4 flex-1 px-4">
+      <ScrollView className="mb-4 flex-1 w-full px-4">
         <Wrapper
-          className="bg-base-200 flex-1 "
+          className="bg-base-200 flex-1 w-full"
           direction="column"
           align="start"
           justify="start"
         >
           <Wrapper
-            className="flex-1 my-4"
+            className="flex-1 my-4 w-full"
             direction="column"
             align="start"
             justify="start"
           >
             <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
-            <Text>
+            {/* <Text>
               Precisamos de alguns dados básicos para começar a acompanhar o
               desenvolvimento dentário da criança de forma personalizada.
-            </Text>
+            </Text> */}
 
-            <View className="p-4 bg-base-100 rounded-lg">
-              <RegisterKidForm
-                onSubmit={onRegisterKid}
-                submitError={registerKidError}
-              />
-            </View>
+            {isVisible && (
+              <View className="w-full">
+                <View className="w-full">
+                  <Text>
+                    Precisamos de alguns dados básicos para começar a acompanhar
+                    o desenvolvimento dentário da criança de forma
+                    personalizada.
+                  </Text>
+                </View>
+                <View className="w-full p-4 bg-base-100 rounded-lg">
+                  <RegisterKidForm
+                    onSubmit={onRegisterKid}
+                    submitError={registerKidError}
+                  />
+                </View>
+              </View>
+            )}
           </Wrapper>
 
           <Text variant={"h4"} className="mt-4">
