@@ -8,11 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Image, ScrollView, View } from "react-native";
 import { Markdown } from "react-native-remark";
 import { ClockIcon } from "phosphor-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Article as ArticleDomain } from "@/types/domain";
-import { SkeletonImage } from "@/components/skeletons/skeletonImage";
-import { SkeletonText } from "@/components/skeletons/skeletonText";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonArticlePage } from "@/skeletons/pages/skeletonArticlePage";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
 
@@ -26,6 +24,8 @@ export function Article() {
   const [isLoading, setIsLoading] = useState(false);
   const articleTimeout = useRef(0);
   const isScreenFocused = useRef(false);
+
+  const categories = article?.categories.join(", ") ?? "";
 
   useFocusEffect(
     useCallback(() => {
@@ -53,6 +53,7 @@ export function Article() {
     try {
       const { data } = await getArticleById(id);
       setArticle(data);
+      console.log("Article loaded successfully! ID:", data.id);
     } catch (error) {
       console.log("Erro ao carregar artigo:", error);
       if (isScreenFocused.current) {
@@ -68,71 +69,29 @@ export function Article() {
     }
   }
 
-  const categories = article?.categories.join(", ") ?? "";
-
   if (!article) {
     return (
-      <Wrapper
-        className="bg-base-100 flex-1"
-        direction="column"
-        align="center"
-        justify="start"
-        gap="gap-2"
-      >
-        <Header hasBackButton />
-
-        <Wrapper
-          className="bg-base-100 flex-1 mx-8"
-          direction="column"
-          align="start"
-          justify="start"
-          gap="gap-2"
-        >
-          <Wrapper
-            className="flex-1 w-full h-24 my-4"
-            direction="row"
-            align="center"
-            gap="gap-2"
-          >
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-4 w-4 rounded-full" />
-            <Skeleton className="h-4 w-24 rounded-md" />
-          </Wrapper>
-
-          <SkeletonImage size="lg" />
-          <SkeletonText variant="h1" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="large" />
-          <SkeletonText variant="default" />
-          <SkeletonText variant="h1" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="p" />
-          <SkeletonText variant="large" />
-          <SkeletonText variant="default" />
-        </Wrapper>
-      </Wrapper>
+      <SkeletonArticlePage />
     );
   }
 
   return (
     <Wrapper
-      className="bg-base-100 flex-1"
+      className="flex-1 bg-base-100"
       direction="column"
       align="start"
       justify="start"
+      gap="gap-0"
     >
       <Header hasBackButton />
 
       <ScrollView>
         <Wrapper
-          className="bg-base-100 flex-1 mx-8"
+          className="mx-8 flex-1 bg-base-100"
           direction="column"
           align="start"
           justify="start"
+          gap="gap-2"
         >
           <Wrapper direction="row" align="center" gap="gap-4">
             <Badge variant="secondary" className="">
@@ -155,7 +114,7 @@ export function Article() {
           >
             <Image
               src={article.imageCoverURL}
-              className="w-full h-56 rounded-2xl bg-base-200"
+              className="h-56 w-full rounded-2xl bg-base-200"
             />
 
             <Markdown markdown={article.content} />

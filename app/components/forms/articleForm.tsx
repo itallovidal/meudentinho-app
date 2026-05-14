@@ -11,6 +11,7 @@ import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useEffect, useState } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getArticles";
+import { ScrollView } from "react-native";
 
 interface ArticleFormProps {
   onSubmit: (data: ArticleRequestDTO) => void | Promise<void>;
@@ -100,93 +101,100 @@ export function ArticleForm({
   }
 
   return (
-    <Wrapper align="center" direction="column" className="w-full" gap={"gap-6"}>
-      <FormInput
-        control={control}
-        errors={errors}
-        name="title"
-        label="Título do Artigo"
-        inputProps={{
-          placeholder: "Digite o título do artigo",
-          autoCorrect: false,
-          className: "bg-white",
-        }}
-      />
-
-      <Text className="w-full font-bold">
-        Categorias (Selecione até {MAX_CATEGORIES})
-      </Text>
-
+    <ScrollView className="w-full flex-1">
       <Wrapper
-        direction="row"
-        align="start"
-        justify="start"
-        gap="gap-2"
-        className="w-full flex-wrap"
+        align="center"
+        direction="column"
+        className="mx-4 my-4"
+        gap={"gap-6"}
       >
-        {categories.map((category) => (
-          <Button
-            variant={category.isSelected ? "default" : "outline"}
-            key={category.id}
-            onPress={() => addCategory(category)}
-          >
-            <Text>{category.name}</Text>
-          </Button>
-        ))}
+        <FormInput
+          control={control}
+          errors={errors}
+          name="title"
+          label="Título do Artigo"
+          inputProps={{
+            placeholder: "Digite o título do artigo",
+            autoCorrect: false,
+            className: "bg-white",
+          }}
+        />
+
+        <Text className="w-full font-bold">
+          Categorias (Selecione até {MAX_CATEGORIES})
+        </Text>
+
+        <Wrapper
+          direction="row"
+          align="start"
+          justify="start"
+          gap="gap-2"
+          className="w-full flex-wrap"
+        >
+          {categories.map((category) => (
+            <Button
+              variant={category.isSelected ? "default" : "outline"}
+              key={category.id}
+              onPress={() => addCategory(category)}
+            >
+              <Text>{category.name}</Text>
+            </Button>
+          ))}
+        </Wrapper>
+
+        <FormInput
+          control={control}
+          errors={errors}
+          name="summary"
+          label="Resumo do Artigo"
+          inputProps={{
+            placeholder: "Digite o resumo do artigo",
+            keyboardType: "default",
+            autoCapitalize: "sentences",
+            autoCorrect: true,
+            className: "bg-white",
+          }}
+        />
+
+        <FormInput
+          control={control}
+          errors={errors}
+          name="imageCoverURL"
+          label="URL da Imagem de Capa"
+          inputProps={{
+            placeholder: "Digite a URL da imagem de capa",
+            autoCapitalize: "none",
+            autoCorrect: false,
+            className: "bg-white",
+          }}
+        />
+
+        <FormInput
+          control={control}
+          errors={errors}
+          name="content"
+          label="Conteúdo do Artigo"
+          inputProps={{
+            placeholder: "Digite o conteúdo do artigo",
+            multiline: true,
+            autoCapitalize: "none",
+            autoCorrect: false,
+            className: "bg-white h-[200px]",
+          }}
+        />
+
+        {submitError && (
+          <Text className="text-red-600">{submitError.message}</Text>
+        )}
+
+        <Button
+          onPress={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+          className="mb-4 w-full"
+        >
+          <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
+        </Button>
       </Wrapper>
-
-      <FormInput
-        control={control}
-        errors={errors}
-        name="summary"
-        label="Resumo do Artigo"
-        inputProps={{
-          placeholder: "Digite o resumo do artigo",
-          keyboardType: "default",
-          autoCapitalize: "sentences",
-          autoCorrect: true,
-          className: "bg-white",
-        }}
-      />
-
-      <FormInput
-        control={control}
-        errors={errors}
-        name="imageCoverURL"
-        label="URL da Imagem de Capa"
-        inputProps={{
-          placeholder: "Digite a URL da imagem de capa",
-          autoCapitalize: "none",
-          autoCorrect: false,
-          className: "bg-white",
-        }}
-      />
-
-      <FormInput
-        control={control}
-        errors={errors}
-        name="content"
-        label="Conteúdo do Artigo"
-        inputProps={{
-          placeholder: "Digite o conteúdo do artigo",
-          multiline: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-          className: "bg-white h-[200px]",
-        }}
-      />
-
-      {submitError && (
-        <Text className="text-red-600">{submitError.message}</Text>
-      )}
-
-      <Button
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-        className="w-full mb-4"
-      >
-        <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
-      </Button>
-    </Wrapper>
+    </ScrollView>
   );
 }

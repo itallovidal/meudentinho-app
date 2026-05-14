@@ -36,7 +36,7 @@ export const Wrapper = forwardRef<View, Args>(function Wrapper(
     direction = "row",
     align = "start",
     justify = "start",
-    gap = "gap-2",
+    gap = "gap-0",
     style,
     ...rest
   },

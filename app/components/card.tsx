@@ -68,11 +68,12 @@ export function Card({
   isDisabled = false,
 }: CardProps) {
   const hasLowOpacity = isDisabled ? "opacity-50" : "";
+  const onPress = isDisabled ? undefined : handlePress;
 
   const classes = cn(cardVariants({ variant }), className, hasLowOpacity);
 
   return (
-    <TouchableOpacity onPress={handlePress} className={classes}>
+    <TouchableOpacity onPress={onPress} className={classes}>
       <Wrapper
         className={iconVariants({ variant })}
         align="center"

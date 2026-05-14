@@ -3,17 +3,16 @@ import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { ArticleCard } from "@/components/articleCard";
 import { Wrapper } from "@/components/wrapper";
-// import { Input } from "@/components/ui/input";
-// import { MagnifyingGlassIcon } from "phosphor-react-native";
-// import { Badge } from "@/components/ui/badge";
 import { ArticleBanner } from "@/components/articleBanner";
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getArticles";
-import { SkeletonArticleCard } from "@/components/skeletons/skeletonArticleCard";
-import { SkeletonArticleBanner } from "@/components/skeletons/skeletonArticleBanner";
 import { useFocusEffect } from "@react-navigation/native";
+import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
+// import { Input } from "@/components/ui/input";
+// import { MagnifyingGlassIcon } from "phosphor-react-native";
+// import { Badge } from "@/components/ui/badge";
 
 const PULLING_INTERVAL = 5000;
 
@@ -23,6 +22,7 @@ export function Index() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const articleTimeout = useRef(0);
   const isScreenFocused = useRef(false);
+  const dataLoaded = useRef(false);
 
   const articlesByCategory = useMemo(() => {
     const map: Record<string, ArticlePreviewDTO[]> = {};
@@ -60,9 +60,11 @@ export function Index() {
 
   async function onLoad() {
     if (!isScreenFocused.current) return;
+    if (dataLoaded.current) return;
 
     try {
       await Promise.all([loadCategories(), loadArticles()]);
+      dataLoaded.current = true;
     } catch (error) {
       console.log("Erro ao carregar dados:", error);
       if (isScreenFocused.current) {
@@ -78,6 +80,7 @@ export function Index() {
     setIsRefreshing(true);
     try {
       await Promise.all([loadCategories(), loadArticles()]);
+      dataLoaded.current = true;
     } catch (error) {
       console.log("Erro ao recarregar dados:", error);
     } finally {
@@ -88,6 +91,7 @@ export function Index() {
   // TODO: turn into a hook later?
   async function loadCategories() {
     const { data } = await getAllCategories();
+    console.log("Fetched categories");
 
     setCategories(
       data.map((cat) => ({
@@ -107,34 +111,10 @@ export function Index() {
 
   if (!articles.length || !categories.length) {
     return (
-      <Wrapper
-        direction="column"
-        align="start"
-        justify="start"
-        className="bg-base-100 flex-1 w-full"
-        gap="gap-2"
-      >
-        <Header />
-        <ScrollView
-          className="flex-1 w-full"
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-          }
-        >
-          <Wrapper
-            className="flex-1 px-6 py-4 bg-base-200"
-            direction="column"
-            align="start"
-            justify="start"
-            gap="gap-3"
-          >
-            <SkeletonArticleBanner />
-            <SkeletonArticleCard />
-            <SkeletonArticleCard />
-            <SkeletonArticleCard />
-          </Wrapper>
-        </ScrollView>
-      </Wrapper>
+      <SkeletonArticleListPage
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+      />
     );
   }
 
@@ -143,17 +123,17 @@ export function Index() {
       direction="column"
       align="start"
       justify="start"
-      className="bg-base-100 flex-1 w-full"
+      className="flex-1"
     >
       <Header />
       <ScrollView
-        className="flex-1 w-full"
+        className="w-full flex-1"
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
         <Wrapper
-          className="flex-1 px-6 py-4 bg-base-200 "
+          className="mx-6 my-4 flex-1"
           direction="column"
           align="start"
           justify="start"
@@ -205,7 +185,7 @@ export function Index() {
           {categories.map((category) => {
             return (
               articlesByCategory[category.name] &&
-              articlesByCategory[category.name].length && (
+              articlesByCategory[category.name].length > 0 && (
                 <Wrapper
                   key={category.id}
                   direction="column"

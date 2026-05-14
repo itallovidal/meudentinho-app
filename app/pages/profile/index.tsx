@@ -21,7 +21,7 @@ import { UserContext } from "@/contexts/UserContext";
 import { ENV } from "@/lib/env";
 import { THEME } from "@/lib/theme";
 
-export function Profile() {
+export function Index() {
   const route = useRoute<ProfileRouteProp>();
   const payload = route.params?.payload;
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -107,14 +107,14 @@ export function Profile() {
 
   return (
     <Wrapper
-      className="bg-base-200 flex-1"
+      className="flex-1 bg-base-200"
       direction="column"
       align="center"
       justify="start"
       gap="gap-0"
     >
       <Header />
-      <ScrollView className="px-4 py-2 w-full bg-base-200">
+      <ScrollView className="w-full bg-base-200 px-4 py-2">
         {profileOptions.map((data, index) => (
           <Card
             className="mb-4"
@@ -135,8 +135,8 @@ export function Profile() {
           align="center"
           justify="center"
         >
-          <Text className="text-sm text-muted mb-0">v{ENV.APP_VERSION}</Text>
-          <Text className="text-sm text-muted mb-4 mt-0">
+          <Text className="mb-0 text-sm text-muted">v{ENV.APP_VERSION}</Text>
+          <Text className="mb-4 mt-0 text-sm text-muted">
             &copy; 2026 MeuDentinho
           </Text>
         </Wrapper>

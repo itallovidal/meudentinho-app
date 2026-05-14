@@ -8,8 +8,6 @@ import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { THEME } from "@/lib/theme";
 
-const MAX_TITLE_LENGTH = 45;
-
 interface ArticleCardProps extends ArticlePreviewDTO {
   className?: string;
   onPress?: (articleId: string) => void;
@@ -28,12 +26,7 @@ export function ArticleCard({
       NativeStackNavigationProp<ArticlesStackParamList, "Article">
     >();
 
-  const formatedTitle =
-    title.length > MAX_TITLE_LENGTH
-      ? title.slice(0, MAX_TITLE_LENGTH - 3) + "..."
-      : title;
-
-    const colors = THEME.light;
+  const colors = THEME.light;
 
   return (
     <TouchableNativeFeedback
@@ -47,18 +40,20 @@ export function ArticleCard({
       }}
     >
       <Wrapper
-        className={`bg-base-100 rounded-lg p-3 border border-base-200 ${className}`}
+        className={`rounded-lg border border-base-200 bg-base-100 p-3 ${className}`}
         direction="row"
         align="center"
         justify="start"
         gap="gap-3"
       >
         <Image
-          className="w-24 h-24 rounded-lg bg-base-200"
+          className="h-24 w-24 rounded-lg bg-base-200"
           source={{ uri: imageCoverURL }}
         />
         <Wrapper className="flex-1" direction="column" justify="between">
-          <Text className="font-bold">{formatedTitle}</Text>
+          <Text className="mb-3 font-bold" numberOfLines={2}>
+            {title}
+          </Text>
           <Wrapper direction="row" align="center" justify="start" gap="gap-1">
             <ClockIcon size={12} weight="regular" color={colors.base500} />
             <Text variant="small" className="text-base-400">

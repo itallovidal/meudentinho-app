@@ -1,18 +1,18 @@
-import { Skeleton } from "../ui/skeleton";
-import { Wrapper } from "../wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Wrapper } from "@/components/wrapper";
 
 export function SkeletonImage({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   return (
     <Wrapper
       className={`overflow-hidden rounded-lg ${
         size === "sm"
-          ? "w-16 h-16"
+          ? "h-16 w-16"
           : size === "md"
-            ? "w-32 h-32"
-            : "w-full h-48"
+            ? "h-32 w-32"
+            : "h-48 w-full"
       }`}
     >
-      <Skeleton className="w-full h-full" />
+      <Skeleton className="h-full w-full" />
     </Wrapper>
   );
 }

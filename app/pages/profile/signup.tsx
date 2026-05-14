@@ -44,7 +44,7 @@ export function Signup() {
 
       navigation.reset({
         index: 0,
-        routes: [{ name: "Profile", params: { payload: basicUser } }],
+        routes: [{ name: "Index", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
       console.log("Signup error:", err);
@@ -74,7 +74,7 @@ export function Signup() {
         justify="center"
       >
         <Wrapper
-          className="px-4 py-4 w-full h-[85vh] bg-base-100"
+          className="h-[85vh] w-full bg-base-100 px-4 py-4"
           direction="column"
           justify="center"
           gap={"gap-4"}
@@ -108,14 +108,14 @@ export function Signup() {
             </Card>
           </Wrapper>
 
-          <Button onPress={goToForm} className="w-full my-4">
+          <Button onPress={goToForm} className="my-4 w-full">
             <Text>Vamos lá!</Text>
           </Button>
         </Wrapper>
 
         <Wrapper
           ref={formRef}
-          className="px-4 w-full bg-base-100"
+          className="w-full bg-base-100 px-4"
           direction="column"
           align="center"
           justify="center"

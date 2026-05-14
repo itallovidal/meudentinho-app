@@ -76,7 +76,12 @@ export function Home() {
   const latestArticle = articles[0];
 
   return (
-    <Wrapper gap="gap-0" direction="column" className="flex-1">
+    <Wrapper
+      direction="column"
+      align="start"
+      justify="start"
+      className="flex-1"
+    >
       <Header />
       <ScrollView className="mb-4 flex-1 w-full px-4">
         <Wrapper
@@ -84,12 +89,14 @@ export function Home() {
           direction="column"
           align="start"
           justify="start"
+          gap="gap-2"
         >
           <Wrapper
             className="flex-1 my-4 w-full"
             direction="column"
             align="start"
             justify="start"
+            gap="gap-2"
           >
             <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
             {/* <Text>
