@@ -16,7 +16,6 @@ export type ProfileRouteParams = {
   Signup: undefined;
   Index: { payload: BasicUser };
   AdminPage: undefined;
-  Profile: { payload: BasicUser };
   Responsible: undefined;
   Dependents: undefined;
 };

@@ -11,7 +11,7 @@ import {
   UserIcon,
 } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
-import { NavigatorScreenParams, RouteProp } from "@react-navigation/native";
+import { NavigatorScreenParams } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const colors = THEME.light;
@@ -29,8 +29,6 @@ export type TabNavigatorNavigationProp = BottomTabNavigationProp<
   TabNavigatorRouteParams,
   "Home"
 >;
-
-export type TabNavigatorRouteProp = RouteProp<TabNavigatorRouteParams, "Home">;
 
 export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   initialRouteName: "Home",
