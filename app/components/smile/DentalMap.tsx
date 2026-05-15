@@ -15,10 +15,17 @@ import {
   registerToothEvent,
 } from "@/api/smile";
 import { ToothEvent } from "@/types/teeth";
+import DentalTipCard from "./DentalTipCard";
 import RecentEventsList from "./RecentEventsList";
 import PredictionsCard from "./PredictionsCard";
 import TeethExchangeCard from "./TeethExchangeCard";
 import ToothEventModal from "./ToothEventModal";
+import {
+  ToothIcon,
+  EyeSlashIcon,
+  SmileyIcon,
+} from "phosphor-react-native";
+import { THEME } from "@/lib/theme";
 
 // IDs dos 5 dentes superiores e inferiores exibidos por lado
 const UPPER_TEETH_IDS = [
@@ -72,49 +79,46 @@ export function DentalMap() {
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // useEffect(() => {
-  //   if (userCtx?.user) {
-  //     // choose first kid if any (mocked later)
-  //     setSelectedKidId(userCtx.user?.kids?.[0]?.id || null);
-  //   }
-  // }, [userCtx?.user]);
+  useEffect(() => {
+    if (userCtx?.user) {
+      // choose first kid if any (mocked later)
+      setSelectedKidId(userCtx.user?.kids?.[0]?.id || null);
+    }
+  }, [userCtx?.user]);
 
-  // useEffect(() => {
-  //   if (!selectedKidId) return;
-  //   (async () => {
-  //     const ev = await getToothEvents(selectedKidId);
-  //     const pr = await getToothPredictions(selectedKidId);
-  //     const st = await getTeethExchangeStats(selectedKidId);
-  //     setEvents(ev);
-  //     setPredictions(pr as any);
-  //     setStats(st as any);
-  //   })();
-  // }, [selectedKidId]);
+  useEffect(() => {
+    if (!selectedKidId) return;
+    (async () => {
+      const ev = await getToothEvents(selectedKidId);
+      const pr = await getToothPredictions(selectedKidId);
+      const st = await getTeethExchangeStats(selectedKidId);
+      setEvents(ev);
+      setPredictions(pr as any);
+      setStats(st as any);
+    })();
+  }, [selectedKidId]);
 
-  // const onToothPress = useCallback((toothId: string) => {
-  //   setSelectedTooth(toothId);
-  //   setModalVisible(true);
-  // }, []);
+  const onToothPress = useCallback((toothId: string) => {
+    setSelectedTooth(toothId);
+    setModalVisible(true);
+  }, []);
 
-  // const handleRegister = async (payload: Omit<ToothEvent, "id">) => {
-  //   if (!selectedKidId) return;
-  //   await registerToothEvent(selectedKidId, payload);
-  //   setModalVisible(false);
-  //   const ev = await getToothEvents(selectedKidId);
-  //   setEvents(ev);
-  // };
+  const handleRegister = async (payload: Omit<ToothEvent, "id">) => {
+    if (!selectedKidId) return;
+    await registerToothEvent(selectedKidId, payload);
+    setModalVisible(false);
+    const ev = await getToothEvents(selectedKidId);
+    setEvents(ev);
+  };
 
-  console.log("Selected kid ID:", selectedKidId);
-  console.log("Tooth events:", events);
-  console.log("Predictions:", predictions);
-  console.log("Teeth exchange stats:", stats);
-  console.log("Selected tooth:", TOOTH_IDS);
-
+  const colors = THEME.light;
   const carouselWidth = screenWidth - 32; // desconta o padding p-4 de cada lado
+
+  const kidName = userCtx?.user?.kids?.[0]?.name;
 
   return (
     <Wrapper direction="column">
-      <Wrapper direction="column" className="p-4">
+      <Wrapper direction="column" align="center" className="mx-6 my-4" gap="gap-4">
         <Card title="Mapa do Sorriso">
           <Carousel
             width={carouselWidth}
@@ -130,23 +134,8 @@ export function DentalMap() {
               showLength: 2,
             }}
             renderItem={({ item }: { item: SideSlide }) => (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingHorizontal: 8,
-                }}
-              >
-                {/* Arcada superior */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginBottom: 8,
-                  }}
-                >
+              <View className="flex-1 items-center justify-center px-2">
+                <View className="flex-row justify-center gap-1.5 mb-2">
                   {item.upper.map((id) => {
                     const path = TOOTH_PATHS[id];
                     if (!path) return null;
@@ -169,15 +158,7 @@ export function DentalMap() {
                   })}
                 </View>
 
-                {/* Arcada inferior */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginBottom: 8,
-                  }}
-                >
+                <View className="flex-row justify-center gap-1.5 mb-2">
                   {item.lower.map((id) => {
                     const path = TOOTH_PATHS[id];
                     if (!path) return null;
@@ -209,36 +190,52 @@ export function DentalMap() {
             justify="center"
             align="center"
             className="mt-4 w-full"
-            direction="column"
+            direction="row"
+            gap="gap-4"
           >
-            <Text>3 Ausentes</Text>
-            <Text>15 Permanentes</Text>
-            <Text>2 Dentes de leite</Text>
+            <Wrapper direction="row" align="center" gap="gap-1">
+              <EyeSlashIcon size={16} color={colors.base500} weight="bold" />
+              <Text className="text-xs text-base-500 font-medium">
+                3 Ausentes
+              </Text>
+            </Wrapper>
+            <Wrapper direction="row" align="center" gap="gap-1">
+              <ToothIcon size={16} color={colors.primary400} weight="fill" />
+              <Text className="text-xs text-primary-400 font-medium">
+                15 Permanentes
+              </Text>
+            </Wrapper>
+            <Wrapper direction="row" align="center" gap="gap-1">
+              <SmileyIcon size={16} color={colors.tertiary300} weight="bold" />
+              <Text className="text-xs text-tertiary-300 font-medium">
+                2 De leite
+              </Text>
+            </Wrapper>
           </Wrapper>
         </Card>
 
-        {/* <Wrapper className="mt-4">
-          <PredictionsCard items={predictions} />
-        </Wrapper> */}
+        <DentalTipCard
+          title="Molar dos 6 anos"
+          description="Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!"
+        />
 
-        {/* <Wrapper className="mt-4">
-          <RecentEventsList items={events} />
-        </Wrapper> */}
+        <RecentEventsList items={events} />
 
-        {/* <Wrapper className="mt-4">
-          <TeethExchangeCard
-            total={stats.totalMilkTeeth}
-            exchanged={stats.exchanged}
-          />
-        </Wrapper> */}
+        <PredictionsCard items={predictions} />
+
+        <TeethExchangeCard
+          total={stats.totalMilkTeeth}
+          exchanged={stats.exchanged}
+          kidName={kidName}
+        />
       </Wrapper>
 
-      {/* <ToothEventModal
+      <ToothEventModal
         visible={modalVisible}
         toothId={selectedTooth}
         onClose={() => setModalVisible(false)}
         onSubmit={handleRegister}
-      /> */}
+      />
     </Wrapper>
   );
 }

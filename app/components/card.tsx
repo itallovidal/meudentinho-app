@@ -92,7 +92,7 @@ export function Card({
         <Text variant={"h4"} className={textVariants({ variant })}>
           {title}
         </Text>
-        {children}
+        <Text>{children}</Text>
       </Wrapper>
     </TouchableOpacity>
   );

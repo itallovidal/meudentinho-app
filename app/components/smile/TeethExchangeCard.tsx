@@ -1,40 +1,47 @@
 import React from "react";
-import { Card } from "@/components/card";
-import { Text } from "@/components/ui/text";
 import { View } from "react-native";
-import { Wrapper } from "../wrapper";
+import { Text } from "@/components/ui/text";
+import { Wrapper } from "@/components/wrapper";
+import { Progress } from "@/components/ui/progress";
 
 export default function TeethExchangeCard({
   total,
   exchanged,
+  kidName,
 }: {
   total: number;
   exchanged: number;
+  kidName?: string;
 }) {
-  const percent = Math.round((exchanged / total) * 100);
+  const percent = total > 0 ? Math.round((exchanged / total) * 100) : 0;
+  const name = kidName || "Seu filho(a)";
+
   return (
-    <Card icon={<Text>🔁</Text>} title="Troca de Dentes">
-      <Text>{`Já trocou ${exchanged} de ${total} dentes de leite.`}</Text>
-      <View
-        style={{
-          height: 12,
-          backgroundColor: "#eee",
-          borderRadius: 6,
-          marginTop: 8,
-        }}
-      >
-        <View
-          style={{
-            width: `${percent}%`,
-            height: "100%",
-            backgroundColor: "#0b1b2b",
-            borderRadius: 6,
-          }}
-        />
-      </View>
-      <Wrapper className="mt-2">
-        <Text>{percent}% CONCLUÍDO</Text>
+    <Wrapper
+      direction="column"
+      align="center"
+      justify="start"
+      className="rounded-2xl bg-base-200 px-5 py-6"
+    >
+      <Text variant="h4" className="text-center text-primary-800">
+        Troca de Dentes
+      </Text>
+
+      <Text className="mt-2 text-center text-sm text-base-500">
+        {`${name} já trocou ${exchanged} de ${total} dentes de leite.`}
+      </Text>
+
+      <Progress
+        value={40}
+        className="mt-4 h-2 w-52 bg-base-200"
+        indicatorClassName="bg-primary-500"
+      />
+
+      <Wrapper className="mt-2" justify="center">
+        <Text className="text-xs font-bold tracking-wide text-primary-500">
+          {percent}% CONCLUÍDO
+        </Text>
       </Wrapper>
-    </Card>
+    </Wrapper>
   );
 }
