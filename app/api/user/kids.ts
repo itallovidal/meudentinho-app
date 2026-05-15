@@ -16,7 +16,7 @@ export async function getAllKids(
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;
 
-  console.log("Get kids response payload:", payload);
+  console.log("Get kids response payload:");
 
   if (payload.status !== 200 && isApiError(payload.error)) {
     console.log("Get kids failed with error:", payload.error);
@@ -38,6 +38,7 @@ export async function createKid(
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO>> {
   console.log("Creating kid with data:", kidDTO);
+  console.log("TOKEN:", token);
 
   const payloadToSend: KidRequestDTO = {
     ...kidDTO,

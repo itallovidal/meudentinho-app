@@ -8,6 +8,8 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 enableScreens();
 
 const Navigation = createStaticNavigation(TabNavigator);
@@ -17,17 +19,19 @@ export default function App() {
   const colors = THEME.light;
 
   return (
-    <SafeAreaProvider>
-      <IconContext.Provider
-        value={{ color: colors.base600, size: 24, weight: "fill" }}
-      >
-        <UserProvider>
-          <SafeAreaView className="flex-1 bg-base-100">
-            <Navigation />
-          </SafeAreaView>
-        </UserProvider>
-      </IconContext.Provider>
-      <PortalHost />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <IconContext.Provider
+          value={{ color: colors.base600, size: 24, weight: "fill" }}
+        >
+          <UserProvider>
+            <SafeAreaView className="flex-1 bg-base-100">
+              <Navigation />
+            </SafeAreaView>
+          </UserProvider>
+        </IconContext.Provider>
+        <PortalHost />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

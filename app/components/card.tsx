@@ -49,7 +49,7 @@ const iconVariants = cva("rounded-lg p-2", {
 
 type CardProps = VariantProps<typeof cardVariants> &
   React.ComponentPropsWithoutRef<typeof TouchableNativeFeedback> & {
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     title: string;
     children: React.ReactNode;
     className?: string;
@@ -74,13 +74,15 @@ export function Card({
 
   return (
     <TouchableOpacity onPress={onPress} className={classes}>
-      <Wrapper
-        className={iconVariants({ variant })}
-        align="center"
-        justify="center"
-      >
-        {icon}
-      </Wrapper>
+      {icon && (
+        <Wrapper
+          className={iconVariants({ variant })}
+          align="center"
+          justify="center"
+        >
+          {icon}
+        </Wrapper>
+      )}
       <Wrapper
         className="flex-1"
         direction="column"
@@ -90,7 +92,7 @@ export function Card({
         <Text variant={"h4"} className={textVariants({ variant })}>
           {title}
         </Text>
-        <Text>{children}</Text>
+        {children}
       </Wrapper>
     </TouchableOpacity>
   );

@@ -57,7 +57,7 @@ export function Home() {
     useCallback(() => {
       console.log("Loading kids...");
       loadKids();
-    }, []),
+    }, [authToken]),
   );
 
   return (
@@ -94,7 +94,7 @@ export function Home() {
                     personalizada.
                   </Text>
                 </View>
-                <View className="w-full p-4 bg-base-100 rounded-lg">
+                <View className="w-full rounded-lg bg-base-100 p-4">
                   <RegisterKidForm
                     onSubmit={onRegisterKid}
                     submitError={registerKidError}
