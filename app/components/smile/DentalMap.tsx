@@ -134,7 +134,7 @@ export function DentalMap() {
               showLength: 2,
             }}
             renderItem={({ item }: { item: SideSlide }) => (
-              <View className="flex-1 items-center justify-center px-2">
+              <View className="flex-1 items-center justify-center px-2 bg-base-100">
                 <View className="flex-row justify-center gap-1.5 mb-2">
                   {item.upper.map((id) => {
                     const path = TOOTH_PATHS[id];
@@ -165,8 +165,8 @@ export function DentalMap() {
                     return (
                       <TouchableOpacity
                         key={`${item.side}-lower-${id}`}
-                        // onPress={() => onToothPress(id)}
-                        onPress={() => console.log(id)}
+                        onPress={() => onToothPress(id)}
+                        // onPress={() => console.log(id)}
                       >
                         <ToothSVG
                           viewBox={path.viewBox}

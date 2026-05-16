@@ -1,5 +1,4 @@
 import React from "react";
-import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Progress } from "@/components/ui/progress";
@@ -21,7 +20,7 @@ export default function TeethExchangeCard({
       direction="column"
       align="center"
       justify="start"
-      className="rounded-2xl bg-base-200 px-5 py-6"
+      className="flex-1 w-full rounded-2xl bg-base-200 px-11 py-6"
     >
       <Text variant="h4" className="text-center text-primary-800">
         Troca de Dentes
@@ -32,7 +31,7 @@ export default function TeethExchangeCard({
       </Text>
 
       <Progress
-        value={40}
+        value={percent}
         className="mt-4 h-2 w-52 bg-base-200"
         indicatorClassName="bg-primary-500"
       />
