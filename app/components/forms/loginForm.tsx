@@ -7,10 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
-import { LoginDTO } from "@/types/dtos/user";
+import { LoginRequest } from "@/types/dtos/user";
 
 interface LoginFormProps {
-  onSubmit: (data: LoginDTO) => void | Promise<void>;
+  onSubmit: (data: LoginRequest) => void | Promise<void>;
   submitError?: ApiError | null;
 }
 
@@ -19,7 +19,7 @@ export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginDTO>({
+  } = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",

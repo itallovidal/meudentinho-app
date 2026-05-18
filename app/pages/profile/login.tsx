@@ -7,7 +7,7 @@ import { loginUser } from "@/api/user/loginUser";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { LoginDTO } from "@/types/dtos/user";
+import { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 
 export function Login() {
@@ -26,15 +26,15 @@ export function Login() {
     }, [user]),
   );
 
-  async function onLogin(loginDTO: LoginDTO) {
+  async function onLogin(LoginRequest: LoginRequest) {
     try {
-      const { data } = await loginUser(loginDTO);
+      const { data } = await loginUser(LoginRequest);
 
       console.log("Login successful, user data:", data);
 
       const basicUser = {
         name: data.name,
-        email: loginDTO.email,
+        email: LoginRequest.email,
         isAdmin: data.isAdmin,
       };
 

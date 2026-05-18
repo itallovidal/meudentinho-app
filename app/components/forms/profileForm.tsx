@@ -6,13 +6,13 @@ import { signupSchema } from "@/lib/schemas/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
-import { SignupDTO } from "@/types/dtos/user";
+import { SignupRequest } from "@/types/dtos/user";
 import { ApiError } from "@/types/domain";
 
 interface ProfileFormProps {
-  onSubmit: (data: SignupDTO) => void | Promise<void>;
+  onSubmit: (data: SignupRequest) => void | Promise<void>;
   submitError?: ApiError | null;
-  defaultValues?: Partial<SignupDTO>;
+  defaultValues?: Partial<SignupRequest>;
   submitLabel?: string;
   submittingLabel?: string;
 }
@@ -28,7 +28,7 @@ export function ProfileForm({
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignupDTO>({
+  } = useForm<SignupRequest>({
     resolver: zodResolver(signupSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",

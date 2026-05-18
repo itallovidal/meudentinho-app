@@ -1,14 +1,14 @@
 import { ENV } from "@/lib/env";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { LoginDTO, UserAuthResponseDTO } from "@/types/dtos/user";
+import { LoginRequest, UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function loginUser(
-  loginDTO: LoginDTO,
+  request: LoginRequest,
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/auth/login`, {
     method: "POST",
-    body: JSON.stringify(loginDTO),
+    body: JSON.stringify(request),
   });
 
   const payload =

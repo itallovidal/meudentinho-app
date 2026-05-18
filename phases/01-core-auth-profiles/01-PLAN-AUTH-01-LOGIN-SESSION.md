@@ -24,12 +24,12 @@ Tasks
 <read_first>
 - `app/api/user/signupUser.ts` — existing API wrapper
 - `app/pages/profile/signup.tsx` — signup screen
-- `app/types/dtos/user.ts` — SignupDTO definition
+- `app/types/dtos/user.ts` — SignupRequest definition
 </read_first>
 
 <action>
 - Add client-side validation using `zod` via existing schema patterns in `app/lib/schemas`.
-- Ensure `signupUser` POSTs to `${ENV.BASE_API_URL}/auth/signup` with `SignupDTO` payload.
+- Ensure `signupUser` POSTs to `${ENV.BASE_API_URL}/auth/signup` with `SignupRequest` payload.
 - On successful signup, call `updateAppUser(basicUser, data.token)` (see `app/pages/profile/signup.tsx`) to store user and token in `UserContext`.
 </action>
 
