@@ -1,20 +1,20 @@
+import { useContext, useState, useEffect } from "react";
+import { ApiError } from "@/types/domain";
+import { Alert, ScrollView, View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { useNavigation } from "@react-navigation/native";
+import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import { UserContext } from "@/contexts/UserContext";
+import { createKid, getAllKids } from "@/api/user/kids";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArticleListSection } from "@/components/article/articleListSection";
+import { RefreshControl } from "react-native-gesture-handler";
+import { useArticles } from "@/hooks/useArticles";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { KidRequestDTO } from "@/types/dtos/user";
-import { useCallback, useContext, useState, useEffect } from "react";
-import { ApiError } from "@/types/domain";
-import { Alert, ScrollView, View } from "react-native";
-import { Button } from "@/components/ui/button";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
-import { UserContext } from "@/contexts/UserContext";
-import { createKid, getAllKids } from "@/api/user/kids";
-import { useQuery } from "@tanstack/react-query";
-import { ArticleListSection } from "@/components/article/articleListSection";
-import { RefreshControl } from "react-native-gesture-handler";
-import { useArticles } from "@/hooks/useArticles";
 
 export function Home() {
   const [isVisible, setVisible] = useState(true);
@@ -23,13 +23,24 @@ export function Home() {
     null,
   );
   const { authToken } = useContext(UserContext)!;
+  const queryClient = useQueryClient();
 
-  const { isRefreshing, onRefresh } = useArticles({ withCategories: false });
+  const {
+    isRefreshing,
+    onRefresh,
+    articles,
+    latestArticle,
+    categories,
+    articlesByCategory,
+    isLoading,
+  } = useArticles({ withCategories: false });
 
-  const { data: kidsResponse, refetch } = useQuery({
+  const { data: kidsResponse } = useQuery({
     queryKey: ["kids", authToken],
     queryFn: () => getAllKids(authToken!),
     enabled: !!authToken,
+    staleTime: 1000 * 60 * 5,
+    refetchOnMount: false,
   });
 
   const kids = kidsResponse?.data || [];
@@ -47,27 +58,16 @@ export function Home() {
         return;
       }
 
-      const newKid = await createKid(kidDTO, authToken);
-      console.log("New kid created:", newKid);
+      await createKid(kidDTO, authToken);
 
-      // Refetch kids using React Query
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["kids", authToken] });
 
-      // TODO: create better modals
       Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
     } catch (error) {
       console.error("Error creating dependent:", error);
       setRegisterKidError(error as ApiError);
     }
   }
-
-  useFocusEffect(
-    useCallback(() => {
-      if (authToken) {
-        refetch();
-      }
-    }, [authToken, refetch]),
-  );
 
   return (
     <Wrapper
@@ -122,7 +122,13 @@ export function Home() {
             Dicas e Artigos
           </Text>
 
-          <ArticleListSection />
+          <ArticleListSection
+            articles={articles}
+            latestArticle={latestArticle}
+            categories={categories}
+            articlesByCategory={articlesByCategory}
+            isLoading={isLoading}
+          />
 
           <Button
             className="w-full"

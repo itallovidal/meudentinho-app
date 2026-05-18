@@ -3,17 +3,17 @@ import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
 import { ArticleListSection } from "@/components/article/articleListSection";
-// import { Text } from "@/components/ui/text";
-// import { Input } from "@/components/ui/input";
-// import { MagnifyingGlassIcon } from "phosphor-react-native";
-// import { Badge } from "@/components/ui/badge";
 
 export function Index() {
   const {
     isRefreshing,
     onRefresh,
+    articles,
+    latestArticle,
+    categories,
+    articlesByCategory,
+    isLoading,
   } = useArticles({ withCategories: true });
-
 
   return (
     <Wrapper
@@ -36,40 +36,14 @@ export function Index() {
           justify="start"
           gap="gap-2"
         >
-          {/* <Wrapper
-            className="flex-1 relative w-full"
-            direction="row"
-            align="center"
-          >
-            <Input
-              placeholder="Buscar artigos e guias"
-              className="bg-base-100 rounded-lg"
-            />
-            <MagnifyingGlassIcon
-              size={16}
-              color="gray"
-              weight="regular"
-              style={{ position: "absolute", right: 16 }}
-            />
-          </Wrapper>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-4 -mx-6 px-6"
-          >
-            {categories.map((cat) => (
-              <Badge
-                key={cat.id}
-                className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg mr-2"
-                variant={"outline"}
-              >
-                <Text className="text-sm">{cat.name}</Text>
-              </Badge>
-            ))}
-          </ScrollView> */}
-
-          <ArticleListSection withCategories />
+          <ArticleListSection
+            withCategories
+            articles={articles}
+            latestArticle={latestArticle}
+            categories={categories}
+            articlesByCategory={articlesByCategory}
+            isLoading={isLoading}
+          />
         </Wrapper>
       </ScrollView>
     </Wrapper>
