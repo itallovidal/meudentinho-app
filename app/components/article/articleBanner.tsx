@@ -1,11 +1,11 @@
 import { Image, TouchableNativeFeedback, View } from "react-native";
-import { Text } from "./ui/text";
 import { ClockIcon } from "phosphor-react-native";
-import { Wrapper } from "./wrapper";
-import { Badge } from "./ui/badge";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import { Wrapper } from "../wrapper";
+import { Badge } from "../ui/badge";
+import { Text } from "../ui/text";
 
 const BANNER_GRADIENT_COLORS = [
   "rgba(0, 0, 0, 0.96)",
@@ -34,6 +34,7 @@ export function ArticleBanner({
         navigation.navigate("Articles", {
           screen: "Article",
           params: { id: id },
+          initial: false,
         })
       }
     >

@@ -1,8 +1,8 @@
-import { Wrapper } from "./wrapper";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleBanner } from "./articleBanner";
-import { Text } from "./ui/text";
 import { ArticleCard } from "./articleCard";
+import { Wrapper } from "../wrapper";
+import { Text } from "../ui/text";
 
 type ArticleListRenderProps = {
   latestArticle?: ArticlePreviewDTO;
