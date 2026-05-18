@@ -9,10 +9,18 @@ import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 enableScreens();
 
 const Navigation = createStaticNavigation(TabNavigator);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+});
 
 export default function App() {
   colorScheme.set("light");
@@ -20,18 +28,20 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <IconContext.Provider
-          value={{ color: colors.base600, size: 24, weight: "fill" }}
-        >
-          <UserProvider>
-            <SafeAreaView className="flex-1 bg-base-100">
-              <Navigation />
-            </SafeAreaView>
-          </UserProvider>
-        </IconContext.Provider>
-        <PortalHost />
-      </SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <IconContext.Provider
+            value={{ color: colors.base600, size: 24, weight: "fill" }}
+          >
+            <UserProvider>
+              <SafeAreaView className="flex-1 bg-base-100">
+                <Navigation />
+              </SafeAreaView>
+            </UserProvider>
+          </IconContext.Provider>
+          <PortalHost />
+        </SafeAreaProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }
