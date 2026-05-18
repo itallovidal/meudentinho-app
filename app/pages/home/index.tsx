@@ -2,8 +2,8 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
-import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
-import { useCallback, useContext, useState } from "react";
+import { KidRequestDTO } from "@/types/dtos/user";
+import { useCallback, useContext, useState, useEffect } from "react";
 import { ApiError } from "@/types/domain";
 import { Alert, ScrollView, View } from "react-native";
 import { Button } from "@/components/ui/button";
@@ -11,29 +11,34 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
 import { createKid, getAllKids } from "@/api/user/kids";
+import { useQuery } from "@tanstack/react-query";
+import { ArticleListSection } from "@/components/article/articleListSection";
+import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
-import { ArticleListRender } from "@/components/articleListRender";
 
 export function Home() {
   const [isVisible, setVisible] = useState(true);
-  const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
   const { authToken } = useContext(UserContext)!;
 
-  const { articles, latestArticle } = useArticles({ withCategories: false });
+  const { isRefreshing, onRefresh } = useArticles({ withCategories: false });
 
-  async function loadKids() {
-    const { data } = await getAllKids(authToken!);
-    setKids(data || []);
+  const { data: kidsResponse, refetch } = useQuery({
+    queryKey: ["kids", authToken],
+    queryFn: () => getAllKids(authToken!),
+    enabled: !!authToken,
+  });
 
-    console.log("Loaded kids:", data.length);
-    if (data.length > 0) {
+  const kids = kidsResponse?.data || [];
+
+  useEffect(() => {
+    if (kids.length > 0) {
       setVisible(false);
     }
-  }
+  }, [kids.length]);
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
@@ -45,6 +50,9 @@ export function Home() {
       const newKid = await createKid(kidDTO, authToken);
       console.log("New kid created:", newKid);
 
+      // Refetch kids using React Query
+      refetch();
+
       // TODO: create better modals
       Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
     } catch (error) {
@@ -55,9 +63,10 @@ export function Home() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Loading kids...");
-      loadKids();
-    }, [authToken]),
+      if (authToken) {
+        refetch();
+      }
+    }, [authToken, refetch]),
   );
 
   return (
@@ -68,7 +77,12 @@ export function Home() {
       className="flex-1"
     >
       <Header />
-      <ScrollView className="w-full flex-1">
+      <ScrollView
+        className="w-full flex-1"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+      >
         <Wrapper
           className="mx-6 my-4 flex-1"
           direction="column"
@@ -108,11 +122,7 @@ export function Home() {
             Dicas e Artigos
           </Text>
 
-          <ArticleListRender
-            latestArticle={latestArticle}
-            articles={articles.slice(1)}
-            hasCategoryTitle={false}
-          />
+          <ArticleListSection />
 
           <Button
             className="w-full"

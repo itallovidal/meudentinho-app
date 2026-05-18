@@ -108,7 +108,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
   }
 
   async function loadArticles() {
-    console.log("Loading articles");
+    // console.log("Loading articles");
     const { data } = await getAllArticlePreview();
     console.log("Fetched articles");
     setArticles(data);
@@ -118,7 +118,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
   const isLoading = !articles.length || (withCategories && !categories.length);
 
   return {
-    articles,
+    articles: articles.slice(1),
     categories,
     articlesByCategory,
     latestArticle,

@@ -2,8 +2,7 @@ import { ScrollView, RefreshControl } from "react-native";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
-import { ArticleListRender } from "@/components/articleListRender";
-import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
+import { ArticleListSection } from "@/components/article/articleListSection";
 // import { Text } from "@/components/ui/text";
 // import { Input } from "@/components/ui/input";
 // import { MagnifyingGlassIcon } from "phosphor-react-native";
@@ -11,24 +10,10 @@ import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPa
 
 export function Index() {
   const {
-    articles,
-    categories,
-    articlesByCategory,
-    latestArticle,
-    isLoading,
     isRefreshing,
     onRefresh,
   } = useArticles({ withCategories: true });
-  console.log(articlesByCategory);
 
-  if (isLoading) {
-    return (
-      <SkeletonArticleListPage
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-      />
-    );
-  }
 
   return (
     <Wrapper
@@ -84,13 +69,7 @@ export function Index() {
             ))}
           </ScrollView> */}
 
-          <ArticleListRender
-            latestArticle={latestArticle}
-            articles={articles.slice(1)}
-            categories={categories}
-            articlesByCategory={articlesByCategory}
-            hasCategoryTitle={true}
-          />
+          <ArticleListSection withCategories />
         </Wrapper>
       </ScrollView>
     </Wrapper>
