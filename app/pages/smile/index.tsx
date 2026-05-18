@@ -4,7 +4,6 @@ import DentalMap from "@/components/smile/DentalMap";
 import { ScrollView } from "react-native";
 
 export function Smile() {
- 
   return (
     <Wrapper
       className="flex-1 bg-base-100"
