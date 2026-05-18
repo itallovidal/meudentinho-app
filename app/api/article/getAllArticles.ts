@@ -2,11 +2,13 @@ import { ApiError, ResponsePayload } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 import { ENV } from "@/lib/env";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
+import { fetchWithTimeout } from "@/lib/apiClient";
 
 export async function getAllArticlePreview(): Promise<
   ResponsePayload<ArticlePreviewDTO[]>
 > {
-  const response = await fetch(`${ENV.BASE_API_URL}/articles/preview`, {
+  console.log("Pegando artigos: ");
+  const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/articles/preview`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

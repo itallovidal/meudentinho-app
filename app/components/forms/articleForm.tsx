@@ -1,7 +1,6 @@
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
@@ -10,7 +9,6 @@ import { articleSchema } from "@/lib/schemas/article";
 import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useEffect, useState } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
-import { getAllArticlePreview } from "@/api/article/getArticles";
 import { ScrollView } from "react-native";
 
 interface ArticleFormProps {

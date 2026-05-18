@@ -2,12 +2,13 @@ import { ENV } from "@/lib/env";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { KidResponseDTO, KidRequestDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
+import { fetchWithTimeout } from "@/lib/apiClient";
 
 export async function getAllKids(
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO[]>> {
   // console.log("getAllKids called with token:", token);
-  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
+  const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/users/kids`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -48,7 +49,7 @@ export async function createKid(
     birthDate: new Date(kidDTO.birthDate).toISOString(),
   };
 
-  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
+  const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/users/kids`, {
     method: "POST",
     body: JSON.stringify(payloadToSend),
     headers: {
