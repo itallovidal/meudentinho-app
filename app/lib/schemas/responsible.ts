@@ -5,6 +5,9 @@ export const updateResponsibleSchema = z
     name: z
       .string({ message: "O nome é obrigatório." })
       .min(3, "O nome deve ter no mínimo 3 caracteres."),
+    email: z
+      .string({ message: "O email é obrigatório." })
+      .email("Digite um email válido."),
     currentPassword: z
       .string({ message: "A senha atual é obrigatória." })
       .min(6, "A senha deve ter no mínimo 6 caracteres."),

@@ -7,7 +7,6 @@ import { fetchWithTimeout } from "@/lib/apiClient";
 export async function getAllKids(
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO[]>> {
-  // console.log("getAllKids called with token:", token);
   const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/users/kids`, {
     method: "GET",
     headers: {
@@ -18,8 +17,6 @@ export async function getAllKids(
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;
 
-  // console.log("Get kids response payload:", payload);
-  
   if (payload.status !== 200 && isApiError(payload.error)) {
     console.log("Get kids failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);

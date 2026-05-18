@@ -12,11 +12,13 @@ import { useForm } from "react-hook-form";
 interface UpdateResponsibleFormProps {
   onSubmit: (data: UpdateResponsibleDTO) => void | Promise<void>;
   defaultName?: string;
+  defaultEmail?: string;
 }
 
 export function UpdateResponsibleForm({
   onSubmit,
   defaultName,
+  defaultEmail
 }: UpdateResponsibleFormProps) {
   const {
     control,
@@ -28,6 +30,7 @@ export function UpdateResponsibleForm({
     reValidateMode: "onChange",
     defaultValues: {
       name: defaultName || "",
+      email: defaultEmail || "",
       currentPassword: "",
       newPassword: "",
       passwordConfirmation: "",
@@ -43,6 +46,18 @@ export function UpdateResponsibleForm({
         label="Nome do Responsável"
         inputProps={{
           placeholder: "Seu nome completo",
+          autoCapitalize: "words",
+          autoCorrect: false,
+        }}
+      />
+
+      <FormInput
+        control={control}
+        errors={errors}
+        name="email"
+        label="Email"
+        inputProps={{
+          placeholder: "Digite seu email",
           autoCapitalize: "words",
           autoCorrect: false,
         }}
@@ -90,7 +105,7 @@ export function UpdateResponsibleForm({
       <Button
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
-        className="w-full mb-2"
+        className="mb-2 w-full"
       >
         <Text>{isSubmitting ? "Salvando..." : "Confirmar"}</Text>
       </Button>

@@ -1,13 +1,20 @@
+import { updateUser } from "@/api/user/updateUser";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { useQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
 export function Responsible() {
   const { user } = useContext(UserContext)!;
+  const { authToken } = useContext(UserContext)!;
+  // TODO: Criar algum helper para identificar qual método usar PATCH ou PUT conforme as alterações feitas.
+  // const { data: User } = useQuery({
+  //   queryKey: ["users", authToken],
+  // })
 
   async function handleUpdateResponsible(data: Record<string, unknown>) {
     Alert.alert("Dados atualizados", "As alterações foram salvas com sucesso.");
@@ -32,6 +39,7 @@ export function Responsible() {
           <UpdateResponsibleForm
             onSubmit={handleUpdateResponsible}
             defaultName={user?.name}
+            defaultEmail={user?.email}
           />
         </View>
       </ScrollView>
