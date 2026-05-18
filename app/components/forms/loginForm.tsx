@@ -10,11 +10,11 @@ import { ApiError } from "@/types/domain";
 import { LoginDTO } from "@/types/dtos/user";
 
 interface LoginFormProps {
-  onSubmit: (data: Record<string, any>) => void | Promise<void>;
+  onSubmit: (data: LoginDTO) => void | Promise<void>;
   submitError?: ApiError | null;
 }
 
-export function LoginForm({ onSubmit, submitError }: Args) {
+export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
   const {
     control,
     handleSubmit,
