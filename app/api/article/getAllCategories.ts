@@ -5,6 +5,8 @@ import { ENV } from "@/lib/env";
 export async function getAllCategories(): Promise<
   ResponsePayload<[{ name: string; id: string }]>
 > {
+  console.log("Fetching categories...");
+
   const response = await fetch(`${ENV.BASE_API_URL}/articles/categories`, {
     method: "GET",
     headers: {

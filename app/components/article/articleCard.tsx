@@ -33,7 +33,7 @@ export function ArticleCard({
       }
     >
       <Wrapper
-        className={`rounded-lg border border-base-200 bg-base-100 p-3 ${className}`}
+        className={`rounded-lg border border-base-200 bg-base-100 p-3 shadow-sm shadow-base-300 ${className}`}
         direction="row"
         align="center"
         justify="start"

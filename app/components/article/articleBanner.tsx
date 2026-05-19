@@ -38,7 +38,7 @@ export function ArticleBanner({
         })
       }
     >
-      <View className="mt-6 w-full overflow-hidden rounded-lg bg-base-500">
+      <View className="mt-6 w-full overflow-hidden rounded-lg">
         <Image src={imageSrc} className="h-60 w-full rounded-lg" />
         <LinearGradient
           colors={BANNER_GRADIENT_COLORS}

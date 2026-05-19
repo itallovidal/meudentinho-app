@@ -29,7 +29,7 @@ export function ArticleListSection({
       articles={articles}
       categories={categories}
       articlesByCategory={articlesByCategory}
-      hasCategoryTitle={withCategories}
+      hasCategories={withCategories}
     />
   );
 }
