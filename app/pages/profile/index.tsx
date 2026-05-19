@@ -1,11 +1,8 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { ScrollView, Text } from "react-native";
-import {
-  ProfileNavegationProp,
-  ProfileRouteProp,
-} from "@/navigation/ProfileStack";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
 import {
   ShieldCheckIcon,
@@ -22,13 +19,9 @@ import { ENV } from "@/lib/env";
 import { THEME } from "@/lib/theme";
 
 export function Index() {
-  const route = useRoute<ProfileRouteProp>();
-  const payload = route.params?.payload;
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { updateAppUser, user } = useContext(UserContext)!;
-
-  console.log("Profile screen received payload:", payload);
 
   const handleLogout = async () => {
     await updateAppUser(null, null);
