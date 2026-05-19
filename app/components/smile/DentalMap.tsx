@@ -1,30 +1,14 @@
-import React, { useState, useCallback, useContext, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { Wrapper } from "@/components/wrapper";
-import { Header } from "@/components/header";
 import ToothSVG from "./teeth/ToothSVG";
-import { TOOTH_PATHS, TOOTH_IDS } from "./teeth/paths";
+import { TOOTH_PATHS } from "./teeth/paths";
 import { Card } from "@/components/card";
 import { Text } from "@/components/ui/text";
-import { UserContext } from "@/contexts/UserContext";
-import {
-  getToothEvents,
-  getToothPredictions,
-  getTeethExchangeStats,
-  registerToothEvent,
-} from "@/api/smile";
 import { ToothEvent } from "@/types/teeth";
-import DentalTipCard from "./DentalTipCard";
-import RecentEventsList from "./RecentEventsList";
-import PredictionsCard from "./PredictionsCard";
-import TeethExchangeCard from "./TeethExchangeCard";
 import ToothEventModal from "./ToothEventModal";
-import {
-  ToothIcon,
-  EyeSlashIcon,
-  SmileyIcon,
-} from "phosphor-react-native";
+import { ToothIcon, EyeSlashIcon, SmileyIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
 
 // IDs dos 5 dentes superiores e inferiores exibidos por lado
@@ -69,166 +53,130 @@ const SLIDES: SideSlide[] = [
   },
 ];
 
-export function DentalMap() {
+type DentalMapProps = {
+  onRegisterEvent: (payload: Omit<ToothEvent, "id">) => Promise<void>;
+};
+
+export function DentalMap({ onRegisterEvent }: DentalMapProps) {
   const { width: screenWidth } = useWindowDimensions();
-  const userCtx = useContext(UserContext);
-  const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
-  const [events, setEvents] = useState<ToothEvent[]>([]);
-  const [predictions, setPredictions] = useState([]);
-  const [stats, setStats] = useState({ totalMilkTeeth: 20, exchanged: 0 });
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  useEffect(() => {
-    if (userCtx?.user) {
-      // choose first kid if any (mocked later)
-      setSelectedKidId(userCtx.user?.kids?.[0]?.id || null);
-    }
-  }, [userCtx?.user]);
-
-  useEffect(() => {
-    if (!selectedKidId) return;
-    (async () => {
-      const ev = await getToothEvents(selectedKidId);
-      const pr = await getToothPredictions(selectedKidId);
-      const st = await getTeethExchangeStats(selectedKidId);
-      setEvents(ev);
-      setPredictions(pr as any);
-      setStats(st as any);
-    })();
-  }, [selectedKidId]);
 
   const onToothPress = useCallback((toothId: string) => {
     setSelectedTooth(toothId);
     setModalVisible(true);
   }, []);
 
-  const handleRegister = async (payload: Omit<ToothEvent, "id">) => {
-    if (!selectedKidId) return;
-    await registerToothEvent(selectedKidId, payload);
-    setModalVisible(false);
-    const ev = await getToothEvents(selectedKidId);
-    setEvents(ev);
-  };
+  const handleRegister = useCallback(
+    async (payload: Omit<ToothEvent, "id">) => {
+      await onRegisterEvent(payload);
+      setModalVisible(false);
+    },
+    [onRegisterEvent],
+  );
 
   const colors = THEME.light;
   const carouselWidth = screenWidth - 72;
 
-  const kidName = userCtx?.user?.kids?.[0]?.name;
-
   return (
-    <Wrapper direction="column">
-      <Wrapper direction="column" align="center" className="mx-6 my-4" gap="gap-4">
-        <Card title="Mapa do Sorriso">
-          <Carousel
-            width={carouselWidth}
-            height={180}
-            data={SLIDES}
-            loop={false}
-            mode="horizontal-stack"
-            modeConfig={{
-              snapDirection: "left",
-              stackInterval: 20,
-              scaleInterval: 0.06,
-              rotateZDeg: 12,
-              showLength: 2,
-            }}
-            renderItem={({ item }: { item: SideSlide }) => (
-              <View className="flex-1 items-center justify-center px-2 bg-base-100">
-                <View className="flex-row justify-center gap-1.5 mb-2">
-                  {item.upper.map((id) => {
-                    const path = TOOTH_PATHS[id];
-                    if (!path) return null;
-                    return (
-                      <TouchableOpacity
-                        key={`${item.side}-upper-${id}`}
-                        // onPress={() => onToothPress(id)}
-                        onPress={() => console.log(id)}
-                      >
-                        <ToothSVG
-                          viewBox={path.viewBox}
-                          content={path.content}
-                          width={48}
-                          height={48}
-                          stroke="black"
-                          flipHorizontal={item.flip}
-                        />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <View className="flex-row justify-center gap-1.5 mb-2">
-                  {item.lower.map((id) => {
-                    const path = TOOTH_PATHS[id];
-                    if (!path) return null;
-                    return (
-                      <TouchableOpacity
-                        key={`${item.side}-lower-${id}`}
-                        onPress={() => onToothPress(id)}
-                        // onPress={() => console.log(id)}
-                      >
-                        <ToothSVG
-                          viewBox={path.viewBox}
-                          content={path.content}
-                          width={48}
-                          height={48}
-                          stroke="black"
-                          flipHorizontal={item.flip}
-                        />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <Text className="text-sm text-base-500">{item.label}</Text>
+    <Wrapper
+      direction="column"
+      align="center"
+    >
+      <Card title="Mapa do Sorriso">
+        <Carousel
+          width={carouselWidth}
+          height={180}
+          data={SLIDES}
+          loop={false}
+          mode="horizontal-stack"
+          modeConfig={{
+            snapDirection: "left",
+            stackInterval: 20,
+            scaleInterval: 0.06,
+            rotateZDeg: 12,
+            showLength: 2,
+          }}
+          renderItem={({ item }: { item: SideSlide }) => (
+            <View className="flex-1 items-center justify-center bg-base-100 px-2">
+              <View className="mb-2 flex-row justify-center gap-1.5">
+                {item.upper.map((id) => {
+                  const path = TOOTH_PATHS[id];
+                  if (!path) return null;
+                  return (
+                    <TouchableOpacity
+                      key={`${item.side}-upper-${id}`}
+                      // onPress={() => onToothPress(id)}
+                      onPress={() => console.log(id)}
+                    >
+                      <ToothSVG
+                        viewBox={path.viewBox}
+                        content={path.content}
+                        width={48}
+                        height={48}
+                        stroke="black"
+                        flipHorizontal={item.flip}
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            )}
-          />
 
-          <Wrapper
-            justify="center"
-            align="center"
-            className="mt-4 w-full"
-            direction="row"
-            gap="gap-4"
-          >
-            <Wrapper direction="row" align="center" gap="gap-1">
-              <EyeSlashIcon size={16} color={colors.base500} weight="bold" />
-              <Text className="text-xs text-base-500 font-medium">
-                3 Ausentes
-              </Text>
-            </Wrapper>
-            <Wrapper direction="row" align="center" gap="gap-1">
-              <ToothIcon size={16} color={colors.primary400} weight="fill" />
-              <Text className="text-xs text-primary-400 font-medium">
-                15 Permanentes
-              </Text>
-            </Wrapper>
-            <Wrapper direction="row" align="center" gap="gap-1">
-              <SmileyIcon size={16} color={colors.tertiary300} weight="bold" />
-              <Text className="text-xs text-tertiary-300 font-medium">
-                2 De leite
-              </Text>
-            </Wrapper>
+              <View className="mb-2 flex-row justify-center gap-1.5">
+                {item.lower.map((id) => {
+                  const path = TOOTH_PATHS[id];
+                  if (!path) return null;
+                  return (
+                    <TouchableOpacity
+                      key={`${item.side}-lower-${id}`}
+                      onPress={() => onToothPress(id)}
+                      // onPress={() => console.log(id)}
+                    >
+                      <ToothSVG
+                        viewBox={path.viewBox}
+                        content={path.content}
+                        width={48}
+                        height={48}
+                        stroke="black"
+                        flipHorizontal={item.flip}
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text className="text-sm text-base-500">{item.label}</Text>
+            </View>
+          )}
+        />
+
+        <Wrapper
+          justify="center"
+          align="center"
+          className="mt-4 w-full"
+          direction="row"
+          gap="gap-4"
+        >
+          <Wrapper direction="row" align="center" gap="gap-1">
+            <EyeSlashIcon size={16} color={colors.base500} weight="bold" />
+            <Text className="text-xs font-medium text-base-500">
+              3 Ausentes
+            </Text>
           </Wrapper>
-        </Card>
-
-        <DentalTipCard
-          title="Molar dos 6 anos"
-          description="Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!"
-        />
-
-        <RecentEventsList items={events} />
-
-        <PredictionsCard items={predictions} />
-
-        <TeethExchangeCard
-          total={stats.totalMilkTeeth}
-          exchanged={stats.exchanged}
-          kidName={kidName}
-        />
-      </Wrapper>
+          <Wrapper direction="row" align="center" gap="gap-1">
+            <ToothIcon size={16} color={colors.primary400} weight="fill" />
+            <Text className="text-xs font-medium text-primary-400">
+              15 Permanentes
+            </Text>
+          </Wrapper>
+          <Wrapper direction="row" align="center" gap="gap-1">
+            <SmileyIcon size={16} color={colors.tertiary300} weight="bold" />
+            <Text className="text-tertiary-300 text-xs font-medium">
+              2 De leite
+            </Text>
+          </Wrapper>
+        </Wrapper>
+      </Card>
 
       <ToothEventModal
         visible={modalVisible}
@@ -239,5 +187,3 @@ export function DentalMap() {
     </Wrapper>
   );
 }
-
-export default DentalMap;
