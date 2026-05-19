@@ -54,7 +54,7 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
       direction="column"
       align="center"
       justify="start"
-      className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300 shadow-base-300"
+      className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
     >
       <Wrapper
         direction="row"
@@ -93,7 +93,7 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
             return (
               <View
                 key={it.id}
-                className="w-full flex-row items-center gap-3 rounded-xl bg-base-200 p-3.5 shadow-sm shadow-base-300 shadow-base-300"
+                className="w-full flex-row items-center gap-3 rounded-xl bg-base-200 p-3.5 shadow-sm shadow-base-300"
               >
                 <View className="h-10 w-10 items-center justify-center rounded-full bg-base-100">
                   <Icon size={20} color={color} weight="bold" />

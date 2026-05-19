@@ -4,8 +4,6 @@ import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
 import { ArticleListSection } from "@/components/article/articleListSection";
-import { CategoriesBadge } from "@/components/article/categoriesBadge";
-import { ArticleCategory } from "@/types/dtos/article";
 
 export function Index() {
   const {
@@ -17,8 +15,6 @@ export function Index() {
     articlesByCategory,
     isLoading,
   } = useArticles({ withCategories: true });
-
-  
 
   return (
     <Wrapper

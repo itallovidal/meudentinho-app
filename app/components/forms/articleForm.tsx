@@ -10,7 +10,7 @@ import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useEffect, useState } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { ScrollView } from "react-native";
-import { CategoriesBadge } from "../article/categoriesBadge";
+import { PropsBadge } from "../propsBadge";
 
 interface ArticleFormProps {
   onSubmit: (data: ArticleRequestDTO) => void | Promise<void>;
@@ -123,7 +123,7 @@ export function ArticleForm({
           Categorias (Selecione até {MAX_CATEGORIES})
         </Text>
 
-        <CategoriesBadge categories={categories} onPress={addCategory} wrap />
+        <PropsBadge props={categories} onPress={addCategory} wrap />
 
         <FormInput
           control={control}
