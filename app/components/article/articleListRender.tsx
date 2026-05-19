@@ -3,7 +3,7 @@ import { ArticleBanner } from "./articleBanner";
 import { ArticleCard } from "./articleCard";
 import { Wrapper } from "../wrapper";
 import { Text } from "../ui/text";
-import { CategoriesBadge } from "./categoriesBadge";
+import { PropsBadge } from "../propsBadge";
 import { useEffect, useState } from "react";
 
 type ArticleListRenderProps = {
@@ -72,10 +72,11 @@ export function ArticleListRender({
       )}
 
       {hasCategories && (
-        <CategoriesBadge
-        categories={categoriesWithAll}
-        onPress={handleCategoryPress}
-      />)}
+        <PropsBadge
+          props={categoriesWithAll}
+          onPress={handleCategoryPress}
+        />
+      )}
 
       {hasCategories
         ? visibleCategories.map((category) => {
