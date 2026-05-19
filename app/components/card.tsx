@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const cardVariants = cva(
-  "w-full bg-base-100 rounded-lg p-4 border shadow-sm flex flex-row items-center gap-4",
+  "w-full bg-base-100 rounded-lg p-4 border shadow-sm shadow-base-300 shadow-base-300 shadow-base-300 shadow-base-300 shadow-base-300 flex flex-row items-center gap-4",
   {
     variants: {
       variant: {

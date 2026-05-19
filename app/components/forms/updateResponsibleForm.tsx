@@ -18,7 +18,7 @@ interface UpdateResponsibleFormProps {
 export function UpdateResponsibleForm({
   onSubmit,
   defaultName,
-  defaultEmail
+  defaultEmail,
 }: UpdateResponsibleFormProps) {
   const {
     control,
@@ -38,12 +38,17 @@ export function UpdateResponsibleForm({
   });
 
   return (
-    <Wrapper align="center" direction="column" className="w-full" gap="gap-4">
+    <Wrapper
+      align="center"
+      direction="column"
+      className="w-full"
+      gap="gap-4"
+    >
       <FormInput
         control={control}
         errors={errors}
         name="name"
-        label="Nome do Responsável"
+        label="Seu Nome"
         inputProps={{
           placeholder: "Seu nome completo",
           autoCapitalize: "words",

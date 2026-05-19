@@ -10,6 +10,7 @@ import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useEffect, useState } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { ScrollView } from "react-native";
+import { CategoriesBadge } from "../article/categoriesBadge";
 
 interface ArticleFormProps {
   onSubmit: (data: ArticleRequestDTO) => void | Promise<void>;
@@ -122,23 +123,7 @@ export function ArticleForm({
           Categorias (Selecione até {MAX_CATEGORIES})
         </Text>
 
-        <Wrapper
-          direction="row"
-          align="start"
-          justify="start"
-          gap="gap-2"
-          className="w-full flex-wrap"
-        >
-          {categories.map((category) => (
-            <Button
-              variant={category.isSelected ? "default" : "outline"}
-              key={category.id}
-              onPress={() => addCategory(category)}
-            >
-              <Text>{category.name}</Text>
-            </Button>
-          ))}
-        </Wrapper>
+        <CategoriesBadge categories={categories} onPress={addCategory} wrap />
 
         <FormInput
           control={control}
