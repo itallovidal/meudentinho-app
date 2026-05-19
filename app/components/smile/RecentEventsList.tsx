@@ -23,21 +23,44 @@ const DEFAULT_EVENT_ICON = {
   color: THEME.light.base500,
 };
 
+const sampleEvents: ToothEvent[] = [
+  {
+    id: "1",
+    toothType: "canine",
+    dentition: "primary",
+    arch: "upper",
+    side: "right",
+    eventType: "exfoliation",
+    occurrenceDate: "2024-05-10T00:00:00Z",
+  },
+  {
+    id: "2",
+    toothType: "central_incisor",
+    dentition: "primary",
+    arch: "upper",
+    side: "right",
+    eventType: "eruption",
+    occurrenceDate: "2024-06-15T00:00:00Z",
+  },
+];
+
 export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
   const colors = THEME.light;
+
+  items = sampleEvents;
 
   return (
     <Wrapper
       direction="column"
       align="center"
       justify="start"
-      className="flex-1 w-full rounded-xl bg-base-200 p-5"
+      className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300 shadow-base-300"
     >
       <Wrapper
         direction="row"
         align="center"
         justify="between"
-        className="flex-1 w-full mb-3"
+        className="mb-3 w-full flex-1"
       >
         <Text variant="h4" className="text-primary-500">
           Últimos Registros
@@ -51,13 +74,14 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
 
       {items.length === 0 ? (
         <Wrapper
-        direction="column"
-        align="center"
-        justify="center"
-        gap="gap-2"
-        className="py-6">
+          direction="column"
+          align="center"
+          justify="center"
+          gap="gap-2"
+          className="py-6"
+        >
           <NoteBlankIcon size={32} color={colors.base400} weight="light" />
-          <Text className="text-sm text-base-400 text-center">
+          <Text className="text-center text-sm text-base-400">
             Nenhum registro informado.
           </Text>
         </Wrapper>
@@ -69,9 +93,9 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
             return (
               <View
                 key={it.id}
-                className="bg-base-200 rounded-xl p-3.5 flex-row items-center gap-3"
+                className="w-full flex-row items-center gap-3 rounded-xl bg-base-200 p-3.5 shadow-sm shadow-base-300 shadow-base-300"
               >
-                <View className="w-10 h-10 rounded-full bg-base-100 items-center justify-center">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-base-100">
                   <Icon size={20} color={color} weight="bold" />
                 </View>
                 <View className="flex-1">

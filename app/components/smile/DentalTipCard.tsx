@@ -22,7 +22,7 @@ export default function DentalTipCard({
       align="start"
       justify="start"
       gap="gap-3"
-      className="rounded-xl bg-base-200 p-4"
+      className="rounded-xl bg-base-100 p-4 shadow-sm shadow-base-300"
     >
       <View className="h-9 w-9 items-center justify-center rounded-full bg-white/15">
         <WarningCircleIcon

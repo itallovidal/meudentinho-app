@@ -3,15 +3,17 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Progress } from "@/components/ui/progress";
 
+type TeethExchangeCardProps = {
+  total: number;
+  exchanged: number;
+  kidName?: string;
+};
+
 export default function TeethExchangeCard({
   total,
   exchanged,
   kidName,
-}: {
-  total: number;
-  exchanged: number;
-  kidName?: string;
-}) {
+}: TeethExchangeCardProps) {
   const percent = total > 0 ? Math.round((exchanged / total) * 100) : 0;
   const name = kidName || "Seu filho(a)";
 
@@ -20,7 +22,7 @@ export default function TeethExchangeCard({
       direction="column"
       align="center"
       justify="start"
-      className="flex-1 w-full rounded-2xl bg-base-200 px-11 py-6"
+      className="w-full flex-1 rounded-2xl bg-base-100 px-11 py-6 shadow-sm shadow-base-300"
     >
       <Text variant="h4" className="text-center text-primary-800">
         Troca de Dentes

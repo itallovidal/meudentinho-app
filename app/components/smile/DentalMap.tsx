@@ -112,7 +112,7 @@ export function DentalMap() {
   };
 
   const colors = THEME.light;
-  const carouselWidth = screenWidth - 32; // desconta o padding p-4 de cada lado
+  const carouselWidth = screenWidth - 72;
 
   const kidName = userCtx?.user?.kids?.[0]?.name;
 
