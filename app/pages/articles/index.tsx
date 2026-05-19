@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { ScrollView, RefreshControl } from "react-native";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
 import { ArticleListSection } from "@/components/article/articleListSection";
+import { CategoriesBadge } from "@/components/article/categoriesBadge";
+import { ArticleCategory } from "@/types/dtos/article";
 
 export function Index() {
   const {
@@ -14,6 +17,8 @@ export function Index() {
     articlesByCategory,
     isLoading,
   } = useArticles({ withCategories: true });
+
+  
 
   return (
     <Wrapper
@@ -36,6 +41,23 @@ export function Index() {
           justify="start"
           gap="gap-2"
         >
+          {/* <Wrapper
+            className="flex-1 relative w-full"
+            direction="row"
+            align="center"
+          >
+            <Input
+              placeholder="Buscar artigos e guias"
+              className="bg-base-100 rounded-lg"
+            />
+            <MagnifyingGlassIcon
+              size={16}
+              color="gray"
+              weight="regular"
+              style={{ position: "absolute", right: 16 }}
+            />
+          </Wrapper> */}
+
           <ArticleListSection
             withCategories
             articles={articles}

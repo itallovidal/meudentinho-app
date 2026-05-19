@@ -15,9 +15,11 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { KidRequestDTO } from "@/types/dtos/user";
+import { RegisterKidSection } from "@/components/home/registerKidSection";
+import RecentEventsList from "@/components/smile/RecentEventsList";
 
 export function Home() {
-  const [isVisible, setVisible] = useState(true);
+  const [isKidSectionVisible, setKidSectionVisible] = useState(false);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
@@ -44,12 +46,11 @@ export function Home() {
   });
 
   const kids = kidsResponse?.data || [];
+  const hasKids = kids.length === 0 && kidsResponse?.status === 200;
 
   useEffect(() => {
-    if (kids.length > 0) {
-      setVisible(false);
-    }
-  }, [kids.length]);
+    setKidSectionVisible(hasKids);
+  }, [hasKids]);
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
@@ -90,33 +91,14 @@ export function Home() {
           justify="start"
           gap="gap-2"
         >
-          <Wrapper
-            className="my-4 flex-1"
-            direction="column"
-            align="start"
-            justify="start"
-            gap="gap-2"
-          >
-            <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
+          {isKidSectionVisible && (
+            <RegisterKidSection
+              onRegisterKid={onRegisterKid}
+              registerKidError={registerKidError}
+            />
+          )}
 
-            {isVisible && (
-              <View className="w-full">
-                <View className="w-full">
-                  <Text>
-                    Precisamos de alguns dados básicos para começar a acompanhar
-                    o desenvolvimento dentário da criança de forma
-                    personalizada.
-                  </Text>
-                </View>
-                <View className="w-full rounded-lg bg-base-100 p-4">
-                  <RegisterKidForm
-                    onSubmit={onRegisterKid}
-                    submitError={registerKidError}
-                  />
-                </View>
-              </View>
-            )}
-          </Wrapper>
+          <RecentEventsList items={[]} />
 
           <Text variant={"h4"} className="mt-4">
             Dicas e Artigos

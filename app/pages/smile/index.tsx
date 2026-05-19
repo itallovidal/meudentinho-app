@@ -6,7 +6,7 @@ import { ScrollView } from "react-native";
 export function Smile() {
   return (
     <Wrapper
-      className="flex-1 bg-base-100"
+      className="flex-1 bg-base-200"
       direction="column"
       align="center"
       justify="start"

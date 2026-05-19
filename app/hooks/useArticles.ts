@@ -71,8 +71,6 @@ export function useArticles(options: UseArticlesOptions = {}) {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["articles-preview"] }),
       queryClient.invalidateQueries({ queryKey: ["article-categories"] }),
-      queryClient.refetchQueries({ queryKey: ["articles-preview"] }),
-      queryClient.refetchQueries({ queryKey: ["article-categories"] }),
     ]);
   }
 
