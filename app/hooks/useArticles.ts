@@ -7,7 +7,6 @@ import { getAllArticlePreview } from "@/api/article/getAllArticles";
 type UseArticlesOptions = {
   withCategories?: boolean;
 };
-const MAX_ATTEMPTS = 2
 
 export function useArticles(options: UseArticlesOptions = {}) {
   const { withCategories = true } = options;
@@ -17,12 +16,6 @@ export function useArticles(options: UseArticlesOptions = {}) {
     queryKey: ["articles-preview"],
     queryFn: () => getAllArticlePreview().then((res) => res.data),
     staleTime: 1000 * 60 * 5,
-    retry: (failureCount, error) => {
-      const r = error as any;
-      if (r.response && r.response?.status == 404) return false;
-      if (r.response && r.response?.status != 404) return true;
-      return failureCount < MAX_ATTEMPTS;
-    }
   });
 
   const { data: categoriesData, isFetching: isCategoriesFetching } = useQuery({
