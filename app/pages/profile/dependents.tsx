@@ -25,7 +25,7 @@ export function Dependents() {
     try {
       await loadKids();
     } catch (error) {
-      console.error("Error fetching dependents:", error);
+      console.log("Error fetching dependents:", error);
     } finally {
       setLoading(false);
     }
