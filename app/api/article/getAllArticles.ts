@@ -7,7 +7,7 @@ import { fetchWithTimeout } from "@/lib/apiClient";
 export async function getAllArticlePreview(): Promise<
   ResponsePayload<ArticlePreviewDTO[]>
 > {
-  console.log("Pegando artigos: ");
+  console.log("Fetching /articles/preview...");
   const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/articles/preview`, {
     method: "GET",
     headers: {
