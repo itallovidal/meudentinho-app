@@ -10,8 +10,10 @@ import { Input } from "../ui/input";
 import { Text } from "../ui/text";
 import { FormInput } from "../formInput";
 import { Controller, useForm } from "react-hook-form";
-import { CustomCalendar } from "../calendar";
 import { Checkbox } from "expo-checkbox";
+import { GenderSelector } from "./genderSelector";
+import { AgeSelector } from "./ageSelector";
+import { DateData } from "react-native-calendars";
 
 interface Props {
   onSubmit: (data: KidRequestDTO) => void | Promise<void>;
@@ -33,7 +35,9 @@ export function RegisterKidForm({
   );
 
   const [isPremature, setIsPremature] = useState(
-    Boolean(defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0"),
+    Boolean(
+      defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
+    ),
   );
 
   const {
@@ -86,8 +90,8 @@ export function RegisterKidForm({
     setValue("gender", gender, { shouldDirty: true });
   }
 
-  function chooseBirthDate(date: string) {
-    setValue("birthDate", date, {
+  function chooseBirthDate(date: DateData) {
+    setValue("birthDate", date.dateString, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -96,7 +100,7 @@ export function RegisterKidForm({
   }
 
   return (
-    <Wrapper align="start" direction="row" className="flex-wrap" gap={"gap-6"}>
+    <Wrapper align="start" direction="column" gap="gap-6">
       <FormInput
         control={control}
         errors={errors}
@@ -112,55 +116,15 @@ export function RegisterKidForm({
         }}
       />
 
-      <Text className="w-full font-bold">Gênero</Text>
+      <GenderSelector gender={gender} onChange={changeGender} />
 
-      <Wrapper
-        direction="row"
-        align="start"
-        justify="start"
-        gap="gap-2"
-        className="w-full flex-wrap"
-      >
-        {["male", "female"].map((g) => (
-          <Button
-            variant={gender === g ? "default" : "outline"}
-            key={g}
-            onPress={() => changeGender(g as "male" | "female")}
-          >
-            <Text>{g === "male" ? "M" : "F"}</Text>
-          </Button>
-        ))}
-      </Wrapper>
-
-      {isEditingBirthDate && (
-        <CustomCalendar onDayPress={(day) => chooseBirthDate(day.dateString)} />
-      )}
-
-      <Wrapper direction="column" className="w-full" gap="gap-2">
-        <Text className="font-bold">Idade</Text>
-
-        <Text className="text-base-500" variant="small">
-          Data de nascimento:{" "}
-          {birthDate
-            ? (() => {
-                const [y, m, d] = birthDate.split("T")[0].split("-");
-                return `${d}/${m}/${y}`;
-              })()
-            : "não informada"}
-        </Text>
-        <Button
-          onPress={() => setIsEditingBirthDate((currentValue) => !currentValue)}
-          variant="outline"
-        >
-          <Text>
-            {isEditingBirthDate
-              ? "Fechar calendário"
-              : "Alterar data de nascimento"}
-          </Text>
-        </Button>
-
-        <Input editable={false} value={ageValue} placeholder="Anos" />
-      </Wrapper>
+      <AgeSelector
+        ageValue={ageValue}
+        birthDate={birthDate}
+        isEditingBirthDate={isEditingBirthDate}
+        setIsEditingBirthDate={setIsEditingBirthDate}
+        onDayPress={chooseBirthDate}
+      />
 
       <Wrapper direction="row" align="center" justify="start" gap="gap-2">
         <Checkbox
@@ -186,7 +150,7 @@ export function RegisterKidForm({
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="numeric"
-                className="bg-white w-full"
+                className="w-full bg-white"
               />
               {errors.prematureWeeks?.message && (
                 <Text className="mt-1 text-destructive" variant="small">
