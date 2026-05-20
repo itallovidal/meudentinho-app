@@ -93,7 +93,7 @@ export function Dependents() {
       <Header hasBackButton />
 
       <ScrollView
-        className="w-full px-4"
+        className="w-full px-6"
         contentContainerStyle={{ flexGrow: 1, paddingVertical: 16 }}
       >
         <Wrapper
