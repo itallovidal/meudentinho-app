@@ -4,19 +4,25 @@ import { UserUpdateRequest } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function updateUser(
+  userId: string,
+  token: string,
   userUpdate: UserUpdateRequest,
 ): Promise<ResponsePayload<User>> {
-  const response = await fetch(`${ENV.BASE_API_URL}/auth/login`, {
-    method: "PUT",
-    body: JSON.stringify(userUpdate),
-  });
+  const response = await fetch(
+    `${ENV.BASE_API_URL}/users/${userId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(userUpdate),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
 
   const payload = (await response.json()) as ResponsePayload<User>;
 
-  console.log("Update response payload:", payload);
-
   if (payload.status !== 200 && isApiError(payload.error)) {
-    console.log("Update failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
 
