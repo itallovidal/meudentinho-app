@@ -46,7 +46,7 @@ export function Home() {
   });
 
   const kids = kidsResponse?.data || [];
-  const hasKids = kids.length === 0 && kidsResponse?.status === 200;
+  const hasKids = kids.length === 0;
 
   useEffect(() => {
     setKidSectionVisible(hasKids);
