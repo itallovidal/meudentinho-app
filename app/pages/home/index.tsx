@@ -1,11 +1,10 @@
 import { useContext, useState, useEffect } from "react";
 import { ApiError } from "@/types/domain";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, ScrollView } from "react-native";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { createKid, getAllKids } from "@/api/user/kids";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { RefreshControl } from "react-native-gesture-handler";
@@ -13,10 +12,11 @@ import { useArticles } from "@/hooks/useArticles";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import RecentEventsList from "@/components/smile/RecentEventsList";
+import { getAllKids } from "@/api/kids/getAllKids";
+import { createKid } from "@/api/kids/createKid";
 
 export function Home() {
   const [isKidSectionVisible, setKidSectionVisible] = useState(false);
