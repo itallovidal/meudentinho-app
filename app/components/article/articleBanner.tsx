@@ -38,7 +38,7 @@ export function ArticleBanner({
         })
       }
     >
-      <View className="w-full overflow-hidden rounded-lg">
+      <Wrapper className="w-full overflow-hidden rounded-lg">
         <Image src={imageSrc} className="h-60 w-full rounded-lg" />
         <LinearGradient
           colors={BANNER_GRADIENT_COLORS}
@@ -70,7 +70,7 @@ export function ArticleBanner({
             {title}
           </Text>
         </Wrapper>
-      </View>
+      </Wrapper>
     </TouchableNativeFeedback>
   );
 }

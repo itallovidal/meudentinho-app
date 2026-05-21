@@ -60,7 +60,7 @@ export function ArticleListRender({
     isAllSelected || !selectedCategory ? categories : [selectedCategory];
 
   return (
-    <>
+    <Wrapper direction="column" align="start" justify="start" gap={hasCategories ? "gap-0" : "gap-2"}>
       {latestArticle && (
         <ArticleBanner
           key={latestArticle.id}
@@ -72,10 +72,7 @@ export function ArticleListRender({
       )}
 
       {hasCategories && (
-        <PropsBadge
-          props={categoriesWithAll}
-          onPress={handleCategoryPress}
-        />
+        <PropsBadge props={categoriesWithAll} onPress={handleCategoryPress} className="my-4" />
       )}
 
       {hasCategories
@@ -89,7 +86,7 @@ export function ArticleListRender({
                 direction="column"
                 align="start"
                 justify="start"
-                gap="gap-3"
+                gap="gap-2"
               >
                 <Text variant="h3" className="mt-2">
                   {category.name}
@@ -118,6 +115,6 @@ export function ArticleListRender({
               id={article.id}
             />
           ))}
-    </>
+    </Wrapper>
   );
 }
