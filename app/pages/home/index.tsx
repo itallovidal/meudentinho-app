@@ -85,11 +85,11 @@ export function Home() {
         }
       >
         <Wrapper
-          className="mx-6 my-4 flex-1"
+          className="mx-6 mb-4 mt-2 flex-1"
           direction="column"
           align="start"
           justify="start"
-          gap="gap-2"
+          gap="gap-4"
         >
           {isKidSectionVisible && (
             <RegisterKidSection
@@ -100,17 +100,23 @@ export function Home() {
 
           <RecentEventsList items={[]} />
 
-          <Text variant={"h4"} className="my-4">
-            Dicas e Artigos
-          </Text>
+          <Wrapper
+            direction="column"
+            align="start"
+            justify="start"
+          >
+            <Text variant={"h4"} className="mb-4">
+              Dicas e Artigos
+            </Text>
 
-          <ArticleListSection
-            articles={articles}
-            latestArticle={latestArticle}
-            categories={categories}
-            articlesByCategory={articlesByCategory}
-            isLoading={isLoading}
-          />
+            <ArticleListSection
+              articles={articles}
+              latestArticle={latestArticle}
+              categories={categories}
+              articlesByCategory={articlesByCategory}
+              isLoading={isLoading}
+            />
+          </Wrapper>
 
           <Button
             className="w-full"

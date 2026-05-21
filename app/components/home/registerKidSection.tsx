@@ -16,13 +16,15 @@ export function RegisterKidSection({
 }: RegisterKidSectionProps) {
   return (
     <Wrapper
-      className="my-4 flex-1"
+      className="flex-1"
       direction="column"
       align="start"
       justify="start"
       gap="gap-2"
     >
-      <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
+      <Text variant={"h4"}>
+        Bem Vindo ao MeuDentinho!
+      </Text>
 
       <View className="w-full">
         <View className="w-full">
