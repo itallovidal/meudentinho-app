@@ -49,24 +49,30 @@ export function PropsBadge({
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <Wrapper
-        direction="row"
-        align="start"
-        justify="start"
-        gap="gap-2"
-        className={` ${className || (wrap ? " flex-wrap " : " flex-nowrap ")}`}
-      >
-        {props.map((prop) => (
-          <Button
-            variant={prop.isSelected ? "default" : "outline"}
-            key={prop.id}
-            onPress={() => onPress(prop)}
-          >
-            <Text>{prop.name}</Text>
-          </Button>
-        ))}
-      </Wrapper>
-    </ScrollView>
+    <Wrapper
+      direction="row"
+      align="center"
+      justify="start"
+    >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <Wrapper
+          direction="row"
+          align="start"
+          justify="start"
+          gap="gap-2"
+          className={` ${className || (wrap ? " flex-wrap " : " flex-nowrap ")}`}
+        >
+          {props.map((prop) => (
+            <Button
+              variant={prop.isSelected ? "default" : "outline"}
+              key={prop.id}
+              onPress={() => onPress(prop)}
+            >
+              <Text>{prop.name}</Text>
+            </Button>
+          ))}
+        </Wrapper>
+      </ScrollView>
+    </Wrapper>
   );
 }
