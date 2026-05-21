@@ -100,7 +100,7 @@ export function Home() {
 
           <RecentEventsList items={[]} />
 
-          <Text variant={"h4"} className="mt-4">
+          <Text variant={"h4"} className="my-4">
             Dicas e Artigos
           </Text>
 
