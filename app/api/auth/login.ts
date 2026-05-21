@@ -3,7 +3,7 @@ import { ApiError, ResponsePayload } from "@/types/domain";
 import { LoginRequest, UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
-export async function loginUser(
+export async function login(
   request: LoginRequest,
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/auth/login`, {

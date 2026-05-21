@@ -12,11 +12,11 @@ import {
 import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupRequest } from "@/types/dtos/user";
-import { signupUser } from "@/api/user/signupUser";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
+import { signup } from "@/api/auth/signup";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -30,7 +30,7 @@ export function Signup() {
 
   async function onSubmit(SignupRequest: SignupRequest) {
     try {
-      const { data } = await signupUser(SignupRequest);
+      const { data } = await signup(SignupRequest);
 
       console.log("Signup successful, user data:", data);
 

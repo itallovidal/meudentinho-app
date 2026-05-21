@@ -3,7 +3,7 @@ import { ApiError, ResponsePayload } from "@/types/domain";
 import { SignupRequest, UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
-export async function signupUser(
+export async function signup(
   SignupRequest: SignupRequest,
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/auth/signup`, {

@@ -3,12 +3,12 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
-import { loginUser } from "@/api/user/loginUser";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
+import { login } from "@/api/auth/login";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -28,7 +28,7 @@ export function Login() {
 
   async function onLogin(LoginRequest: LoginRequest) {
     try {
-      const { data } = await loginUser(LoginRequest);
+      const { data } = await login(LoginRequest);
 
       console.log("Login successful, user data:", data);
 
