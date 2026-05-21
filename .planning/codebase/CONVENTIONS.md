@@ -21,7 +21,7 @@ Data Fetching Pattern (updated)
   - `staleTime: 1000 * 60 * 5` (5 min) set globally in `App.tsx` and overridable per query.
   - Refreshing done by `queryClient.invalidateQueries` + `queryClient.refetchQueries` (see `app/hooks/useArticles.ts`).
   - Retry logic per query: 404 → no retry; other errors → retry up to `MAX_ATTEMPTS`.
-- **HTTP client:** All API calls must use `fetchWithTimeout` from `app/lib/apiClient.ts` (5 s timeout, AbortController). Raw `fetch` is deprecated internally.
+- **HTTP client:** All API calls must use `fetch` from `app/lib/apiClient.ts` (5 s timeout, AbortController). Raw `fetch` is deprecated internally.
 
 Error Handling
 - API wrappers parse `ResponsePayload<T>` and throw `ApiError` when status codes indicate failure (see `app/types/domain.ts` and `app/api/*`).

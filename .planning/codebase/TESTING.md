@@ -21,7 +21,7 @@ Recommendations
 - With React Query now in place, consider mocking the query layer for component tests using `@tanstack/react-query`'s `QueryClientProvider` test helpers.
 - Priority test targets:
   1. `app/hooks/useArticles.ts` — test query keys, stale time, retry logic, and `latestArticle` slicing.
-  2. `app/lib/apiClient.ts` — test `fetchWithTimeout` abort behavior.
+  2. `app/lib/apiClient.ts` — test `fetch` abort behavior.
   3. `app/components/article/*` — snapshot + interaction tests for `articleCard` and `articleBanner`.
   4. Auth forms: `loginForm`, `signupForm` — zod schema validation paths.
 

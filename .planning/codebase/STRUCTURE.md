@@ -38,7 +38,7 @@ app/
 ├── hooks/
 │   └── useArticles.ts    — React Query-based hook (migrated from useState)
 ├── lib/
-│   ├── apiClient.ts      — fetchWithTimeout utility  [NEW]
+│   ├── apiClient.ts      — fetch utility  [NEW]
 │   ├── asyncStorage.ts
 │   ├── env.ts
 │   ├── schemas/          — zod schemas for forms
@@ -69,7 +69,7 @@ app/
 Important files
 - `App.tsx` — root providers: GestureHandlerRootView → QueryClientProvider → SafeAreaProvider → IconContext → UserProvider → PortalHost
 - `app/lib/env.ts` — runtime environment validation using `zod`
-- `app/lib/apiClient.ts` — `fetchWithTimeout` with 5 s AbortController timeout  [NEW]
+- `app/lib/apiClient.ts` — `fetch` with 5 s AbortController timeout  [NEW]
 - `app/lib/asyncStorage.ts` — local storage helpers
 - `app/lib/theme.ts` — centralized theme tokens
 - `app/lib/schemas/*` — zod validation schemas used by forms

@@ -8,7 +8,7 @@ Date: [2026-05-19]
 
 Overview
 - The app communicates with a backend API using `ENV.BASE_API_URL` (see `app/lib/env.ts`).
-- All HTTP calls go through `fetchWithTimeout` (5 s abort timeout) defined in `app/lib/apiClient.ts`.
+- All HTTP calls go through `fetch` (5 s abort timeout) defined in `app/lib/apiClient.ts`.
 
 API Endpoints (client-side calls)
 - Articles endpoints:

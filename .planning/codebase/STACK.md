@@ -40,5 +40,5 @@ Configuration
 
 Notes / Actionable
 - Mobile-first codebase (Expo). Build/release flows use Android Gradle scripts referenced in `package.json` scripts.
-- Network requests now use `fetchWithTimeout` (5 s default) — see `app/lib/apiClient.ts`.
+- Network requests now use `fetch` (5 s default) — see `app/lib/apiClient.ts`.
 - React Query is now the standard data-fetching layer; raw `fetch` calls should be migrated to use this pattern.

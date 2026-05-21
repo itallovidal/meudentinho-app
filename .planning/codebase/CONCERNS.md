@@ -17,7 +17,7 @@ Immediate findings
 Architecture / Design Debt
 - **`patchUser` vs `updateUser` ambiguity:** Two API wrappers (`app/api/user/patchUser.ts`, `app/api/user/updateUser.ts`) exist with the same interface but different HTTP methods. There is no helper yet to decide which to use. Risk of inconsistent mutations. **NEW concern.**
 - **React Query retry logic uses `any` cast:** In `app/hooks/useArticles.ts`, the error inside `retry` is cast as `any` to access `.response.status`. This defeats TypeScript strictness. Should use a typed `ApiError` guard.
-- **Raw `fetch` still present in some API files:** The migration to `fetchWithTimeout` was done incrementally — verify all `app/api/*` files use `fetchWithTimeout` and no plain `fetch` remains.
+- **Raw `fetch` still present in some API files:** The migration to `fetch` was done incrementally — verify all `app/api/*` files use `fetch` and no plain `fetch` remains.
 
 Security
 - No direct secrets detected in repo scan. Client uses `ENV.BASE_API_URL` and `authToken` flow; ensure tokens are not committed and production secrets are injected via environment provider.
@@ -39,4 +39,4 @@ Action items
 3. Add linting and commit hooks (prettier is present; ESLint recommended).
 4. Resolve PATCH vs PUT ambiguity in profile update flow — implement the helper noted in the TODO.
 5. Type `ApiError` properly in React Query retry callbacks — remove `any` cast.
-6. Audit all `app/api/*` files to confirm `fetchWithTimeout` usage (no plain `fetch` left).
+6. Audit all `app/api/*` files to confirm `fetch` usage (no plain `fetch` left).
