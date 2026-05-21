@@ -2,15 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import {
-  updateResponsibleSchema,
-  UpdateResponsibleDTO,
+  updatePasswordSchema,
+  updateProfileSchema,
+  UpdatePasswordDTO,
+  UpdateProfileDTO,
 } from "@/lib/schemas/responsible";
 import { FormInput } from "../formInput";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { View } from "react-native";
 
 interface UpdateResponsibleFormProps {
-  onSubmit: (data: UpdateResponsibleDTO) => void | Promise<void>;
+  onSubmit: (
+    profile: UpdateProfileDTO,
+    password: UpdatePasswordDTO | null,
+  ) => void | Promise<void>;
   defaultName?: string;
   defaultEmail?: string;
 }
@@ -21,21 +27,56 @@ export function UpdateResponsibleForm({
   defaultEmail,
 }: UpdateResponsibleFormProps) {
   const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<UpdateResponsibleDTO>({
-    resolver: zodResolver(updateResponsibleSchema),
+    control: profileControl,
+    handleSubmit: handleProfileSubmit,
+    formState: { errors: profileErrors },
+    watch: profileWatch,
+  } = useForm<UpdateProfileDTO>({
+    resolver: zodResolver(updateProfileSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
       name: defaultName || "",
       email: defaultEmail || "",
+    },
+  });
+
+  const {
+    control: passwordControl,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors, isSubmitting },
+    watch: passwordWatch,
+  } = useForm<UpdatePasswordDTO>({
+    resolver: zodResolver(updatePasswordSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: {
       currentPassword: "",
       newPassword: "",
       passwordConfirmation: "",
     },
   });
+
+  function handleConfirm() {
+    handleProfileSubmit((profileData) => {
+      const newPassword = passwordWatch("newPassword");
+      const passwordConfirmation = passwordWatch("passwordConfirmation");
+      const currentPassword = passwordWatch("currentPassword");
+
+      const hasPasswordChange =
+        newPassword && newPassword.length > 0 && newPassword === passwordConfirmation;
+
+      const passwordData: UpdatePasswordDTO | null = hasPasswordChange
+        ? {
+            currentPassword,
+            newPassword,
+            passwordConfirmation,
+          }
+        : null;
+
+      onSubmit(profileData, passwordData);
+    })();
+  }
 
   return (
     <Wrapper
@@ -45,8 +86,8 @@ export function UpdateResponsibleForm({
       gap="gap-4"
     >
       <FormInput
-        control={control}
-        errors={errors}
+        control={profileControl}
+        errors={profileErrors}
         name="name"
         label="Seu Nome"
         inputProps={{
@@ -57,8 +98,8 @@ export function UpdateResponsibleForm({
       />
 
       <FormInput
-        control={control}
-        errors={errors}
+        control={profileControl}
+        errors={profileErrors}
         name="email"
         label="Email"
         inputProps={{
@@ -68,9 +109,11 @@ export function UpdateResponsibleForm({
         }}
       />
 
+      <View className="w-full h-px bg-base-300 my-2" />
+
       <FormInput
-        control={control}
-        errors={errors}
+        control={passwordControl}
+        errors={passwordErrors}
         name="currentPassword"
         label="Senha Atual"
         inputProps={{
@@ -82,8 +125,8 @@ export function UpdateResponsibleForm({
       />
 
       <FormInput
-        control={control}
-        errors={errors}
+        control={passwordControl}
+        errors={passwordErrors}
         name="newPassword"
         label="Nova Senha"
         inputProps={{
@@ -95,8 +138,8 @@ export function UpdateResponsibleForm({
       />
 
       <FormInput
-        control={control}
-        errors={errors}
+        control={passwordControl}
+        errors={passwordErrors}
         name="passwordConfirmation"
         label="Confirmar Senha"
         inputProps={{
@@ -108,7 +151,7 @@ export function UpdateResponsibleForm({
       />
 
       <Button
-        onPress={handleSubmit(onSubmit)}
+        onPress={handleConfirm}
         disabled={isSubmitting}
         className="mb-2 w-full"
       >
