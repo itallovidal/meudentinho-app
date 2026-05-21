@@ -5,12 +5,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function shouldUsePut<T extends Record<string, unknown>>(
+  original: T,
+  updated: T,
+  fields: (keyof T)[],
+): boolean {
+  const changedFields = fields.filter(
+    (field) => original[field] !== updated[field],
+  );
+  return changedFields.length === fields.length;
+}
+
 export function getUserIdFromToken(token: string): string {
   const parts = token.split(".");
   if (parts.length !== 3) {
     throw new Error("Invalid token format");
   }
-  const payload = JSON.parse(atob(parts[1]));
+  const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const payload = JSON.parse(atob(base64));
   return payload.userId;
 }
 
