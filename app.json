@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/new-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/new-splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.meudentinhoapp"
@@ -21,7 +15,6 @@
         "foregroundImage": "./assets/new-adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.meudentinhoapp"
     },
