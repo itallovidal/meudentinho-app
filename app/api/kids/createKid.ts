@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { KidResponseDTO, KidRequestDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
@@ -12,15 +13,18 @@ export async function createKid(
     birthDate: new Date(kidDTO.birthDate).toISOString(),
   };
 
-  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
-    method: "POST",
-    body: JSON.stringify(payloadToSend),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      accept: "application/json",
-      "Content-Type": "application/json",
+  const response = await authFetch(
+    `${ENV.BASE_API_URL}/users/kids`,
+    {
+      method: "POST",
+      body: JSON.stringify(payloadToSend),
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
     },
-  });
+    token,
+  );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
 

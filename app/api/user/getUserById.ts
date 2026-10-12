@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload, BasicUser } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 
@@ -6,13 +7,16 @@ export async function getUserById(
   token: string,
   userId: string,
 ): Promise<ResponsePayload<BasicUser>> {
-  const response = await fetch(`${ENV.BASE_API_URL}/users/${userId}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const response = await authFetch(
+    `${ENV.BASE_API_URL}/users/${userId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+    token,
+  );
 
   const payload = (await response.json()) as ResponsePayload<BasicUser>;
 

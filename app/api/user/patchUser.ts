@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload, User } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 
@@ -7,16 +8,16 @@ export async function patchUser(
   token: string,
   userPatch: Partial<{ name: string; email: string; password: string }>,
 ): Promise<ResponsePayload<User>> {
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}`,
     {
       method: "PATCH",
       body: JSON.stringify(userPatch),
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<User>;

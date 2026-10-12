@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload, User } from "@/types/domain";
 import { UserUpdateRequest } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
@@ -8,16 +9,16 @@ export async function updateUser(
   token: string,
   userUpdate: UserUpdateRequest,
 ): Promise<ResponsePayload<User>> {
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}`,
     {
       method: "PUT",
       body: JSON.stringify(userUpdate),
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<User>;

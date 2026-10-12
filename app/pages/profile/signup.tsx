@@ -14,12 +14,10 @@ import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
-import { ApiError, Kid } from "@/types/domain";
+import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
 import { signup } from "@/api/auth/signup";
-import { getAllKids } from "@/api/kids/getAllKids";
-import { toDomainKid } from "@/lib/utils";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -36,22 +34,18 @@ export function Signup() {
     try {
       const { data } = await signup(SignupRequest);
 
-      let kids: Kid[] = [];
-      try {
-        const kidsResponse = await getAllKids(data.token);
-        kids = (kidsResponse.data ?? []).map(toDomainKid);
-      } catch {
-        kids = [];
-      }
-
       const basicUser = {
         name: data.name,
         email: SignupRequest.email,
         isAdmin: data.isAdmin,
-        kids,
       };
 
-      updateAppUser(basicUser, data.token);
+      updateAppUser(
+        basicUser,
+        data.token,
+        data.refreshToken ?? null,
+        data.userId ?? null,
+      );
 
       navigation.reset({
         index: 0,

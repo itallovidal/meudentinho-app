@@ -26,6 +26,7 @@ export interface UserAuthResponseDTO {
   name: string;
   token: string;
   refreshToken: string;
+  userId: string;
   isAdmin: boolean;
 }
 
