@@ -1,11 +1,11 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { Alert, ScrollView } from "react-native";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
@@ -14,17 +14,15 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
-import RecentEventsList from "@/components/smile/RecentEventsList";
 import { getAllKids } from "@/api/kids/getAllKids";
 import { createKid } from "@/api/kids/createKid";
 
 export function Home() {
-  const [isKidSectionVisible, setKidSectionVisible] = useState(false);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
-  const { authToken } = useContext(UserContext)!;
+  const { authToken, hydrated } = useContext(UserContext)!;
   const queryClient = useQueryClient();
 
   const {
@@ -35,6 +33,7 @@ export function Home() {
     categories,
     articlesByCategory,
     isLoading,
+    isError,
   } = useArticles({ withCategories: false });
 
   const { data: kidsResponse } = useQuery({
@@ -45,12 +44,13 @@ export function Home() {
     refetchOnMount: false,
   });
 
-  const kids = kidsResponse?.data || [];
-  const hasKids = kids.length === 0;
+  const kids = kidsResponse?.data ?? [];
+  const showOnboarding = hydrated && !!authToken && kids.length === 0;
 
-  useEffect(() => {
-    setKidSectionVisible(hasKids);
-  }, [hasKids]);
+  const createKidMutation = useMutation({
+    mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kids"] }),
+  });
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
@@ -59,14 +59,20 @@ export function Home() {
         return;
       }
 
-      await createKid(kidDTO, authToken);
+      await createKidMutation.mutateAsync(kidDTO);
 
-      queryClient.invalidateQueries({ queryKey: ["kids", authToken] });
-
-      Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
+      Alert.alert("Sucesso", "Filho cadastrado com sucesso.");
     } catch (error) {
-      console.error("Error creating dependent:", error);
-      setRegisterKidError(error as ApiError);
+      if (error instanceof ApiError) {
+        setRegisterKidError(error);
+        return;
+      }
+      setRegisterKidError(
+        new ApiError(
+          "Não foi possível cadastrar o filho. Verifique sua conexão e tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
     }
   }
 
@@ -91,14 +97,23 @@ export function Home() {
           justify="start"
           gap="gap-4"
         >
-          {isKidSectionVisible && (
+          {hydrated && showOnboarding && (
             <RegisterKidSection
               onRegisterKid={onRegisterKid}
               registerKidError={registerKidError}
             />
           )}
 
-          <RecentEventsList items={[]} />
+          {hydrated && !authToken && (
+            <Wrapper direction="column" gap="gap-1" className="mb-2 mt-4">
+              <Text variant="h2" className="mb-0">
+                Bem-vindo!
+              </Text>
+              <Text className="text-muted">
+                Acompanhe a saúde bucal do seu filho.
+              </Text>
+            </Wrapper>
+          )}
 
           <Wrapper
             direction="column"
@@ -115,6 +130,8 @@ export function Home() {
               categories={categories}
               articlesByCategory={articlesByCategory}
               isLoading={isLoading}
+              isError={isError}
+              onRetry={onRefresh}
             />
           </Wrapper>
 

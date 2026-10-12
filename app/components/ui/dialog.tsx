@@ -58,7 +58,7 @@ function DialogContent({
       <DialogOverlay>
         <DialogPrimitive.Content
           className={cn(
-            'bg-background border-border z-50 mx-auto flex w-full max-w-[calc(100%-2rem)] flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5',
+            'bg-background border-border z-50 mx-auto flex w-full max-w-[calc(100%-2rem)] flex-col gap-4 rounded-2xl border p-6 shadow-lg shadow-black/5',
             Platform.select({
               web: 'animate-in fade-in-0 zoom-in-95 duration-200',
             }),

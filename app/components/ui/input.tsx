@@ -1,12 +1,14 @@
 import { cn } from "@/lib/utils";
 import { Platform, TextInput } from "react-native";
+import { forwardRef } from "react";
 
-function Input({
-  className,
-  ...props
-}: React.ComponentProps<typeof TextInput> & React.RefAttributes<TextInput>) {
+const Input = forwardRef<
+  TextInput,
+  React.ComponentProps<typeof TextInput>
+>(function Input({ className, ...props }, ref) {
   return (
     <TextInput
+      ref={ref}
       className={cn(
         "dark:bg-input/30 border-sm bg-base-200 text-base-900 flex h-14 w-full min-w-0 flex-row items-center rounded-md border border-base-200 px-3 py-2 text-base leading-5 shadow-sm shadow-black/5 sm:h-9",
         props.editable === false &&
@@ -29,6 +31,6 @@ function Input({
       {...props}
     />
   );
-}
+});
 
 export { Input };

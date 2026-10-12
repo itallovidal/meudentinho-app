@@ -9,11 +9,20 @@ import {
   UpdateProfileDTO,
 } from "@/lib/schemas/responsible";
 import { getUserIdFromToken } from "@/lib/utils";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Alert, ScrollView, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 
 export function Responsible() {
-  const { user, authToken, updateAppUser } = useContext(UserContext)!;
+  const { user, authToken, hydrated, updateAppUser } = useContext(UserContext)!;
+  const navigation = useNavigation<ProfileNavegationProp>();
+
+  useEffect(() => {
+    if (hydrated && !authToken) {
+      navigation.navigate("Login");
+    }
+  }, [hydrated, authToken, navigation]);
 
   async function handleUpdateResponsible(
     profile: UpdateProfileDTO,
@@ -50,9 +59,27 @@ export function Responsible() {
 
       Alert.alert("Dados atualizados", "As alterações foram salvas com sucesso.");
     } catch (error) {
-      console.error("Error updating user:", error);
       Alert.alert("Erro", "Não foi possível atualizar os dados.");
     }
+  }
+
+  if (!hydrated) {
+    return (
+      <Wrapper
+        className="bg-base-200 flex-1"
+        direction="column"
+        align="center"
+        justify="start"
+        gap="gap-0"
+      >
+        <Header hasBackButton />
+        <Text>Carregando...</Text>
+      </Wrapper>
+    );
+  }
+
+  if (!authToken) {
+    return null;
   }
 
   return (
@@ -70,7 +97,7 @@ export function Responsible() {
       >
         <Text className="text-3xl font-bold mb-4">Responsável</Text>
 
-        <View className="bg-base-100 rounded-lg p-4">
+        <View className="bg-base-100 rounded-xl p-4">
           <UpdateResponsibleForm
             onSubmit={handleUpdateResponsible}
             defaultName={user?.name}

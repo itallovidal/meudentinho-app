@@ -17,6 +17,7 @@ export function Index() {
     categories,
     articlesByCategory,
     isLoading,
+    isError,
   } = useArticles({ withCategories: true });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +65,7 @@ export function Index() {
           direction="column"
           align="start"
           justify="start"
-          gap="gap-2"
+          gap="gap-4"
         >
           <SearchInput
             onSearchStart={handleSearchStart}
@@ -102,6 +103,8 @@ export function Index() {
               categories={categories}
               articlesByCategory={articlesByCategory}
               isLoading={isLoading}
+              isError={isError}
+              onRetry={onRefresh}
             />
           )}
         </Wrapper>

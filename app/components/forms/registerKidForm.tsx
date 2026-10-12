@@ -1,5 +1,4 @@
 import { kidSchema } from "@/lib/schemas/kid";
-import { calculateAgeFromBirthDate } from "@/lib/utils";
 import { ApiError } from "@/types/domain";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +12,6 @@ import { Controller, useForm } from "react-hook-form";
 import { Checkbox } from "expo-checkbox";
 import { GenderSelector } from "./genderSelector";
 import { AgeSelector } from "./ageSelector";
-import { DateData } from "react-native-calendars";
 
 interface Props {
   onSubmit: (data: KidRequestDTO) => void | Promise<void>;
@@ -83,20 +81,16 @@ export function RegisterKidForm({
     }
   }, [isPremature, setValue]);
 
-  const calculatedAge = calculateAgeFromBirthDate(birthDate);
-  const ageValue = calculatedAge === null ? "" : String(calculatedAge);
-
   function changeGender(gender: "male" | "female") {
     setValue("gender", gender, { shouldDirty: true });
   }
 
-  function chooseBirthDate(date: DateData) {
-    setValue("birthDate", date.dateString, {
+  function chooseBirthDate(dateString: string) {
+    setValue("birthDate", dateString, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
     });
-    setIsEditingBirthDate(false);
   }
 
   return (
@@ -119,11 +113,11 @@ export function RegisterKidForm({
       <GenderSelector gender={gender} onChange={changeGender} />
 
       <AgeSelector
-        ageValue={ageValue}
         birthDate={birthDate}
+        onSelectDate={chooseBirthDate}
+        error={errors.birthDate?.message as string | undefined}
         isEditingBirthDate={isEditingBirthDate}
         setIsEditingBirthDate={setIsEditingBirthDate}
-        onDayPress={chooseBirthDate}
       />
 
       <Wrapper direction="row" align="center" justify="start" gap="gap-2">
