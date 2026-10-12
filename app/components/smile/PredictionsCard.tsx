@@ -2,14 +2,21 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
+import { ToothPrediction } from "@/types/teeth";
 import {
   ArrowRightIcon,
   CalendarBlankIcon,
-  CalendarIcon,
   ClockIcon,
 } from "phosphor-react-native";
 
-export default function PredictionsCard({ items }: { items: any[] }) {
+export default function PredictionsCard({
+  items,
+}: {
+  items: ToothPrediction[];
+}) {
+  if (items.length === 0) {
+    return null;
+  }
   return (
     <Wrapper
       direction="column"
@@ -27,20 +34,8 @@ export default function PredictionsCard({ items }: { items: any[] }) {
         <ArrowRightIcon size={22} color="white" weight="bold" />
       </Wrapper>
 
-      {items.length === 0 ? (
-        <View className="items-center justify-center gap-2 py-5">
-          <CalendarIcon
-            size={32}
-            color="rgba(255, 255, 255, 0.4)"
-            weight="light"
-          />
-          <Text className="text-center text-sm text-white/50">
-            Nenhuma previsão informada.
-          </Text>
-        </View>
-      ) : (
-        <View className="gap-2">
-          {items.map((it: any) => (
+      <View className="gap-2">
+        {items.map((it: ToothPrediction) => (
             <View key={it.id} className="rounded-lg bg-white/10 px-3.5 py-3">
               <Text className="text-sm font-semibold text-white">
                 {it.title}
@@ -66,7 +61,6 @@ export default function PredictionsCard({ items }: { items: any[] }) {
             </View>
           ))}
         </View>
-      )}
 
       <View className="absolute bottom-0 right-0 opacity-[0.08]">
         <CalendarBlankIcon size={80} color="white" weight="regular" />

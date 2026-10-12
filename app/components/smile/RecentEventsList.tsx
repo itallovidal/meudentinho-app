@@ -5,14 +5,14 @@ import { Wrapper } from "@/components/wrapper";
 import { ToothEvent } from "@/types/teeth";
 import {
   ClockCounterClockwiseIcon,
-  NoteBlankIcon,
   ToothIcon,
   StarIcon,
   CalendarCheckIcon,
 } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
+import { toothEventVerb, toothTypeLabel, archLabel } from "@/lib/teethLabels";
+import { formatDateShortPtBR } from "@/lib/utils";
 
-// Map event types to icons for visual distinction
 const EVENT_ICON_MAP: Record<string, { Icon: any; color: string }> = {
   exfoliation: { Icon: ToothIcon, color: THEME.light.primary400 },
   eruption: { Icon: StarIcon, color: THEME.light.tertiary400 },
@@ -23,31 +23,12 @@ const DEFAULT_EVENT_ICON = {
   color: THEME.light.base500,
 };
 
-const sampleEvents: ToothEvent[] = [
-  {
-    id: "1",
-    toothType: "canine",
-    dentition: "primary",
-    arch: "upper",
-    side: "right",
-    eventType: "exfoliation",
-    occurrenceDate: "2024-05-10T00:00:00Z",
-  },
-  {
-    id: "2",
-    toothType: "central_incisor",
-    dentition: "primary",
-    arch: "upper",
-    side: "right",
-    eventType: "eruption",
-    occurrenceDate: "2024-06-15T00:00:00Z",
-  },
-];
-
 export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
   const colors = THEME.light;
 
-  items = sampleEvents;
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <Wrapper
@@ -62,7 +43,7 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
         justify="between"
         className="mb-3 w-full flex-1"
       >
-        <Text variant="h4" className="text-primary-500">
+        <Text variant="h4" className="flex-1 text-primary-500">
           Últimos Registros
         </Text>
         <ClockCounterClockwiseIcon
@@ -72,22 +53,8 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
         />
       </Wrapper>
 
-      {items.length === 0 ? (
-        <Wrapper
-          direction="column"
-          align="center"
-          justify="center"
-          gap="gap-2"
-          className="py-6"
-        >
-          <NoteBlankIcon size={32} color={colors.base400} weight="light" />
-          <Text className="text-center text-sm text-base-400">
-            Nenhum registro informado.
-          </Text>
-        </Wrapper>
-      ) : (
-        <View className="gap-2">
-          {items.map((it) => {
+      <View className="gap-2">
+        {items.map((it) => {
             const { Icon, color } =
               EVENT_ICON_MAP[it.eventType] || DEFAULT_EVENT_ICON;
             return (
@@ -100,20 +67,19 @@ export default function RecentEventsList({ items }: { items: ToothEvent[] }) {
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-primary-800">
-                    {it.toothType} • {it.eventType}
+                    {`${toothTypeLabel(it.toothType)} ${archLabel(it.arch)} ${toothEventVerb(it.eventType)}`}
                   </Text>
                   <Text className="text-xs text-base-500">
-                    {new Date(it.occurrenceDate).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                    })}
+                    {it.note
+                      ? `${formatDateShortPtBR(it.occurrenceDate) ?? it.occurrenceDate} • ${it.note}`
+                      : (formatDateShortPtBR(it.occurrenceDate) ??
+                        it.occurrenceDate)}
                   </Text>
                 </View>
               </View>
             );
           })}
         </View>
-      )}
     </Wrapper>
   );
 }

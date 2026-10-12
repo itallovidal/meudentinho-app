@@ -1,62 +1,233 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
+import { KidSelector } from "@/components/smile/KidSelector";
 import PredictionsCard from "@/components/smile/PredictionsCard";
 import RecentEventsList from "@/components/smile/RecentEventsList";
 import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import {
-  getTeethExchangeStats,
-  getToothEvents,
-  getToothPredictions,
-  registerToothEvent,
-} from "@/api/smile";
-import { TeethExchangeStats, ToothEvent, ToothPrediction } from "@/types/teeth";
+import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import { getAllKids } from "@/api/kids/getAllKids";
+import { getToothEventsByKid } from "@/api/smile/getToothEvents";
+import { createToothEvent } from "@/api/smile/createToothEvent";
+import { updateToothEvent } from "@/api/smile/updateToothEvent";
+import { birthDateToString } from "@/lib/utils";
+import { ApiError, ResponsePayload } from "@/types/domain";
+import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
+
+const TOTAL_MILK_TEETH = 20;
 
 export function Smile() {
-  const userCtx = useContext(UserContext);
+  const { user, authToken } = useContext(UserContext)!;
+  const navigation = useNavigation<TabNavigatorNavigationProp>();
+  const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
-  const [events, setEvents] = useState<ToothEvent[]>([]);
-  const [predictions, setPredictions] = useState<ToothPrediction[]>([]);
-  const [stats, setStats] = useState<TeethExchangeStats>({
-    totalMilkTeeth: 20,
-    exchanged: 0,
+
+  const { data: kidsData } = useQuery({
+    queryKey: ["kids", authToken],
+    queryFn: () => getAllKids(authToken!),
+    enabled: !!authToken,
+    staleTime: 1000 * 60 * 5,
   });
 
-  useEffect(() => {
-    if (!userCtx?.user) return;
-    setSelectedKidId(userCtx.user?.kids?.[0]?.id || null);
-  }, [userCtx?.user]);
-
-  const loadSmileData = useCallback(async (kidId: string) => {
-    const [ev, pr, st] = await Promise.all([
-      getToothEvents(kidId),
-      getToothPredictions(kidId),
-      getTeethExchangeStats(kidId),
-    ]);
-    setEvents(ev);
-    setPredictions(pr);
-    setStats(st);
-  }, []);
+  const kids = useMemo(() => {
+    const fromApi = kidsData?.data ?? [];
+    if (fromApi.length > 0) {
+      return fromApi.map((kid) => ({ id: kid.id, name: kid.name }));
+    }
+    return (user?.kids ?? []).map((kid) => ({ id: kid.id, name: kid.name }));
+  }, [kidsData, user]);
 
   useEffect(() => {
-    if (!selectedKidId) return;
-    void loadSmileData(selectedKidId);
-  }, [loadSmileData, selectedKidId]);
+    if (!kids.some((kid) => kid.id === selectedKidId)) {
+      setSelectedKidId(kids[0]?.id ?? null);
+    }
+  }, [kids, selectedKidId]);
 
-  const handleRegisterEvent = useCallback(
-    async (payload: Omit<ToothEvent, "id">) => {
-      if (!selectedKidId) return;
-      await registerToothEvent(selectedKidId, payload);
-      await loadSmileData(selectedKidId);
-    },
-    [loadSmileData, selectedKidId],
-  );
+  const eventsQuery = useQuery({
+    queryKey: ["tooth-events", selectedKidId],
+    queryFn: () =>
+      getToothEventsByKid(selectedKidId!, authToken!).then(
+        (response) => response.data,
+      ),
+    enabled: !!selectedKidId && !!authToken,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const kidName = userCtx?.user?.kids?.[0]?.name;
+  const events = useMemo(() => {
+    const data = eventsQuery.data ?? [];
+    return [...data].sort((a, b) =>
+      a.occurrenceDate < b.occurrenceDate ? 1 : -1,
+    );
+  }, [eventsQuery.data]);
+
+  const registerMutation = useMutation({
+    mutationFn: (request: ToothEventRequestDTO) =>
+      createToothEvent(request, authToken ?? ""),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["tooth-events", selectedKidId],
+      }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, request }: { id: string; request: ToothEventRequestDTO }) =>
+      updateToothEvent(id, authToken ?? "", request),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["tooth-events", selectedKidId],
+      }),
+  });
+
+  async function handleRegisterEvent(
+    payload: ToothEventRequestDTO,
+    editingId: string | null,
+  ) {
+    if (editingId) {
+      await updateMutation.mutateAsync({ id: editingId, request: payload });
+      return;
+    }
+    try {
+      await registerMutation.mutateAsync(payload);
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.code === "TOOTH_EVENT_DUPLICATE"
+      ) {
+        const cached = queryClient.getQueryData<
+          ResponsePayload<ToothEvent[]>
+        >(["tooth-events", selectedKidId]);
+        const match = (cached?.data ?? []).find(
+          (event) =>
+            event.quadrant === payload.quadrant &&
+            event.toothType === payload.toothType &&
+            event.eventType === payload.eventType,
+        );
+        if (match) {
+          await updateMutation.mutateAsync({ id: match.id, request: payload });
+          return;
+        }
+      }
+      throw error;
+    }
+  }
+
+  const stats = useMemo(() => {
+    const exfoliated = new Set<string>();
+    for (const event of events) {
+      if (
+        event.eventType === "exfoliation" &&
+        event.dentition === "primary"
+      ) {
+        exfoliated.add(`${event.quadrant}:${event.toothType}`);
+      }
+    }
+    return {
+      totalMilkTeeth: TOTAL_MILK_TEETH,
+      exchanged: Math.min(exfoliated.size, TOTAL_MILK_TEETH),
+    };
+  }, [events]);
+
+  const selectedKid = kids.find((kid) => kid.id === selectedKidId);
+  const selectedKidRecord = (
+    (kidsData?.data ?? user?.kids ?? []) as {
+      id: string;
+      birthDate: string | Date;
+    }[]
+  ).find((kid) => kid.id === selectedKidId);
+  const kidBirthDate = selectedKidRecord
+    ? birthDateToString(selectedKidRecord.birthDate)
+    : null;
+
+  if (!authToken || !user) {
+    return (
+      <Wrapper
+        direction="column"
+        align="center"
+        justify="start"
+        className="flex-1 bg-base-200"
+      >
+        <Header />
+        <Wrapper
+          direction="column"
+          align="center"
+          justify="center"
+          className="w-full flex-1 px-6"
+        >
+          <Wrapper
+            className="w-full items-center rounded-xl bg-base-100 p-5"
+            direction="column"
+            align="center"
+            justify="center"
+            gap="gap-4"
+          >
+            <Text variant="h4" className="text-center text-primary-500">
+              Acompanhe o sorriso
+            </Text>
+            <Text className="text-center text-base-500">
+              Faça login para registrar e acompanhar os eventos dentários.
+            </Text>
+            <Button
+              onPress={() =>
+                navigation.navigate("Profile", { screen: "Login" })
+              }
+            >
+              <Text>Fazer login</Text>
+            </Button>
+          </Wrapper>
+        </Wrapper>
+      </Wrapper>
+    );
+  }
+
+  if (kids.length === 0) {
+    return (
+      <Wrapper
+        direction="column"
+        align="center"
+        justify="start"
+        className="flex-1 bg-base-200"
+      >
+        <Header />
+        <Wrapper
+          direction="column"
+          align="center"
+          justify="center"
+          className="w-full flex-1 px-6"
+        >
+          <Wrapper
+            className="w-full items-center rounded-xl bg-base-100 p-5"
+            direction="column"
+            align="center"
+            justify="center"
+            gap="gap-4"
+          >
+            <Text variant="h4" className="text-center text-primary-500">
+              Nenhum filho ainda
+            </Text>
+            <Text className="text-center text-base-500">
+              Adicione um filho para começar a registrar os eventos
+              dentários.
+            </Text>
+            <Button
+              onPress={() =>
+                navigation.navigate("Profile", { screen: "Dependents" })
+              }
+            >
+              <Text>Gerenciar filhos</Text>
+            </Button>
+          </Wrapper>
+        </Wrapper>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper
@@ -74,21 +245,59 @@ export function Smile() {
           justify="start"
           gap="gap-4"
         >
-          <DentalMap onRegisterEvent={handleRegisterEvent} />
-          <DentalTipCard
-            title="Molar dos 6 anos"
-            description="Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!"
+          <KidSelector
+            kids={kids}
+            selectedId={selectedKidId}
+            onSelect={setSelectedKidId}
+            onAdd={() =>
+              navigation.navigate("Profile", { screen: "Dependents" })
+            }
           />
 
-          <RecentEventsList items={events} />
+          {eventsQuery.isPending && (
+            <Text className="text-base-500">Carregando eventos...</Text>
+          )}
 
-          <PredictionsCard items={predictions} />
+          {eventsQuery.isError && (
+            <Wrapper
+              direction="column"
+              align="center"
+              justify="center"
+              gap="gap-4"
+              className="w-full rounded-xl bg-base-100 p-6"
+            >
+              <Text className="text-center">
+                Não foi possível carregar os eventos. Verifique sua conexão.
+              </Text>
+              <Button onPress={() => void eventsQuery.refetch()}>
+                <Text>Tentar novamente</Text>
+              </Button>
+            </Wrapper>
+          )}
 
-          <TeethExchangeCard
-            total={stats.totalMilkTeeth}
-            exchanged={stats.exchanged}
-            kidName={kidName}
-          />
+          {!eventsQuery.isPending && !eventsQuery.isError && selectedKidId && (
+            <>
+              <DentalMap
+                kidId={selectedKidId}
+                kidBirthDate={kidBirthDate}
+                events={events}
+                onRegisterEvent={handleRegisterEvent}
+              />
+              <DentalTipCard
+                title="Molar dos 6 anos"
+                description="Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!"
+              />
+              <RecentEventsList items={events.slice(0, 5)} />
+              <PredictionsCard items={[]} />
+              {events.length > 0 && (
+                <TeethExchangeCard
+                  total={stats.totalMilkTeeth}
+                  exchanged={stats.exchanged}
+                  kidName={selectedKid?.name}
+                />
+              )}
+            </>
+          )}
         </Wrapper>
       </ScrollView>
     </Wrapper>
