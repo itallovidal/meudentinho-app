@@ -15,20 +15,25 @@ import {
 } from "phosphor-react-native";
 import { useContext } from "react";
 import { UserContext } from "@/contexts/UserContext";
+import { logout } from "@/api/auth/logout";
 import { ENV } from "@/lib/env";
 import { THEME } from "@/lib/theme";
 
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
-  const { updateAppUser, user, hydrated } = useContext(UserContext)!;
+  const { updateAppUser, user, hydrated, refreshToken } = useContext(UserContext)!;
 
   const handleLogout = async () => {
-    await updateAppUser(null, null);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Index" }],
-    });
+    try {
+      await logout(refreshToken ?? "");
+    } finally {
+      await updateAppUser(null, null);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Index" }],
+      });
+    }
   };
 
   const profileOptions = [
@@ -42,8 +47,8 @@ export function Index() {
     },
     {
       icon: <UsersThreeIcon color={colors.primary400} />,
-      title: "Gerencie seus filhos",
-      description: "Administre seus filhos.",
+      title: "Gerencie Dependentes",
+      description: "Administre seus dependentes.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Dependents"),
       isDisabled: false,

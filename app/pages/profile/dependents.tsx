@@ -6,15 +6,18 @@ import { updateKid } from "@/api/kids/updateKid";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { ApiError } from "@/types/domain";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import { formatAgeFromBirthDate, shouldUsePut } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
 import { THEME } from "@/lib/theme";
 import { TrashIcon, UsersThreeIcon } from "phosphor-react-native";
 import React, { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, RefreshControl, Alert, ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,12 +28,19 @@ export function Dependents() {
   const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<KidResponseDTO | null>(
+    null,
+  );
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadFailure, setLoadFailure] = useState<"auth" | "network" | null>(
+    null,
+  );
   const navigation = useNavigation<ProfileNavegationProp>();
   const queryClient = useQueryClient();
   const colors = THEME.light;
+  const { showToast } = useToast();
 
-  const isEmptyState = !loading && !loadError && kids.length === 0;
+  const isEmptyState = !loading && !loadFailure && kids.length === 0;
 
   useEffect(() => {
     loadDependents();
@@ -71,9 +81,13 @@ export function Dependents() {
   async function loadDependents() {
     try {
       await loadKids();
-      setLoadError(false);
-    } catch {
-      setLoadError(true);
+      setLoadFailure(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "INVALID_CREDENTIALS") {
+        setLoadFailure("auth");
+      } else {
+        setLoadFailure("network");
+      }
     } finally {
       setLoading(false);
     }
@@ -81,8 +95,18 @@ export function Dependents() {
 
   async function handleRetryLoad() {
     setLoading(true);
-    setLoadError(false);
+    setLoadFailure(null);
     await loadDependents();
+  }
+
+  function handleLoginAgain() {
+    navigation.navigate("Login");
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadDependents();
+    setRefreshing(false);
   }
 
   async function handleSubmitKidForm(data: KidRequestDTO, index: number) {
@@ -124,9 +148,9 @@ export function Dependents() {
       }
 
       await loadKids();
-      Alert.alert("Sucesso", "Filho atualizado com sucesso.");
+      showToast("Dependente atualizado com sucesso.");
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível atualizar o filho.");
+      Alert.alert("Erro", "Não foi possível atualizar o dependente.");
     }
   }
 
@@ -140,25 +164,14 @@ export function Dependents() {
       await createKidMutation.mutateAsync(data);
       await loadKids();
       setShowCreateForm(false);
-      Alert.alert("Sucesso", "Filho cadastrado com sucesso.");
+      showToast("Dependente cadastrado com sucesso.");
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível cadastrar o filho.");
+      Alert.alert("Erro", "Não foi possível cadastrar o dependente.");
     }
   }
 
-  function handleDeletePress(kidId: string, kidName: string) {
-    Alert.alert(
-      "Excluir filho",
-      `Deseja excluir ${kidName}? Esta ação não pode ser desfeita.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: () => void handleConfirmDelete(kidId),
-        },
-      ],
-    );
+  function handleDeletePress(dependent: KidResponseDTO) {
+    setConfirmDelete(dependent);
   }
 
   async function handleConfirmDelete(kidId: string) {
@@ -170,9 +183,9 @@ export function Dependents() {
     try {
       await deleteKidMutation.mutateAsync(kidId);
       await loadKids();
-      Alert.alert("Sucesso", "Filho excluído com sucesso.");
+      showToast("Dependente excluído com sucesso.");
     } catch {
-      Alert.alert("Erro", "Não foi possível excluir o filho.");
+      Alert.alert("Erro", "Não foi possível excluir o dependente.");
     } finally {
       setDeletingId(null);
     }
@@ -199,7 +212,7 @@ export function Dependents() {
           </View>
           <Button
             variant="ghost"
-            onPress={() => handleDeletePress(dependent.id, dependent.name)}
+            onPress={() => handleDeletePress(dependent)}
             disabled={deletingId !== null}
             className="px-2"
           >
@@ -259,6 +272,9 @@ export function Dependents() {
       <ScrollView
         className="w-full px-6"
         contentContainerStyle={{ flexGrow: 1, paddingVertical: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         <Wrapper
           direction="column"
@@ -270,7 +286,7 @@ export function Dependents() {
               variant="h2"
               className={`mb-0 ${isEmptyState ? "text-center" : ""}`}
             >
-              Filhos
+              Dependentes
             </Text>
             <Text
               className={`text-muted ${isEmptyState ? "text-center" : ""}`}
@@ -285,11 +301,25 @@ export function Dependents() {
                 size="small"
                 color={colors.primary400}
               />
-              <Text>Carregando filhos...</Text>
+              <Text>Carregando dependentes...</Text>
             </View>
           )}
 
-          {!loading && loadError && (
+          {!loading && loadFailure === "auth" && (
+            <View className="bg-base-100 rounded-xl px-5 py-6 items-center">
+              <Text className="font-bold text-lg text-center mb-2">
+                Sessão expirada
+              </Text>
+              <Text className="text-base-500 text-center mb-5">
+                Faça login novamente para gerenciar os dependentes.
+              </Text>
+              <Button onPress={handleLoginAgain} className="h-12">
+                <Text>Fazer login</Text>
+              </Button>
+            </View>
+          )}
+
+          {!loading && loadFailure === "network" && (
             <View className="bg-base-100 rounded-xl px-5 py-6 items-center">
               <Text className="font-bold text-lg text-center mb-2">
                 Não foi possível carregar
@@ -313,14 +343,14 @@ export function Dependents() {
                 />
               </View>
               <Text className="font-bold text-lg text-center mb-2">
-                Nenhum filho cadastrado
+                Nenhum dependente cadastrado
               </Text>
               <Text className="text-base-500 text-center mb-5">
-                Adicione o primeiro filho para começar a gerenciar os
+                Adicione o primeiro dependente para começar a gerenciar os
                 dados.
               </Text>
               <Button onPress={() => setShowCreateForm(true)} className="h-12">
-                <Text>Adicionar filho</Text>
+                <Text>Adicionar dependente</Text>
               </Button>
             </View>
           )}
@@ -333,8 +363,8 @@ export function Dependents() {
             <View className="bg-base-100 rounded-xl p-6">
               <RegisterKidForm
                 onSubmit={handleCreateKidForm}
-                submitLabel="Adicionar novo filho"
-                submittingLabel="Adicionando novo filho..."
+                submitLabel="Adicionar novo dependente"
+                submittingLabel="Adicionando novo dependente..."
               />
             </View>
           )}
@@ -345,11 +375,27 @@ export function Dependents() {
               className="w-full"
               variant="default"
             >
-              <Text>Novo filho</Text>
+              <Text>Novo dependente</Text>
             </Button>
           )}
         </Wrapper>
       </ScrollView>
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title="Excluir dependente"
+        message={`Deseja excluir ${confirmDelete?.name ?? ""}? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => {
+          const target = confirmDelete;
+          setConfirmDelete(null);
+          if (target) {
+            void handleConfirmDelete(target.id);
+          }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </Wrapper>
   );
 

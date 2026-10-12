@@ -1,7 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { Kid } from "@/types/domain";
-import type { KidResponseDTO } from "@/types/dtos/user";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,27 +14,6 @@ export function shouldUsePut<T extends Record<string, unknown>>(
     (field) => original[field] !== updated[field],
   );
   return changedFields.length === fields.length;
-}
-
-export function toDomainKid(dto: KidResponseDTO): Kid {
-  const rawWeeks = dto.prematureWeeks ?? "";
-  const parsedWeeks = rawWeeks === "" ? undefined : Number(rawWeeks);
-  const prematureWeeks =
-    parsedWeeks === undefined || Number.isNaN(parsedWeeks)
-      ? undefined
-      : parsedWeeks;
-
-  return {
-    id: dto.id,
-    name: dto.name,
-    birthDate: new Date(dto.birthDate),
-    gender: dto.gender,
-    isPremature: dto.isPremature ?? prematureWeeks !== undefined,
-    prematureWeeks,
-    parentId: dto.parentId,
-    createdAt: new Date(dto.createdAt),
-    updatedAt: new Date(dto.updatedAt),
-  };
 }
 
 export function getUserIdFromToken(token: string): string {
