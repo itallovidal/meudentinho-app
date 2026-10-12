@@ -2,14 +2,13 @@ import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   Alert,
-  ScrollView,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
 import { Wrapper } from "@/components/wrapper";
-import ToothSVG, { type StrokeColor } from "./teeth/ToothSVG";
-import { TOOTH_PATHS } from "./teeth/paths";
+import ToothSVG from "./teeth/ToothSVG";
+import { FDI_TEETH } from "./teeth/fdiTeeth";
 import { Text } from "@/components/ui/text";
 import { ToothIcon } from "phosphor-react-native";
 import ToothEventModal from "./ToothEventModal";
@@ -31,15 +30,10 @@ type ToothPosition = {
   arch: Arch;
   side: Side;
   quadrant: Quadrant;
-  pathId: string;
-  flipVertical: boolean;
+  fdi: string;
 };
 
-type ArchMode = "open" | "closed";
-
-type ShownToothType = Exclude<ToothType, "third_molar">;
-
-const QUADRANT_TYPES: ShownToothType[] = [
+const QUADRANT_TYPES: ToothType[] = [
   "central_incisor",
   "lateral_incisor",
   "canine",
@@ -47,37 +41,35 @@ const QUADRANT_TYPES: ShownToothType[] = [
   "second_premolar",
   "first_molar",
   "second_molar",
+  "third_molar",
 ];
 
-const UPPER_SHAPES: Record<ShownToothType, { pathId: string; flipVertical: boolean }> = {
-  central_incisor: { pathId: "upper_central_incisor", flipVertical: false },
-  lateral_incisor: { pathId: "upper_lateral_incisor", flipVertical: false },
-  canine: { pathId: "upper_canine", flipVertical: false },
-  first_premolar: { pathId: "lower_first_premolar", flipVertical: true },
-  second_premolar: { pathId: "lower_second_premolar", flipVertical: true },
-  first_molar: { pathId: "lower_first_molar", flipVertical: true },
-  second_molar: { pathId: "lower_second_molar", flipVertical: true },
+const FDI_DECADE: Record<Quadrant, string> = {
+  upper_right: "1",
+  upper_left: "2",
+  lower_left: "3",
+  lower_right: "4",
 };
 
-const LOWER_SHAPES: Record<ShownToothType, { pathId: string; flipVertical: boolean }> = {
-  central_incisor: { pathId: "lower_central_incisor", flipVertical: false },
-  lateral_incisor: { pathId: "lower_lateral_incisor", flipVertical: false },
-  canine: { pathId: "lower_canine", flipVertical: false },
-  first_premolar: { pathId: "lower_first_premolar", flipVertical: false },
-  second_premolar: { pathId: "lower_second_premolar", flipVertical: false },
-  first_molar: { pathId: "lower_first_molar", flipVertical: false },
-  second_molar: { pathId: "lower_second_molar", flipVertical: false },
+const FDI_UNIT: Record<ToothType, string> = {
+  central_incisor: "1",
+  lateral_incisor: "2",
+  canine: "3",
+  first_premolar: "4",
+  second_premolar: "5",
+  first_molar: "6",
+  second_molar: "7",
+  third_molar: "8",
 };
 
-const STROKE_BY_STATE: Record<MapToothState, StrokeColor> = {
-  unregistered: "gray",
-  dimmed: "gray",
-  bornMilk: "light-blue",
-  bornPermanent: "dark-blue",
-  fell: "orange",
-  delayed: "soft-red",
+const STATE_COLORS: Record<MapToothState, string> = {
+  unregistered: "#8E97A3",
+  dimmed: "#C4CBD4",
+  bornMilk: "#4C9BDD",
+  bornPermanent: "#1E3A5F",
+  fell: "#DE7F02",
+  delayed: "#DA4E4E",
 };
-
 
 const LEGEND: { state: MapToothState; label: string; color: string }[] = [
   { state: "unregistered", label: "Sem registro", color: "#8E97A3" },
@@ -88,28 +80,18 @@ const LEGEND: { state: MapToothState; label: string; color: string }[] = [
   { state: "delayed", label: "Atrasado", color: "#DA4E4E" },
 ];
 
-const FILL_BY_STATE: Record<MapToothState, string> = {
-  unregistered: "#FFFFFF",
-  dimmed: "#FFFFFF",
-  bornMilk: "#E3F1FC",
-  bornPermanent: "#DCE7F3",
-  fell: "#FDF0DC",
-  delayed: "#FDE7E7",
-};
-
 const OPEN_TOOTH_SIZE = 28;
 const OPEN_ARCH_HEIGHT = 190;
 
 function buildArch(arch: Arch, side: Side): ToothPosition[] {
-  const shapes = arch === "upper" ? UPPER_SHAPES : LOWER_SHAPES;
+  const quadrant = `${arch}_${side}` as Quadrant;
   return QUADRANT_TYPES.map((toothType) => ({
     id: `${arch}_${side}_${toothType}`,
     toothType,
     arch,
     side,
-    quadrant: `${arch}_${side}` as Quadrant,
-    pathId: shapes[toothType].pathId,
-    flipVertical: shapes[toothType].flipVertical,
+    quadrant,
+    fdi: `${FDI_DECADE[quadrant]}${FDI_UNIT[toothType]}`,
   }));
 }
 
@@ -131,7 +113,6 @@ export function DentalMap({
 }: DentalMapProps) {
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [mode, setMode] = useState<ArchMode>("open");
   const { width: screenWidth } = useWindowDimensions();
 
   useFocusEffect(
@@ -168,7 +149,7 @@ export function DentalMap({
     return map;
   }, [arches, ageMonths, events]);
 
-  const archWidth = Math.max(280, screenWidth - 120);
+  const archWidth = Math.max(300, screenWidth - 100);
 
   const legendCounts = useMemo(() => {
     const counts: Record<MapToothState, number> = {
@@ -218,49 +199,6 @@ export function DentalMap({
     );
   }
 
-  function renderTooth(
-    position: ToothPosition,
-    size: number,
-    flipHorizontal: boolean,
-  ) {
-    const path = TOOTH_PATHS[position.pathId];
-    if (!path) {
-      return null;
-    }
-    const state = stateOf(position);
-    return (
-      <TouchableOpacity
-        key={position.id}
-        onPress={() => onToothPress(position.id)}
-        hitSlop={4}
-        style={{ opacity: state === "dimmed" ? 0.35 : 1 }}
-      >
-        <ToothSVG
-          viewBox={path.viewBox}
-          content={path.content}
-          width={size}
-          height={size}
-          stroke={STROKE_BY_STATE[state]}
-          strokeWidth={1.5}
-          fill={FILL_BY_STATE[state]}
-          flipHorizontal={flipHorizontal}
-          flipVertical={position.flipVertical}
-        />
-      </TouchableOpacity>
-    );
-  }
-
-  function renderClosedStrip(right: ToothPosition[], left: ToothPosition[]) {
-    return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View className="flex-row items-end gap-1">
-          {right.map((position) => renderTooth(position, 30, false))}
-          {left.map((position) => renderTooth(position, 30, true))}
-        </View>
-      </ScrollView>
-    );
-  }
-
   function renderOpenArch(
     right: ToothPosition[],
     left: ToothPosition[],
@@ -268,16 +206,16 @@ export function DentalMap({
   ) {
     const cx = archWidth / 2;
     const yBase = upper ? 30 : OPEN_ARCH_HEIGHT - 30;
-    const rx = archWidth / 2 - 30;
+    const rx = archWidth / 2 - 34;
     const ry = OPEN_ARCH_HEIGHT - 70;
 
     function place(sign: 1 | -1, curveIndex: number) {
-      const theta = (curveIndex / 6) * Math.PI * 0.5;
+      const theta = (curveIndex / 7) * Math.PI * 0.5;
       const x = cx + sign * (14 + rx * Math.sin(theta));
       const y = upper
         ? yBase + ry * (1 - Math.cos(theta))
         : yBase - ry * (1 - Math.cos(theta));
-      const rotation = sign * (curveIndex / 6) * 12;
+      const rotation = sign * (curveIndex / 7) * 12;
       return { x, y, rotation };
     }
 
@@ -286,8 +224,8 @@ export function DentalMap({
       sign: 1 | -1,
       curveIndex: number,
     ) {
-      const path = TOOTH_PATHS[position.pathId];
-      if (!path) {
+      const tooth = FDI_TEETH[position.fdi];
+      if (!tooth) {
         return null;
       }
       const { x, y, rotation } = place(sign, curveIndex);
@@ -306,15 +244,12 @@ export function DentalMap({
           }}
         >
           <ToothSVG
-            viewBox={path.viewBox}
-            content={path.content}
+            viewBox={tooth.viewBox}
+            contour={tooth.contour}
+            details={tooth.details}
+            fill={STATE_COLORS[state]}
             width={OPEN_TOOTH_SIZE}
             height={OPEN_TOOTH_SIZE}
-            stroke={STROKE_BY_STATE[state]}
-            strokeWidth={2}
-            fill={FILL_BY_STATE[state]}
-            flipHorizontal={sign > 0}
-            flipVertical={position.flipVertical}
           />
         </TouchableOpacity>
       );
@@ -326,7 +261,7 @@ export function DentalMap({
         className="self-center"
       >
         {right.map((position, index) =>
-          renderPlaced(position, -1, 6 - index),
+          renderPlaced(position, -1, 7 - index),
         )}
         {left.map((position, index) => renderPlaced(position, 1, index))}
       </View>
@@ -362,52 +297,19 @@ export function DentalMap({
         gap="gap-4"
         className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
       >
-        <Wrapper direction="row" align="center" justify="between" className="w-full">
-          <Text variant="h4" className="text-primary-500">
-            Mapa do Sorriso
-          </Text>
-          <Wrapper direction="row" gap="gap-2">
-            <TouchableOpacity
-              onPress={() => setMode("open")}
-              className={`rounded-full px-3 py-1.5 ${mode === "open" ? "bg-primary-500" : "bg-base-200"}`}
-            >
-              <Text
-                className={`text-xs font-bold ${mode === "open" ? "text-white" : ""}`}
-              >
-                Aberta
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setMode("closed")}
-              className={`rounded-full px-3 py-1.5 ${mode === "closed" ? "bg-primary-500" : "bg-base-200"}`}
-            >
-              <Text
-                className={`text-xs font-bold ${mode === "closed" ? "text-white" : ""}`}
-              >
-                Fechada
-              </Text>
-            </TouchableOpacity>
-          </Wrapper>
-        </Wrapper>
+        <Text variant="h4" className="text-primary-500">
+          Mapa do Sorriso
+        </Text>
 
-        {mode === "open" ? (
-          <>
-            {renderArchSection(
-              arches.upperRight,
-              arches.upperLeft,
-              "Superior",
-            )}
-            {renderArchSection(
-              arches.lowerRight,
-              arches.lowerLeft,
-              "Inferior",
-            )}
-          </>
-        ) : (
-          <View className="w-full">
-            {renderClosedStrip(arches.upperRight, arches.upperLeft)}
-            {renderClosedStrip(arches.lowerRight, arches.lowerLeft)}
-          </View>
+        {renderArchSection(
+          arches.upperRight,
+          arches.upperLeft,
+          "Superior",
+        )}
+        {renderArchSection(
+          arches.lowerRight,
+          arches.lowerLeft,
+          "Inferior",
         )}
 
         <Wrapper

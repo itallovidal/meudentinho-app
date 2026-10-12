@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
 import { isApiError } from "@/types/predicates";
@@ -8,14 +9,13 @@ export async function updateToothEvent(
   token: string,
   request: ToothEventRequestDTO,
 ): Promise<ResponsePayload<ToothEvent>> {
-  const response = await fetch(`${ENV.BASE_API_URL}/tooth-events/${eventId}`, {
+  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/${eventId}`, {
     method: "PUT",
     body: JSON.stringify(request),
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-  });
+  }, token);
 
   const payload = (await response.json()) as ResponsePayload<ToothEvent>;
 
