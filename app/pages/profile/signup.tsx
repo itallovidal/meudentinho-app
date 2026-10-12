@@ -1,4 +1,5 @@
 import { Wrapper } from "@/components/wrapper";
+import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
@@ -13,10 +14,12 @@ import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
-import { ApiError } from "@/types/domain";
+import { ApiError, Kid } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
 import { signup } from "@/api/auth/signup";
+import { getAllKids } from "@/api/kids/getAllKids";
+import { toDomainKid } from "@/lib/utils";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -29,15 +32,23 @@ export function Signup() {
   const colors = THEME.light;
 
   async function onSubmit(SignupRequest: SignupRequest) {
+    setError(null);
     try {
       const { data } = await signup(SignupRequest);
 
-      console.log("Signup successful, user data:", data);
+      let kids: Kid[] = [];
+      try {
+        const kidsResponse = await getAllKids(data.token);
+        kids = (kidsResponse.data ?? []).map(toDomainKid);
+      } catch {
+        kids = [];
+      }
 
       const basicUser = {
         name: data.name,
         email: SignupRequest.email,
         isAdmin: data.isAdmin,
+        kids,
       };
 
       updateAppUser(basicUser, data.token);
@@ -47,11 +58,16 @@ export function Signup() {
         routes: [{ name: "Index", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
-      console.log("Signup error:", err);
       if (err instanceof ApiError) {
         setError(err);
         return;
       }
+      setError(
+        new ApiError(
+          "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
     }
   }
 
@@ -66,7 +82,9 @@ export function Signup() {
   }
 
   return (
-    <ScrollView ref={scrollViewRef} className="bg-base-100 ">
+    <View className="flex-1 bg-base-100">
+      <Header hasBackButton />
+      <ScrollView ref={scrollViewRef} className="bg-base-100 ">
       <Wrapper
         className="w-full pb-6"
         direction="column"
@@ -74,7 +92,7 @@ export function Signup() {
         justify="center"
       >
         <Wrapper
-          className="h-[85vh] w-full bg-base-100 px-4 py-4"
+          className="w-full bg-base-100 px-6 py-4 min-h-[85vh]"
           direction="column"
           justify="center"
           gap={"gap-4"}
@@ -115,7 +133,7 @@ export function Signup() {
 
         <Wrapper
           ref={formRef}
-          className="w-full bg-base-100 px-4"
+          className="w-full bg-base-100 px-6"
           direction="column"
           align="center"
           justify="center"
@@ -140,6 +158,7 @@ export function Signup() {
           </Button>
         </Wrapper>
       </Wrapper>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

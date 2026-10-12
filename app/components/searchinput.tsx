@@ -1,6 +1,7 @@
 import { MagnifyingGlassIcon, XIcon } from "phosphor-react-native";
 import { Button } from "./ui/button";
 import { FormInput } from "./formInput";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { searchArticles } from "@/api/article/searchArticles";
 import { Article } from "@/types/domain";
@@ -44,13 +45,27 @@ export function SearchInput({
         return;
       }
 
-      console.error("Error searching articles:", payload.error);
       onSearchComplete(query, []);
     } catch (error) {
-      console.error("Error searching articles:", error);
       onSearchComplete(query, []);
     }
   }
+
+  const query = watch("query");
+  const lastSearched = useRef("");
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed === lastSearched.current) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      lastSearched.current = trimmed;
+      onSearchStart?.(trimmed);
+      void fetchSearchResults(trimmed);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   async function handleSearchSubmit(data: SearchFormData) {
     const query = data.query.trim();
@@ -60,6 +75,7 @@ export function SearchInput({
       return;
     }
 
+    lastSearched.current = query;
     onSearchStart?.(query);
     await fetchSearchResults(query);
   }
@@ -67,6 +83,7 @@ export function SearchInput({
   function onPress() {
     if (watch("query")) {
       reset();
+      lastSearched.current = "";
       onSearchReset?.();
       return;
     }
@@ -111,7 +128,7 @@ function mapToPreviews(articles: Article[]): ArticlePreviewDTO[] {
   return articles.map((article) => ({
     id: article.id,
     title: article.title,
-    categories: article.categories[0] || "",
+    categories: article.categories ?? [],
     readingTime: article.readingTime,
     imageCoverURL: article.imageCoverURL,
   }));

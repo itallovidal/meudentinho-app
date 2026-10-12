@@ -1,41 +1,52 @@
 import { Wrapper } from "@/components/wrapper";
+import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
-import { ApiError } from "@/types/domain";
+import { ApiError, Kid } from "@/types/domain";
 import { useCallback, useContext, useState } from "react";
 import { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 import { login } from "@/api/auth/login";
+import { getAllKids } from "@/api/kids/getAllKids";
+import { toDomainKid } from "@/lib/utils";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const [error, setError] = useState<ApiError | null>(null);
-  const { updateAppUser, user } = useContext(UserContext)!;
+  const { updateAppUser, user, authToken, hydrated } = useContext(UserContext)!;
 
   useFocusEffect(
     useCallback(() => {
-      if (user) {
+      if (hydrated && user && authToken) {
         navigation.reset({
           index: 0,
           routes: [{ name: "Index", params: { payload: user } }],
         });
       }
-    }, [user]),
+    }, [hydrated, user, authToken, navigation]),
   );
 
   async function onLogin(LoginRequest: LoginRequest) {
+    setError(null);
     try {
       const { data } = await login(LoginRequest);
 
-      console.log("Login successful, user data:", data);
+      let kids: Kid[] = [];
+      try {
+        const kidsResponse = await getAllKids(data.token);
+        kids = (kidsResponse.data ?? []).map(toDomainKid);
+      } catch {
+        kids = [];
+      }
 
       const basicUser = {
         name: data.name,
         email: LoginRequest.email,
         isAdmin: data.isAdmin,
+        kids,
       };
 
       updateAppUser(basicUser, data.token);
@@ -45,21 +56,34 @@ export function Login() {
         routes: [{ name: "Index", params: { payload: basicUser } }],
       });
     } catch (err: unknown) {
-      console.log("Login error:", err);
       if (err instanceof ApiError) {
         setError(err);
         return;
       }
+      setError(
+        new ApiError(
+          "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
     }
   }
 
   return (
     <Wrapper
-      className="w-full flex-1 bg-base-100 px-4"
+      className="w-full flex-1 bg-base-100"
       direction="column"
       align="center"
-      justify="center"
+      justify="start"
     >
+      <Header hasBackButton />
+
+      <Wrapper
+        className="w-full flex-1 px-6"
+        direction="column"
+        align="center"
+        justify="center"
+      >
       <Wrapper className="w-full" direction="column" gap={"gap-0"}>
         <Text className="mb-0" variant={"h2"}>
           Bem vindo de volta!
@@ -75,6 +99,7 @@ export function Login() {
       <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>
         <Text>Registrar-se</Text>
       </Button>
+      </Wrapper>
     </Wrapper>
   );
 }
