@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
@@ -6,13 +7,16 @@ import { isApiError } from "@/types/predicates";
 export async function getAllKids(
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO[]>> {
-  const response = await fetch(`${ENV.BASE_API_URL}/users/kids`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const response = await authFetch(
+    `${ENV.BASE_API_URL}/users/kids`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+    token,
+  );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;
 

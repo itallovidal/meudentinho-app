@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
@@ -13,16 +14,16 @@ export async function updateKid(
     birthDate: new Date(kidData.birthDate).toISOString(),
   };
 
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids/${kidId}`,
     {
       method: "PUT",
       body: JSON.stringify(payloadToSend),
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
@@ -33,7 +34,7 @@ export async function updateKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a atualização do filho",
+      "Erro inesperado ocorreu durante a atualização do dependente",
       "INTERNAL_SERVER_ERROR",
     );
   }

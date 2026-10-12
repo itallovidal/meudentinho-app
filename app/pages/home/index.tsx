@@ -14,6 +14,7 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
+import { useToast } from "@/components/ui/toast";
 import { getAllKids } from "@/api/kids/getAllKids";
 import { createKid } from "@/api/kids/createKid";
 
@@ -24,6 +25,7 @@ export function Home() {
   );
   const { authToken, hydrated } = useContext(UserContext)!;
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const {
     isRefreshing,
@@ -36,7 +38,7 @@ export function Home() {
     isError,
   } = useArticles({ withCategories: false });
 
-  const { data: kidsResponse } = useQuery({
+  const { data: kidsResponse, isPending: kidsPending } = useQuery({
     queryKey: ["kids", authToken],
     queryFn: () => getAllKids(authToken!),
     enabled: !!authToken,
@@ -45,7 +47,8 @@ export function Home() {
   });
 
   const kids = kidsResponse?.data ?? [];
-  const showOnboarding = hydrated && !!authToken && kids.length === 0;
+  const showOnboarding =
+    hydrated && !!authToken && !kidsPending && kids.length === 0;
 
   const createKidMutation = useMutation({
     mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
@@ -61,7 +64,7 @@ export function Home() {
 
       await createKidMutation.mutateAsync(kidDTO);
 
-      Alert.alert("Sucesso", "Filho cadastrado com sucesso.");
+      showToast("Dependente cadastrado com sucesso.");
     } catch (error) {
       if (error instanceof ApiError) {
         setRegisterKidError(error);
@@ -69,7 +72,7 @@ export function Home() {
       }
       setRegisterKidError(
         new ApiError(
-          "Não foi possível cadastrar o filho. Verifique sua conexão e tente novamente.",
+          "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
           "INTERNAL_SERVER_ERROR",
         ),
       );

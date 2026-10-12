@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 
@@ -6,15 +7,15 @@ export async function deleteUser(
   userId: string,
   token: string,
 ): Promise<ResponsePayload<void>> {
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}`,
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<void>;

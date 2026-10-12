@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 
@@ -6,15 +7,15 @@ export async function deleteKid(
   kidId: string,
   token: string,
 ): Promise<ResponsePayload<void>> {
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids/${kidId}`,
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<void>;
@@ -25,7 +26,7 @@ export async function deleteKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a exclusão do filho",
+      "Erro inesperado ocorreu durante a exclusão do dependente",
       "INTERNAL_SERVER_ERROR",
     );
   }

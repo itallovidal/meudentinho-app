@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { CustomCalendar } from "@/components/calendar";
@@ -60,6 +61,7 @@ export default function ToothEventModal({
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [showCalendar, setShowCalendar] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
@@ -82,12 +84,15 @@ export default function ToothEventModal({
   }
 
   useEffect(() => {
+    if (!visible) {
+      return;
+    }
     setEventType("eruption");
     loadRecord(
       toothEvents.find((event) => event.eventType === "eruption"),
       defaultDentition,
     );
-  }, [toothId]);
+  }, [visible, toothId]);
 
   function changeEventType(next: "eruption" | "exfoliation") {
     setEventType(next);
@@ -97,7 +102,7 @@ export default function ToothEventModal({
     );
   }
 
-  async function handleSave() {
+  async function performSave() {
     if (!parsed || !kidId) {
       return;
     }
@@ -121,17 +126,26 @@ export default function ToothEventModal({
     );
   }
 
+  function handleConfirmPress() {
+    if (editingId) {
+      setConfirmOpen(true);
+      return;
+    }
+    void performSave();
+  }
+
   const editingRecord = editingId
     ? toothEvents.find((event) => event.id === editingId)
     : undefined;
 
   return (
-    <Dialog
-      open={visible}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
+    <>
+      <Dialog
+        open={visible}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+      >
       <DialogContent className="gap-4 p-5">
         <DialogHeader>
           <DialogTitle>{toothIdLabel(toothId)}</DialogTitle>
@@ -227,7 +241,7 @@ export default function ToothEventModal({
             <Text>Fechar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => void handleSave()}
+            onPress={handleConfirmPress}
             disabled={!parsed}
             className="rounded bg-primary-700 px-4 py-2"
           >
@@ -236,5 +250,18 @@ export default function ToothEventModal({
         </Wrapper>
       </DialogContent>
     </Dialog>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Salvar alterações"
+        message="Deseja salvar as alterações deste registro?"
+        confirmLabel="Salvar"
+        onConfirm={() => {
+          setConfirmOpen(false);
+          void performSave();
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </>
   );
 }

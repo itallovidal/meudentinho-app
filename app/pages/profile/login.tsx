@@ -5,18 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
-import { ApiError, Kid } from "@/types/domain";
+import { ApiError } from "@/types/domain";
 import { useCallback, useContext, useState } from "react";
 import { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 import { login } from "@/api/auth/login";
-import { getAllKids } from "@/api/kids/getAllKids";
-import { toDomainKid } from "@/lib/utils";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const [error, setError] = useState<ApiError | null>(null);
-  const { updateAppUser, user, authToken, hydrated } = useContext(UserContext)!;
+  const { updateAppUser, user, authToken, hydrated, sessionExpired, clearSessionExpired } = useContext(UserContext)!;
 
   useFocusEffect(
     useCallback(() => {
@@ -31,25 +29,22 @@ export function Login() {
 
   async function onLogin(LoginRequest: LoginRequest) {
     setError(null);
+    clearSessionExpired();
     try {
       const { data } = await login(LoginRequest);
-
-      let kids: Kid[] = [];
-      try {
-        const kidsResponse = await getAllKids(data.token);
-        kids = (kidsResponse.data ?? []).map(toDomainKid);
-      } catch {
-        kids = [];
-      }
 
       const basicUser = {
         name: data.name,
         email: LoginRequest.email,
         isAdmin: data.isAdmin,
-        kids,
       };
 
-      updateAppUser(basicUser, data.token);
+      updateAppUser(
+        basicUser,
+        data.token,
+        data.refreshToken ?? null,
+        data.userId ?? null,
+      );
 
       navigation.reset({
         index: 0,
@@ -94,6 +89,12 @@ export function Login() {
       </Wrapper>
 
       <LoginForm submitError={error} onSubmit={onLogin} />
+
+      {sessionExpired && !error && (
+        <Text className="mb-2 text-center text-red-600">
+          Sessão expirada. Faça login novamente.
+        </Text>
+      )}
 
       <Text variant={"small"}>Não possui uma conta?</Text>
       <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>

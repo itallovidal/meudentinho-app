@@ -1,4 +1,5 @@
 import { patchUser } from "@/api/user/patchUser";
+import { changePassword } from "@/api/user/changePassword";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
@@ -15,7 +16,8 @@ import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 
 export function Responsible() {
-  const { user, authToken, hydrated, updateAppUser } = useContext(UserContext)!;
+  const { user, authToken, hydrated, updateAppUser, userId: contextUserId } =
+    useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
 
   useEffect(() => {
@@ -34,7 +36,13 @@ export function Responsible() {
     }
 
     try {
-      const userId = getUserIdFromToken(authToken);
+      const userId =
+        contextUserId ??
+        (authToken ? getUserIdFromToken(authToken) : null);
+      if (!userId) {
+        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        return;
+      }
       const nameChanged = profile.name !== user.name;
       const emailChanged = profile.email !== user.email;
       const hasProfileChange = nameChanged || emailChanged;
@@ -52,8 +60,9 @@ export function Responsible() {
       }
 
       if (password) {
-        await patchUser(userId, authToken, {
-          password: password.newPassword,
+        await changePassword(userId, authToken, {
+          currentPassword: password.currentPassword,
+          newPassword: password.newPassword,
         });
       }
 

@@ -1,4 +1,5 @@
 import { ENV } from "@/lib/env";
+import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
@@ -15,16 +16,16 @@ export async function patchKid(
       : {}),
   };
 
-  const response = await fetch(
+  const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids/${kidId}`,
     {
       method: "PATCH",
       body: JSON.stringify(payloadToSend),
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     },
+    token,
   );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
@@ -35,7 +36,7 @@ export async function patchKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a atualização parcial do filho",
+      "Erro inesperado ocorreu durante a atualização parcial do dependente",
       "INTERNAL_SERVER_ERROR",
     );
   }

@@ -5,6 +5,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { TabNavigator } from "./app/navigation/TabNavigator";
 import { UserProvider } from "./app/contexts/UserContext";
 import { ErrorBoundary } from "./app/components/ErrorBoundary";
+import { ToastProvider } from "./app/components/ui/toast";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
@@ -13,6 +14,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 enableScreens();
+
+console.log(`[app] bundle loaded em ${new Date().toLocaleTimeString("pt-BR")}`);
 
 const Navigation = createStaticNavigation(TabNavigator);
 const queryClient = new QueryClient({
@@ -39,9 +42,11 @@ export default function App() {
                 edges={["top", "left", "right"]}
                 className="flex-1 bg-base-100"
               >
-                <ErrorBoundary>
-                  <Navigation />
-                </ErrorBoundary>
+                <ToastProvider>
+                  <ErrorBoundary>
+                    <Navigation />
+                  </ErrorBoundary>
+                </ToastProvider>
               </SafeAreaView>
             </UserProvider>
           </IconContext.Provider>

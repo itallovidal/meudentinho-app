@@ -40,6 +40,10 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
     deciduous: { at: 30, limit: 33.9 },
     permanent: { from: 144, to: 156, limit: 160 },
   },
+  "upper:third_molar": {
+    deciduous: null,
+    permanent: { from: 204, to: 360, limit: 1200 },
+  },
   "lower:central_incisor": {
     deciduous: { at: 7, limit: 14.8 },
     permanent: { from: 72, to: 84, limit: 90 },
@@ -67,6 +71,10 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
   "lower:second_molar": {
     deciduous: { at: 28, limit: 34.2 },
     permanent: { from: 132, to: 144, limit: 156 },
+  },
+  "lower:third_molar": {
+    deciduous: null,
+    permanent: { from: 204, to: 360, limit: 1200 },
   },
 };
 
