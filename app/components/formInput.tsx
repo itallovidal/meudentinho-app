@@ -17,7 +17,7 @@ interface FormInputProps<TFieldValues extends FieldValues> {
   control: Control<TFieldValues>;
   errors: FieldErrors<TFieldValues>;
   name: Path<TFieldValues>;
-  label: string;
+  label?: string;
   inputProps?: Omit<InputProps, "onBlur" | "onChangeText" | "value">;
   labelProps?: ComponentProps<typeof Text>;
 }
@@ -38,9 +38,11 @@ export function FormInput<TFieldValues extends FieldValues>({
 
   return (
     <Wrapper direction="column" className="w-full ">
-      <Text className="mb-1 font-bold" {...labelProps}>
-        {label}
-      </Text>
+      {label && (
+        <Text className="mb-1 font-bold" {...labelProps}>
+          {label}
+        </Text>
+      )}
       <Controller
         control={control}
         name={name}

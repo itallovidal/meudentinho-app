@@ -1,34 +1,49 @@
-import { ScrollView, RefreshControl } from "react-native";
+import { useState } from "react";
+import { ScrollView, RefreshControl, ActivityIndicator } from "react-native";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
-import { ArticleListRender } from "@/components/articleListRender";
-import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
-// import { Text } from "@/components/ui/text";
-// import { Input } from "@/components/ui/input";
-// import { MagnifyingGlassIcon } from "phosphor-react-native";
-// import { Badge } from "@/components/ui/badge";
+import { ArticleListSection } from "@/components/article/articleListSection";
+import { SearchInput } from "@/components/searchinput";
+import { Text } from "@/components/ui/text";
+import { ArticlePreviewDTO } from "@/types/dtos/article";
 
 export function Index() {
   const {
-    articles,
-    categories,
-    articlesByCategory,
-    latestArticle,
-    isLoading,
     isRefreshing,
     onRefresh,
+    articles,
+    latestArticle,
+    categories,
+    articlesByCategory,
+    isLoading,
   } = useArticles({ withCategories: true });
-  console.log(articlesByCategory);
 
-  if (isLoading) {
-    return (
-      <SkeletonArticleListPage
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-      />
-    );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    ArticlePreviewDTO[] | null
+  >(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  function handleSearchStart(query: string) {
+    setSearchQuery(query);
+    setSearchResults(null);
+    setIsSearching(true);
   }
+
+  function handleSearchComplete(query: string, results: ArticlePreviewDTO[]) {
+    setSearchQuery(query);
+    setSearchResults(results);
+    setIsSearching(false);
+  }
+
+  function handleSearchReset() {
+    setSearchQuery("");
+    setSearchResults(null);
+    setIsSearching(false);
+  }
+
+  const isSearchActive = searchQuery.trim() !== "";
 
   return (
     <Wrapper
@@ -51,46 +66,44 @@ export function Index() {
           justify="start"
           gap="gap-2"
         >
-          {/* <Wrapper
-            className="flex-1 relative w-full"
-            direction="row"
-            align="center"
-          >
-            <Input
-              placeholder="Buscar artigos e guias"
-              className="bg-base-100 rounded-lg"
-            />
-            <MagnifyingGlassIcon
-              size={16}
-              color="gray"
-              weight="regular"
-              style={{ position: "absolute", right: 16 }}
-            />
-          </Wrapper>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-4 -mx-6 px-6"
-          >
-            {categories.map((cat) => (
-              <Badge
-                key={cat.id}
-                className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg mr-2"
-                variant={"outline"}
-              >
-                <Text className="text-sm">{cat.name}</Text>
-              </Badge>
-            ))}
-          </ScrollView> */}
-
-          <ArticleListRender
-            latestArticle={latestArticle}
-            articles={articles.slice(1)}
-            categories={categories}
-            articlesByCategory={articlesByCategory}
-            hasCategoryTitle={true}
+          <SearchInput
+            onSearchStart={handleSearchStart}
+            onSearchComplete={handleSearchComplete}
+            onSearchReset={handleSearchReset}
           />
+
+          {isSearching && (
+            <Wrapper className="w-full items-center justify-center py-8">
+              <ActivityIndicator size="large" color="gray" />
+              <Text className="mt-2">Buscando artigos...</Text>
+            </Wrapper>
+          )}
+
+          {!isSearching && searchResults !== null && isSearchActive && (
+            <>
+              {searchResults.length === 0 ? (
+                <Text className="py-8 text-center">
+                  Nenhum artigo encontrado para "{searchQuery}"
+                </Text>
+              ) : (
+                <ArticleListSection
+                  withCategories={false}
+                  articles={searchResults}
+                />
+              )}
+            </>
+          )}
+
+          {!isSearching && !isSearchActive && (
+            <ArticleListSection
+              withCategories
+              articles={articles}
+              latestArticle={latestArticle}
+              categories={categories}
+              articlesByCategory={articlesByCategory}
+              isLoading={isLoading}
+            />
+          )}
         </Wrapper>
       </ScrollView>
     </Wrapper>

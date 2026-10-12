@@ -1,19 +1,31 @@
-export interface LoginDTO {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface SignupDTO {
+export interface SignupRequest {
   name: string;
   email: string;
   password: string;
   passwordConfirmation: string;
 }
 
-// TODO: add refresh token later
+export interface UserPatchRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface UserUpdateRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface UserAuthResponseDTO {
   name: string;
   token: string;
+  refreshToken: string;
   isAdmin: boolean;
 }
 

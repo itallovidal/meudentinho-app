@@ -1,6 +1,6 @@
 import { Image, TouchableNativeFeedback } from "react-native";
-import { Text } from "./ui/text";
-import { Wrapper } from "./wrapper";
+import { Text } from "../ui/text";
+import { Wrapper } from "../wrapper";
 import { useNavigation } from "@react-navigation/native";
 import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
@@ -28,11 +28,12 @@ export function ArticleCard({
         navigation.navigate("Articles", {
           screen: "Article",
           params: { id: id },
+          initial: false,
         })
       }
     >
       <Wrapper
-        className={`rounded-lg border border-base-200 bg-base-100 p-3 ${className}`}
+        className={`rounded-lg border border-base-200 bg-base-100 p-3 shadow-sm shadow-base-300 ${className}`}
         direction="row"
         align="center"
         justify="start"

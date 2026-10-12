@@ -11,12 +11,12 @@ import {
 } from "phosphor-react-native";
 import { useContext, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
-import { SignupDTO } from "@/types/dtos/user";
-import { signupUser } from "@/api/user/signupUser";
+import { SignupRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
+import { signup } from "@/api/auth/signup";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -28,15 +28,15 @@ export function Signup() {
 
   const colors = THEME.light;
 
-  async function onSubmit(signupDTO: SignupDTO) {
+  async function onSubmit(SignupRequest: SignupRequest) {
     try {
-      const { data } = await signupUser(signupDTO);
+      const { data } = await signup(SignupRequest);
 
       console.log("Signup successful, user data:", data);
 
       const basicUser = {
         name: data.name,
-        email: signupDTO.email,
+        email: SignupRequest.email,
         isAdmin: data.isAdmin,
       };
 

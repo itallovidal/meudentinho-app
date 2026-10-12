@@ -6,6 +6,7 @@ import { ArticlePreviewDTO } from "@/types/dtos/article";
 export async function getAllArticlePreview(): Promise<
   ResponsePayload<ArticlePreviewDTO[]>
 > {
+  console.log("Fetching /articles/preview...");
   const response = await fetch(`${ENV.BASE_API_URL}/articles/preview`, {
     method: "GET",
     headers: {

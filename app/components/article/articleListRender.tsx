@@ -1,15 +1,17 @@
-import { Wrapper } from "./wrapper";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleBanner } from "./articleBanner";
-import { Text } from "./ui/text";
 import { ArticleCard } from "./articleCard";
+import { Wrapper } from "../wrapper";
+import { Text } from "../ui/text";
+import { PropsBadge } from "../propsBadge";
+import { useEffect, useState } from "react";
 
 type ArticleListRenderProps = {
   latestArticle?: ArticlePreviewDTO;
   articles: ArticlePreviewDTO[];
   categories?: ArticleCategory[];
   articlesByCategory?: Record<string, ArticlePreviewDTO[]>;
-  hasCategoryTitle?: boolean;
+  hasCategories?: boolean;
 };
 
 export function ArticleListRender({
@@ -17,10 +19,48 @@ export function ArticleListRender({
   articles,
   categories = [],
   articlesByCategory = {},
-  hasCategoryTitle = false,
+  hasCategories = false,
 }: ArticleListRenderProps) {
+  const ALL_CATEGORY_ID = "all";
+  const [selectedCategoryId, setSelectedCategoryId] = useState(ALL_CATEGORY_ID);
+
+  useEffect(() => {
+    if (selectedCategoryId === ALL_CATEGORY_ID) return;
+
+    const hasSelectedCategory = categories.some(
+      (category) => category.id === selectedCategoryId,
+    );
+
+    if (!hasSelectedCategory) {
+      setSelectedCategoryId(ALL_CATEGORY_ID);
+    }
+  }, [categories, selectedCategoryId]);
+
+  function handleCategoryPress(category: ArticleCategory) {
+    setSelectedCategoryId(category.id);
+  }
+
+  const categoriesWithAll = [
+    {
+      id: ALL_CATEGORY_ID,
+      name: "Todos",
+      isSelected: selectedCategoryId === ALL_CATEGORY_ID,
+    },
+    ...categories.map((category) => ({
+      ...category,
+      isSelected: category.id === selectedCategoryId,
+    })),
+  ];
+
+  const selectedCategory = categories.find(
+    (category) => category.id === selectedCategoryId,
+  );
+  const isAllSelected = selectedCategoryId === ALL_CATEGORY_ID;
+  const visibleCategories =
+    isAllSelected || !selectedCategory ? categories : [selectedCategory];
+
   return (
-    <>
+    <Wrapper direction="column" align="start" justify="start" gap={hasCategories ? "gap-0" : "gap-2"}>
       {latestArticle && (
         <ArticleBanner
           key={latestArticle.id}
@@ -31,8 +71,12 @@ export function ArticleListRender({
         />
       )}
 
-      {hasCategoryTitle
-        ? categories.map((category) => {
+      {hasCategories && (
+        <PropsBadge props={categoriesWithAll} onPress={handleCategoryPress} className="my-4" />
+      )}
+
+      {hasCategories
+        ? visibleCategories.map((category) => {
             const categoryArticles = articlesByCategory[category.name];
             if (!categoryArticles || categoryArticles.length === 0) return null;
 
@@ -42,7 +86,7 @@ export function ArticleListRender({
                 direction="column"
                 align="start"
                 justify="start"
-                gap="gap-3"
+                gap="gap-2"
               >
                 <Text variant="h3" className="mt-2">
                   {category.name}
@@ -71,6 +115,6 @@ export function ArticleListRender({
               id={article.id}
             />
           ))}
-    </>
+    </Wrapper>
   );
 }

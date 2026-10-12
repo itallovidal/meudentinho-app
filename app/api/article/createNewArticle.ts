@@ -7,6 +7,7 @@ export async function createNewArticle(
   articleRequestDTO: ArticleRequestDTO,
   authToken: string,
 ) {
+  console.log("Creating new article...");
   const response = await fetch(`${ENV.BASE_API_URL}/articles`, {
     method: "POST",
     headers: {

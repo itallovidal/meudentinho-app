@@ -1,11 +1,8 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { ScrollView, Text } from "react-native";
-import {
-  ProfileNavegationProp,
-  ProfileRouteProp,
-} from "@/navigation/ProfileStack";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
 import {
   ShieldCheckIcon,
@@ -22,30 +19,25 @@ import { ENV } from "@/lib/env";
 import { THEME } from "@/lib/theme";
 
 export function Index() {
-  const route = useRoute<ProfileRouteProp>();
-  const payload = route.params?.payload;
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { updateAppUser, user } = useContext(UserContext)!;
-
-  console.log("Profile screen received payload:", payload);
 
   const handleLogout = async () => {
     await updateAppUser(null, null);
     navigation.reset({
       index: 0,
-      routes: [{ name: "Login" }],
+      routes: [{ name: "Index" }],
     });
-    console.log("User logged out, navigating to Login screen");
   };
 
   const profileOptions = [
     {
       icon: <UserCircleIcon color={colors.primary400} />,
-      title: "Gerencie sua conta",
+      title: `${user ? "Gerencie" : "Crie"} sua conta`,
       description: "Administre seus dados pessoais.",
       variant: "default" as const,
-      handlePress: () => navigation.navigate("Responsible"),
+      handlePress: () => navigation.navigate(user ? "Responsible" : "Signup"),
       isDisabled: false,
     },
     {
@@ -115,22 +107,28 @@ export function Index() {
     >
       <Header />
       <ScrollView className="w-full bg-base-200 px-4 py-2">
-        {profileOptions.map((data, index) => (
-          <Card
-            className="mb-4"
-            key={index}
-            icon={data.icon}
-            title={data.title}
-            variant={data.variant}
-            handlePress={data.handlePress}
-            isDisabled={data.isDisabled}
-          >
-            {data.description}
-          </Card>
-        ))}
+        {profileOptions.map((data, index) => {
+          if (data.title.includes("Sair da conta") && !user) {
+            return null;
+          }
+
+          return (
+            <Card
+              className="mb-4"
+              key={index}
+              icon={data.icon}
+              title={data.title}
+              variant={data.variant}
+              handlePress={data.handlePress}
+              isDisabled={data.isDisabled}
+            >
+              {data.description}
+            </Card>
+          );
+        })}
 
         <Wrapper
-          className="my-4"
+          className="my-4 pt-16"
           direction="column"
           align="center"
           justify="center"

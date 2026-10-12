@@ -26,7 +26,7 @@ export type ProfileNavegationProp =
 export type ProfileRouteProp = RouteProp<ProfileRouteParams, "Index">;
 
 export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
-  initialRouteName: "Login",
+  initialRouteName: "Index",
   screens: {
     Login,
     Signup,

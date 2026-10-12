@@ -11,7 +11,7 @@ export interface User {
   kids: Kid[];
 }
 
-export type BasicUser = Pick<User, "name" | "email" | "isAdmin">;
+export type BasicUser = Pick<User, "name" | "email" | "isAdmin"> & { kids?: Kid[] };
 
 export interface Kid {
   id: string;

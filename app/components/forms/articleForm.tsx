@@ -1,17 +1,17 @@
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
 import { articleSchema } from "@/lib/schemas/article";
 import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
-import { getAllArticlePreview } from "@/api/article/getArticles";
 import { ScrollView } from "react-native";
+import { PropsBadge } from "../propsBadge";
 
 interface ArticleFormProps {
   onSubmit: (data: ArticleRequestDTO) => void | Promise<void>;
@@ -30,30 +30,12 @@ export function ArticleForm({
   submittingLabel = "Criando artigo...",
   submitError,
 }: ArticleFormProps) {
-  const [categories, setCategories] = useState<ArticleCategory[]>([]);
-
-  // TODO: turn into a hook later?
-  async function loadCategories() {
-    const { data } = await getAllCategories();
-
-    setCategories(
-      data.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        isSelected: defaultValues?.categories?.includes(cat.id) || false,
-      })),
-    );
-  }
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
   const {
     control,
     handleSubmit,
     getValues,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ArticleRequestDTO>({
     resolver: zodResolver(articleSchema),
@@ -68,6 +50,31 @@ export function ArticleForm({
       ...defaultValues,
     },
   });
+
+  const selectedCategories = watch("categories");
+
+  const {
+    data: categoriesData,
+    isFetching: isCategoriesFetching,
+    error: categoriesFetchingError,
+    refetch: refetchCategories,
+  } = useQuery({
+    queryKey: ["article-categories"],
+    queryFn: () => getAllCategories().then((res) => res.data),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const categories = useMemo<ArticleCategory[]>(() => {
+    if (!categoriesData) return [];
+
+    const currentCategories = selectedCategories ?? [];
+
+    return categoriesData.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      isSelected: currentCategories.includes(cat.name),
+    }));
+  }, [categoriesData, selectedCategories]);
 
   function addCategory(category: {
     id: string;
@@ -91,14 +98,19 @@ export function ArticleForm({
       // adding..
       setValue("categories", [...currentCategories, category.name]);
     }
-
-    // updating local
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === category.id ? { ...cat, isSelected: !cat.isSelected } : cat,
-      ),
-    );
   }
+
+  const categoriesError = useMemo(() => {
+    if (!categoriesFetchingError) return undefined;
+
+    return {
+      name: categoriesFetchingError.name,
+      cause: categoriesFetchingError.cause,
+      message: categoriesFetchingError.message,
+      stack: categoriesFetchingError.stack,
+      onPress: refetchCategories,
+    };
+  }, [categoriesFetchingError, refetchCategories]);
 
   return (
     <ScrollView className="w-full flex-1">
@@ -124,23 +136,13 @@ export function ArticleForm({
           Categorias (Selecione até {MAX_CATEGORIES})
         </Text>
 
-        <Wrapper
-          direction="row"
-          align="start"
-          justify="start"
-          gap="gap-2"
-          className="w-full flex-wrap"
-        >
-          {categories.map((category) => (
-            <Button
-              variant={category.isSelected ? "default" : "outline"}
-              key={category.id}
-              onPress={() => addCategory(category)}
-            >
-              <Text>{category.name}</Text>
-            </Button>
-          ))}
-        </Wrapper>
+        <PropsBadge
+          props={categories}
+          onPress={addCategory}
+          isLoading={isCategoriesFetching}
+          error={categoriesError}
+          wrap
+        />
 
         <FormInput
           control={control}
