@@ -35,7 +35,7 @@ export async function patchKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a atualização parcial do dependente",
+      "Erro inesperado ocorreu durante a atualização parcial do filho",
       "INTERNAL_SERVER_ERROR",
     );
   }

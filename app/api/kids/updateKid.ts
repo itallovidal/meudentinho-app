@@ -33,7 +33,7 @@ export async function updateKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a atualização do dependente",
+      "Erro inesperado ocorreu durante a atualização do filho",
       "INTERNAL_SERVER_ERROR",
     );
   }

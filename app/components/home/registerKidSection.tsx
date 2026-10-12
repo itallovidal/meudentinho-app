@@ -16,29 +16,27 @@ export function RegisterKidSection({
 }: RegisterKidSectionProps) {
   return (
     <Wrapper
-      className="flex-1"
+      className="flex-1 mt-4"
       direction="column"
       align="start"
       justify="start"
-      gap="gap-2"
+      gap="gap-4"
     >
-      <Text variant={"h4"}>
-        Bem Vindo ao MeuDentinho!
-      </Text>
+      <Wrapper direction="column" gap="gap-2">
+        <Text variant={"h4"} className="mb-0">
+          Bem Vindo ao MeuDentinho!
+        </Text>
+        <Text className="text-muted">
+          Precisamos de alguns dados básicos para começar a acompanhar o
+          desenvolvimento dentário da criança de forma personalizada.
+        </Text>
+      </Wrapper>
 
-      <View className="w-full">
-        <View className="w-full">
-          <Text>
-            Precisamos de alguns dados básicos para começar a acompanhar o
-            desenvolvimento dentário da criança de forma personalizada.
-          </Text>
-        </View>
-        <View className="w-full rounded-lg bg-base-100 p-4">
-          <RegisterKidForm
-            onSubmit={onRegisterKid}
-            submitError={registerKidError}
-          />
-        </View>
+      <View className="w-full rounded-xl bg-base-100 p-6 shadow-sm shadow-base-300">
+        <RegisterKidForm
+          onSubmit={onRegisterKid}
+          submitError={registerKidError}
+        />
       </View>
     </Wrapper>
   );

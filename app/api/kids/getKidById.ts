@@ -27,7 +27,7 @@ export async function getKidById(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ao buscar dados do dependente",
+      "Erro inesperado ao buscar dados do filho",
       "INTERNAL_SERVER_ERROR",
     );
   }
