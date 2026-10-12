@@ -7,9 +7,6 @@ export async function createKid(
   kidDTO: KidRequestDTO,
   token: string,
 ): Promise<ResponsePayload<KidResponseDTO>> {
-  console.log("Creating kid with data:", kidDTO);
-  console.log("TOKEN:", token);
-
   const payloadToSend: KidRequestDTO = {
     ...kidDTO,
     birthDate: new Date(kidDTO.birthDate).toISOString(),

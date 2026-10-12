@@ -4,6 +4,7 @@ import { enableScreens } from "react-native-screens";
 import { PortalHost } from "@rn-primitives/portal";
 import { TabNavigator } from "./app/navigation/TabNavigator";
 import { UserProvider } from "./app/contexts/UserContext";
+import { ErrorBoundary } from "./app/components/ErrorBoundary";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
@@ -34,8 +35,13 @@ export default function App() {
             value={{ color: colors.base600, size: 24, weight: "fill" }}
           >
             <UserProvider>
-              <SafeAreaView className="flex-1 bg-base-100">
-                <Navigation />
+              <SafeAreaView
+                edges={["top", "left", "right"]}
+                className="flex-1 bg-base-100"
+              >
+                <ErrorBoundary>
+                  <Navigation />
+                </ErrorBoundary>
               </SafeAreaView>
             </UserProvider>
           </IconContext.Provider>

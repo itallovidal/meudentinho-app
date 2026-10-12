@@ -25,12 +25,29 @@ export type ToothEventType =
 
 export interface ToothEvent {
   id: string;
-  occurrenceDate: string; // ISO
+  parentId: string;
+  kidId: string;
+  occurrenceDate: string;
   dentition: Dentition;
   arch: Arch;
   side: Side;
   toothType: ToothType;
   eventType: ToothEventType;
+  quadrant: Quadrant;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ToothEventRequestDTO {
+  kidId: string;
+  occurrenceDate: string;
+  dentition: Dentition;
+  arch: Arch;
+  side: Side;
+  toothType: ToothType;
+  eventType: ToothEventType;
+  quadrant: Quadrant;
   note?: string;
 }
 

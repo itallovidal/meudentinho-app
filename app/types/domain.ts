@@ -31,6 +31,7 @@ const API_ERROR_CODES = {
   InvalidPayloadError: "INVALID_PAYLOAD",
   InternalServerError: "INTERNAL_SERVER_ERROR",
   UserCreationError: "USER_CREATION_ERROR",
+  ToothEventDuplicateError: "TOOTH_EVENT_DUPLICATE",
   ResponseParseError: "RESPONSE_PARSE_ERROR",
 } as const;
 

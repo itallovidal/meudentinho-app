@@ -14,10 +14,7 @@ export async function signup(
   const payload =
     (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
 
-  console.log("Signup response payload:", payload);
-
   if (payload.status !== 201 && isApiError(payload.error)) {
-    console.log("Signup failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
 

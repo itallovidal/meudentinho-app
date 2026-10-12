@@ -1,11 +1,15 @@
-import { useMemo } from "react";
-import { Pressable, View } from "react-native";
-import { Calendar, CalendarProps } from "react-native-calendars";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { FlatList, Pressable, View } from "react-native";
+import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar, CalendarProps, DateData } from "react-native-calendars";
+import { MONTH_SHORT_NAMES_PT_BR } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
 import {
   QuestionIcon,
@@ -21,6 +25,7 @@ interface CalendarHeaderProps {
   month?: {
     toDate: () => Date;
   };
+  onLabelPress?: () => void;
 }
 
 interface CalendarArrowButtonProps {
@@ -70,7 +75,11 @@ function CalendarArrowButton({
   );
 }
 
-function CustomCalendarHeader({ addMonth, month }: CalendarHeaderProps) {
+function CustomCalendarHeader({
+  addMonth,
+  month,
+  onLabelPress,
+}: CalendarHeaderProps) {
   const monthDate = useMemo(() => {
     if (!month) {
       return new Date();
@@ -95,9 +104,21 @@ function CustomCalendarHeader({ addMonth, month }: CalendarHeaderProps) {
         onChangeMonth={(step) => handleChangeMonth("left", step)}
       />
 
-      <Text className="text-base font-bold text-primary-500">
-        {formatMonthLabel(monthDate)}
-      </Text>
+      {onLabelPress ? (
+        <Pressable
+          accessibilityLabel="Selecionar mês e ano"
+          onPress={onLabelPress}
+          className="rounded px-3 py-1 active:bg-base-200"
+        >
+          <Text className="text-base font-bold text-primary-500">
+            {formatMonthLabel(monthDate)}
+          </Text>
+        </Pressable>
+      ) : (
+        <Text className="px-3 py-1 text-base font-bold text-primary-500">
+          {formatMonthLabel(monthDate)}
+        </Text>
+      )}
 
       <CalendarArrowButton
         direction="right"
@@ -107,18 +128,148 @@ function CustomCalendarHeader({ addMonth, month }: CalendarHeaderProps) {
   );
 }
 
-export function CustomCalendar({ onDayPress, ...props }: Props) {
-  const maxDate = new Date();
+export function CustomCalendar({
+  onDayPress,
+  maxDate: maxDateProp,
+  onMonthChange: onMonthChangeProp,
+  allowJump = true,
+  ...props
+}: Props & { allowJump?: boolean }) {
+  const todayKey = new Date().toISOString().split("T")[0];
+  const effectiveMaxDate =
+    typeof maxDateProp === "string" && maxDateProp ? maxDateProp : todayKey;
+  const parsedYear = Number(effectiveMaxDate.split("-")[0]);
+  const maxYear = Number.isNaN(parsedYear)
+    ? new Date().getFullYear()
+    : parsedYear;
+  const parsedMonth = Number(effectiveMaxDate.split("-")[1]) - 1;
+  const maxMonthIndex = Number.isNaN(parsedMonth)
+    ? 11
+    : Math.min(Math.max(parsedMonth, 0), 11);
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(maxYear);
+  const [jumpKey, setJumpKey] = useState<string | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState(() => new Date());
+  const yearListRef = useRef<FlatList<number> | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setPickerOpen(false);
+    }, []),
+  );
+
+  const monthNames = MONTH_SHORT_NAMES_PT_BR;
+
+  const years = useMemo(
+    () => Array.from({ length: 121 }, (_, index) => maxYear - index),
+    [maxYear],
+  );
+
+  useEffect(() => {
+    if (pickerOpen) {
+      yearListRef.current?.scrollToIndex({
+        index: Math.max(0, years.indexOf(pickerYear)),
+        animated: false,
+      });
+    }
+  }, [pickerOpen]);
+
+  function handleMonthChange(date: DateData) {
+    setVisibleMonth(new Date(`${date.dateString}T12:00:00`));
+    onMonthChangeProp?.(date);
+  }
+
+  function openPicker() {
+    const year = visibleMonth.getFullYear();
+    setPickerYear(Number.isNaN(year) ? maxYear : Math.min(year, maxYear));
+    setPickerOpen(true);
+  }
+
+  function applyMonth(monthIndex: number) {
+    setJumpKey(
+      `${pickerYear}-${String(monthIndex + 1).padStart(2, "0")}-15`,
+    );
+    setVisibleMonth(new Date(pickerYear, monthIndex, 1));
+    setPickerOpen(false);
+  }
+
+  function isMonthDisabled(monthIndex: number) {
+    return pickerYear === maxYear && monthIndex > maxMonthIndex;
+  }
+
+  function isMonthSelected(monthIndex: number) {
+    return (
+      pickerYear === visibleMonth.getFullYear() &&
+      monthIndex === visibleMonth.getMonth()
+    );
+  }
 
   return (
     <View className="w-full">
       <Calendar
-        maxDate={maxDate.toISOString()}
-        onDayPress={onDayPress}
-        enableSwipeMonths={true}
-        customHeader={CustomCalendarHeader}
         {...props}
+        key={jumpKey ?? undefined}
+        current={jumpKey ?? undefined}
+        maxDate={effectiveMaxDate}
+        onDayPress={onDayPress}
+        onMonthChange={handleMonthChange}
+        enableSwipeMonths={true}
+        customHeader={(headerProps: CalendarHeaderProps) => (
+          <CustomCalendarHeader
+            {...headerProps}
+            onLabelPress={allowJump ? openPicker : undefined}
+          />
+        )}
       />
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="gap-3 p-4">
+          <DialogHeader>
+            <DialogTitle>Selecionar mês e ano</DialogTitle>
+          </DialogHeader>
+
+          <FlatList
+            ref={yearListRef}
+            horizontal
+            data={years}
+            keyExtractor={(year) => String(year)}
+            renderItem={({ item: year }) => (
+              <Button
+                size="sm"
+                variant={year === pickerYear ? "default" : "outline"}
+                onPress={() => setPickerYear(year)}
+                className="w-16"
+              >
+                <Text>{String(year)}</Text>
+              </Button>
+            )}
+            getItemLayout={(_, index) => ({
+              length: 72,
+              offset: 72 * index,
+              index,
+            })}
+            initialScrollIndex={Math.max(0, years.indexOf(pickerYear))}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          />
+
+          <View className="flex-row flex-wrap gap-2">
+            {monthNames.map((name, index) => (
+              <Button
+                key={name}
+                size="sm"
+                variant={isMonthSelected(index) ? "default" : "outline"}
+                disabled={isMonthDisabled(index)}
+                onPress={() => applyMonth(index)}
+                className="grow basis-[23%]"
+              >
+                <Text>{name}</Text>
+              </Button>
+            ))}
+          </View>
+        </DialogContent>
+      </Dialog>
 
       <Wrapper
         className="mt-4"

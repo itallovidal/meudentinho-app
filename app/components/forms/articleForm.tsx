@@ -117,7 +117,7 @@ export function ArticleForm({
       <Wrapper
         align="center"
         direction="column"
-        className="mx-4 my-4"
+        className="mx-6 my-4"
         gap={"gap-6"}
       >
         <FormInput

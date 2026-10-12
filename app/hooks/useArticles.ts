@@ -12,18 +12,21 @@ export function useArticles(options: UseArticlesOptions = {}) {
   const { withCategories = true } = options;
   const queryClient = useQueryClient();
 
-  const { data: articlesData, isFetching: isArticlesFetching } = useQuery({
+  const articlesQuery = useQuery({
     queryKey: ["articles-preview"],
     queryFn: () => getAllArticlePreview().then((res) => res.data),
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: categoriesData, isFetching: isCategoriesFetching } = useQuery({
+  const categoriesQuery = useQuery({
     queryKey: ["article-categories"],
     queryFn: () => getAllCategories().then((res) => res.data),
     enabled: withCategories,
     staleTime: 1000 * 60 * 5,
   });
+
+  const articlesData = articlesQuery.data;
+  const categoriesData = categoriesQuery.data;
 
   const articles = articlesData ?? [];
   const categories = useMemo<ArticleCategory[]>(() => {
@@ -47,8 +50,10 @@ export function useArticles(options: UseArticlesOptions = {}) {
     const [latest, ...list] = articles;
 
     list.forEach((article) => {
-      if (map[article.categories]) {
-        map[article.categories].push(article);
+      for (const category of article.categories ?? []) {
+        if (map[category]) {
+          map[category].push(article);
+        }
       }
     });
 
@@ -56,9 +61,14 @@ export function useArticles(options: UseArticlesOptions = {}) {
   }, [articles, categories, withCategories]);
 
   const latestArticle = articles.at(0);
-  const isLoading = !articles.length || (withCategories && !categories.length);
+  const isLoading =
+    articlesQuery.isPending || (withCategories && categoriesQuery.isPending);
+  const isError =
+    articlesQuery.isError || (withCategories && categoriesQuery.isError);
 
-  const isRefreshing = isArticlesFetching || (withCategories && isCategoriesFetching);
+  const isRefreshing =
+    articlesQuery.isFetching ||
+    (withCategories && categoriesQuery.isFetching);
 
   async function onRefresh() {
     await Promise.all([
@@ -74,6 +84,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
     latestArticle,
     isLoading,
     isRefreshing,
+    isError,
     onRefresh,
   };
 }

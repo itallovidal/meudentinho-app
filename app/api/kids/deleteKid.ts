@@ -25,7 +25,7 @@ export async function deleteKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a exclusão do dependente",
+      "Erro inesperado ocorreu durante a exclusão do filho",
       "INTERNAL_SERVER_ERROR",
     );
   }

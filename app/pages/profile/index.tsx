@@ -21,7 +21,7 @@ import { THEME } from "@/lib/theme";
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
-  const { updateAppUser, user } = useContext(UserContext)!;
+  const { updateAppUser, user, hydrated } = useContext(UserContext)!;
 
   const handleLogout = async () => {
     await updateAppUser(null, null);
@@ -42,8 +42,8 @@ export function Index() {
     },
     {
       icon: <UsersThreeIcon color={colors.primary400} />,
-      title: "Gerencie Dependentes",
-      description: "Administre seus dependentes.",
+      title: "Gerencie seus filhos",
+      description: "Administre seus filhos.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Dependents"),
       isDisabled: false,
@@ -97,6 +97,21 @@ export function Index() {
     profileOptions.unshift(...adminOptions);
   }
 
+  if (!hydrated) {
+    return (
+      <Wrapper
+        className="flex-1 bg-base-200"
+        direction="column"
+        align="center"
+        justify="start"
+        gap="gap-0"
+      >
+        <Header />
+        <Text className="mt-8 text-sm text-muted">Carregando...</Text>
+      </Wrapper>
+    );
+  }
+
   return (
     <Wrapper
       className="flex-1 bg-base-200"
@@ -106,7 +121,7 @@ export function Index() {
       gap="gap-0"
     >
       <Header />
-      <ScrollView className="w-full bg-base-200 px-4 py-2">
+      <ScrollView className="w-full bg-base-200 px-6 py-2">
         {profileOptions.map((data, index) => {
           if (data.title.includes("Sair da conta") && !user) {
             return null;

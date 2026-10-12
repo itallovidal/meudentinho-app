@@ -14,10 +14,7 @@ export async function login(
   const payload =
     (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
 
-  console.log("Login response payload:", payload);
-
   if (payload.status !== 200 && isApiError(payload.error)) {
-    console.log("Login failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
 
