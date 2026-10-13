@@ -10,6 +10,7 @@ import { BasicUser } from "@/types/domain";
 import { AdminPage } from "@/pages/profile/adminPage";
 import { Dependents } from "@/pages/profile/dependents";
 import { Responsible } from "@/pages/profile/responsible";
+import { ChangePassword } from "@/pages/profile/changePassword";
 import type { CrossTabOrigin } from "./types";
 
 export type ProfileRouteParams = {
@@ -18,6 +19,7 @@ export type ProfileRouteParams = {
   Index: { payload: BasicUser };
   AdminPage: undefined;
   Responsible: undefined;
+  ChangePassword: undefined;
   Dependents: undefined | CrossTabOrigin;
 };
 
@@ -34,6 +36,7 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     Index,
     AdminPage,
     Responsible,
+    ChangePassword,
     Dependents,
   },
   screenOptions: {

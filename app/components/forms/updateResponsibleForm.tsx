@@ -1,36 +1,40 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { Wrapper } from "@/components/wrapper";
+import { FieldShell } from "./fieldShell";
+import { THEME } from "@/lib/theme";
 import {
-  updatePasswordSchema,
   updateProfileSchema,
-  UpdatePasswordDTO,
   UpdateProfileDTO,
 } from "@/lib/schemas/responsible";
-import { FormInput } from "../formInput";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { View } from "react-native";
+import {
+  CaretRightIcon,
+  EnvelopeSimpleIcon,
+  LockIcon,
+  UserIcon,
+} from "phosphor-react-native";
+import { Controller, useForm } from "react-hook-form";
+import { Pressable, View } from "react-native";
 
 interface UpdateResponsibleFormProps {
-  onSubmit: (
-    profile: UpdateProfileDTO,
-    password: UpdatePasswordDTO | null,
-  ) => void | Promise<void>;
+  onSubmit: (profile: UpdateProfileDTO) => void | Promise<void>;
+  onChangePassword: () => void;
   defaultName?: string;
   defaultEmail?: string;
 }
 
 export function UpdateResponsibleForm({
   onSubmit,
+  onChangePassword,
   defaultName,
   defaultEmail,
 }: UpdateResponsibleFormProps) {
+  const colors = THEME.light;
   const {
-    control: profileControl,
-    handleSubmit: handleProfileSubmit,
-    formState: { errors: profileErrors },
-    watch: profileWatch,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
   } = useForm<UpdateProfileDTO>({
     resolver: zodResolver(updateProfileSchema),
     mode: "onSubmit",
@@ -41,122 +45,65 @@ export function UpdateResponsibleForm({
     },
   });
 
-  const {
-    control: passwordControl,
-    handleSubmit: handlePasswordSubmit,
-    formState: { errors: passwordErrors, isSubmitting },
-    watch: passwordWatch,
-  } = useForm<UpdatePasswordDTO>({
-    resolver: zodResolver(updatePasswordSchema),
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      passwordConfirmation: "",
-    },
-  });
-
-  function handleConfirm() {
-    handleProfileSubmit((profileData) => {
-      const newPassword = passwordWatch("newPassword");
-      const passwordConfirmation = passwordWatch("passwordConfirmation");
-      const currentPassword = passwordWatch("currentPassword");
-
-      const hasPasswordChange =
-        newPassword && newPassword.length > 0 && newPassword === passwordConfirmation;
-
-      const passwordData: UpdatePasswordDTO | null = hasPasswordChange
-        ? {
-            currentPassword,
-            newPassword,
-            passwordConfirmation,
-          }
-        : null;
-
-      onSubmit(profileData, passwordData);
-    })();
-  }
-
   return (
-    <Wrapper
-      align="center"
-      direction="column"
-      className="w-full"
-      gap="gap-4"
-    >
-      <FormInput
-        control={profileControl}
-        errors={profileErrors}
-        name="name"
-        label="Seu Nome"
-        inputProps={{
-          placeholder: "Seu nome completo",
-          autoCapitalize: "words",
-          autoCorrect: false,
-        }}
-      />
+    <View className="w-full">
+      <FieldShell label="Nome Completo" error={errors.name?.message}>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Seu nome completo"
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          )}
+        />
+        <UserIcon color={colors.primary500} />
+      </FieldShell>
 
-      <FormInput
-        control={profileControl}
-        errors={profileErrors}
-        name="email"
-        label="Email"
-        inputProps={{
-          placeholder: "Digite seu email",
-          autoCapitalize: "words",
-          autoCorrect: false,
-        }}
-      />
+      <FieldShell label="E-mail" error={errors.email?.message}>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Digite seu email"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+            />
+          )}
+        />
+        <EnvelopeSimpleIcon color={colors.primary500} />
+      </FieldShell>
 
-      <View className="w-full h-px bg-base-300 my-2" />
-
-      <FormInput
-        control={passwordControl}
-        errors={passwordErrors}
-        name="currentPassword"
-        label="Senha Atual"
-        inputProps={{
-          placeholder: "Digite sua senha atual",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
-
-      <FormInput
-        control={passwordControl}
-        errors={passwordErrors}
-        name="newPassword"
-        label="Nova Senha"
-        inputProps={{
-          placeholder: "Digite sua nova senha",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
-
-      <FormInput
-        control={passwordControl}
-        errors={passwordErrors}
-        name="passwordConfirmation"
-        label="Confirmar Senha"
-        inputProps={{
-          placeholder: "Confirme sua nova senha",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
+      <Pressable
+        onPress={onChangePassword}
+        className="mt-2 flex-row items-center rounded-xl bg-base-100 p-3 shadow-sm"
+      >
+        <View className="h-12 w-12 items-center justify-center rounded-lg bg-base-200">
+          <LockIcon color={colors.primary500} />
+        </View>
+        <Text className="ml-3 flex-1 text-base font-medium">Alterar Senha</Text>
+        <CaretRightIcon color={colors.primary500} weight="regular" />
+      </Pressable>
 
       <Button
-        onPress={handleConfirm}
+        onPress={() => handleSubmit(onSubmit)()}
         disabled={isSubmitting}
-        className="mb-2 w-full"
+        className="mt-10 w-full"
       >
-        <Text>{isSubmitting ? "Salvando..." : "Confirmar"}</Text>
+        <Text>{isSubmitting ? "Salvando..." : "Salvar Alterações"}</Text>
       </Button>
-    </Wrapper>
+    </View>
   );
 }

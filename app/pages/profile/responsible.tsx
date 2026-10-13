@@ -1,23 +1,32 @@
 import { patchUser } from "@/api/user/patchUser";
-import { changePassword } from "@/api/user/changePassword";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import {
-  UpdatePasswordDTO,
-  UpdateProfileDTO,
-} from "@/lib/schemas/responsible";
+import { UpdateProfileDTO } from "@/lib/schemas/responsible";
 import { getUserIdFromToken } from "@/lib/utils";
 import { useContext, useEffect } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 
+function getInitials(name?: string) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  const first = parts[0][0];
+  const second = parts.length > 1 ? parts[1][0] : "";
+  return (first + second).toUpperCase();
+}
+
 export function Responsible() {
-  const { user, authToken, hydrated, updateAppUser, userId: contextUserId } =
-    useContext(UserContext)!;
+  const {
+    user,
+    authToken,
+    hydrated,
+    updateAppUser,
+    userId: contextUserId,
+  } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
 
   useEffect(() => {
@@ -26,10 +35,7 @@ export function Responsible() {
     }
   }, [hydrated, authToken, navigation]);
 
-  async function handleUpdateResponsible(
-    profile: UpdateProfileDTO,
-    password: UpdatePasswordDTO | null,
-  ) {
+  async function handleUpdateResponsible(profile: UpdateProfileDTO) {
     if (!authToken || !user) {
       Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
       return;
@@ -37,8 +43,7 @@ export function Responsible() {
 
     try {
       const userId =
-        contextUserId ??
-        (authToken ? getUserIdFromToken(authToken) : null);
+        contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
       if (!userId) {
         Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
         return;
@@ -59,14 +64,10 @@ export function Responsible() {
         );
       }
 
-      if (password) {
-        await changePassword(userId, authToken, {
-          currentPassword: password.currentPassword,
-          newPassword: password.newPassword,
-        });
-      }
-
-      Alert.alert("Dados atualizados", "As alterações foram salvas com sucesso.");
+      Alert.alert(
+        "Dados atualizados",
+        "As alterações foram salvas com sucesso.",
+      );
     } catch (error) {
       Alert.alert("Erro", "Não foi possível atualizar os dados.");
     }
@@ -75,7 +76,7 @@ export function Responsible() {
   if (!hydrated) {
     return (
       <Wrapper
-        className="bg-base-200 flex-1"
+        className="flex-1 bg-base-100"
         direction="column"
         align="center"
         justify="start"
@@ -93,7 +94,7 @@ export function Responsible() {
 
   return (
     <Wrapper
-      className="bg-base-200 flex-1"
+      className="flex-1 bg-base-100"
       direction="column"
       align="center"
       justify="start"
@@ -101,18 +102,23 @@ export function Responsible() {
     >
       <Header hasBackButton />
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 28 }}
+        contentContainerStyle={{ padding: 24, paddingBottom: 28 }}
         className="w-full"
       >
-        <Text className="text-3xl font-bold mb-4">Responsável</Text>
-
-        <View className="bg-base-100 rounded-xl p-4">
-          <UpdateResponsibleForm
-            onSubmit={handleUpdateResponsible}
-            defaultName={user?.name}
-            defaultEmail={user?.email}
-          />
+        <View className="mb-10 mt-4 items-center">
+          <View className="h-32 w-32 items-center justify-center rounded-full bg-base-300">
+            <Text className="text-4xl font-semibold text-primary-500">
+              {getInitials(user?.name)}
+            </Text>
+          </View>
         </View>
+
+        <UpdateResponsibleForm
+          onSubmit={handleUpdateResponsible}
+          onChangePassword={() => navigation.navigate("ChangePassword")}
+          defaultName={user?.name}
+          defaultEmail={user?.email}
+        />
       </ScrollView>
     </Wrapper>
   );
