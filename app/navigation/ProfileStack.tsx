@@ -10,14 +10,15 @@ import { BasicUser } from "@/types/domain";
 import { AdminPage } from "@/pages/profile/adminPage";
 import { Dependents } from "@/pages/profile/dependents";
 import { Responsible } from "@/pages/profile/responsible";
+import type { CrossTabOrigin } from "./types";
 
 export type ProfileRouteParams = {
-  Login: undefined;
+  Login: undefined | CrossTabOrigin;
   Signup: undefined;
   Index: { payload: BasicUser };
   AdminPage: undefined;
   Responsible: undefined;
-  Dependents: undefined;
+  Dependents: undefined | CrossTabOrigin;
 };
 
 export type ProfileNavegationProp =

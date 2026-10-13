@@ -5,6 +5,7 @@ import { Wrapper } from "../wrapper";
 import { Text } from "../ui/text";
 import { PropsBadge } from "../propsBadge";
 import { useEffect, useState } from "react";
+import type { TabName } from "@/navigation/types";
 
 type ArticleListRenderProps = {
   latestArticle?: ArticlePreviewDTO;
@@ -12,6 +13,7 @@ type ArticleListRenderProps = {
   categories?: ArticleCategory[];
   articlesByCategory?: Record<string, ArticlePreviewDTO[]>;
   hasCategories?: boolean;
+  fromTab?: TabName;
 };
 
 export function ArticleListRender({
@@ -20,6 +22,7 @@ export function ArticleListRender({
   categories = [],
   articlesByCategory = {},
   hasCategories = false,
+  fromTab,
 }: ArticleListRenderProps) {
   const ALL_CATEGORY_ID = "all";
   const [selectedCategoryId, setSelectedCategoryId] = useState(ALL_CATEGORY_ID);
@@ -60,7 +63,12 @@ export function ArticleListRender({
     isAllSelected || !selectedCategory ? categories : [selectedCategory];
 
   return (
-    <Wrapper direction="column" align="start" justify="start" gap={hasCategories ? "gap-0" : "gap-2"}>
+    <Wrapper
+      direction="column"
+      align="start"
+      justify="start"
+      gap={hasCategories ? "gap-0" : "gap-2"}
+    >
       {latestArticle && (
         <ArticleBanner
           key={latestArticle.id}
@@ -68,11 +76,16 @@ export function ArticleListRender({
           readingTime={latestArticle.readingTime}
           imageSrc={latestArticle.imageCoverURL}
           id={latestArticle.id}
+          fromTab={fromTab}
         />
       )}
 
       {hasCategories && (
-        <PropsBadge props={categoriesWithAll} onPress={handleCategoryPress} className="my-4" />
+        <PropsBadge
+          props={categoriesWithAll}
+          onPress={handleCategoryPress}
+          className="my-4"
+        />
       )}
 
       {hasCategories
@@ -100,6 +113,7 @@ export function ArticleListRender({
                     readingTime={article.readingTime}
                     imageCoverURL={article.imageCoverURL}
                     id={article.id}
+                    fromTab={fromTab}
                   />
                 ))}
               </Wrapper>
@@ -113,6 +127,7 @@ export function ArticleListRender({
               readingTime={article.readingTime}
               imageCoverURL={article.imageCoverURL}
               id={article.id}
+              fromTab={fromTab}
             />
           ))}
     </Wrapper>

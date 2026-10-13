@@ -6,6 +6,7 @@ import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { Wrapper } from "../wrapper";
 import { Badge } from "../ui/badge";
 import { Text } from "../ui/text";
+import type { TabName } from "@/navigation/types";
 
 const BANNER_GRADIENT_COLORS = [
   "rgba(0, 0, 0, 0.96)",
@@ -18,6 +19,7 @@ interface ArticleBannerProps {
   title: string;
   readingTime: string;
   id: string;
+  fromTab?: TabName;
 }
 
 export function ArticleBanner({
@@ -25,6 +27,7 @@ export function ArticleBanner({
   title,
   readingTime,
   id,
+  fromTab,
 }: ArticleBannerProps) {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
 
@@ -33,7 +36,7 @@ export function ArticleBanner({
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
-          params: { id: id },
+          params: { id: id, ...(fromTab ? { fromTab } : {}) },
           initial: false,
         })
       }

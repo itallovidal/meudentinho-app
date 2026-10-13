@@ -163,3 +163,45 @@ export function formatAgeFromBirthDate(birthDate: string): string {
   const years = Math.floor(wholeMonths / 12);
   return years === 1 ? "1 ano" : `${years} anos`;
 }
+
+export function maskDateBr(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+export function brDateToIsoKey(br: string): string | null {
+  const match = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+  const [, dd, mm, yyyy] = match;
+  const day = Number(dd);
+  const month = Number(mm);
+  const year = Number(yyyy);
+  const currentYear = new Date().getFullYear();
+  if (year < 1900 || year > currentYear) {
+    return null;
+  }
+  if (month < 1 || month > 12) {
+    return null;
+  }
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    return null;
+  }
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  if (date.getTime() > Date.now()) {
+    return null;
+  }
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function isoToBrDate(iso: string): string {
+  return formatDatePtBR(iso) ?? "";
+}

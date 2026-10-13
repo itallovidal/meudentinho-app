@@ -4,6 +4,7 @@ import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticl
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
+import type { TabName } from "@/navigation/types";
 
 type ArticleListSectionProps = {
   withCategories?: boolean;
@@ -14,6 +15,7 @@ type ArticleListSectionProps = {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  fromTab?: TabName;
 };
 
 export function ArticleListSection({
@@ -25,6 +27,7 @@ export function ArticleListSection({
   isLoading = false,
   isError = false,
   onRetry,
+  fromTab,
 }: ArticleListSectionProps) {
   if (isLoading) {
     return <SkeletonArticleListRender />;
@@ -58,6 +61,7 @@ export function ArticleListSection({
       categories={categories}
       articlesByCategory={articlesByCategory}
       hasCategories={withCategories}
+      fromTab={fromTab}
     />
   );
 }

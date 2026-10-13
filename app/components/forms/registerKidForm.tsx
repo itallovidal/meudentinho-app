@@ -3,6 +3,7 @@ import { ApiError } from "@/types/domain";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { Wrapper } from "../wrapper";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -11,7 +12,7 @@ import { FormInput } from "../formInput";
 import { Controller, useForm } from "react-hook-form";
 import { Checkbox } from "expo-checkbox";
 import { GenderSelector } from "./genderSelector";
-import { AgeSelector } from "./ageSelector";
+import { BirthDateInput } from "./birthDateInput";
 
 interface Props {
   onSubmit: (data: KidRequestDTO) => void | Promise<void>;
@@ -24,14 +25,10 @@ interface Props {
 export function RegisterKidForm({
   onSubmit,
   defaultValues,
-  submitLabel = "Registrar Criança",
-  submittingLabel = "Registrando criança...",
+  submitLabel = "Confirmar",
+  submittingLabel = "Salvando...",
   submitError,
 }: Props) {
-  const [isEditingBirthDate, setIsEditingBirthDate] = useState(
-    !defaultValues?.birthDate,
-  );
-
   const [isPremature, setIsPremature] = useState(
     Boolean(
       defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
@@ -59,15 +56,6 @@ export function RegisterKidForm({
   const birthDate = watch("birthDate");
 
   useEffect(() => {
-    if (!defaultValues?.birthDate) {
-      setIsEditingBirthDate(true);
-      return;
-    }
-
-    setIsEditingBirthDate(false);
-  }, [defaultValues?.birthDate]);
-
-  useEffect(() => {
     setIsPremature(
       Boolean(
         defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
@@ -85,8 +73,8 @@ export function RegisterKidForm({
     setValue("gender", gender, { shouldDirty: true });
   }
 
-  function chooseBirthDate(dateString: string) {
-    setValue("birthDate", dateString, {
+  function chooseBirthDate(isoDate: string) {
+    setValue("birthDate", isoDate, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -94,31 +82,38 @@ export function RegisterKidForm({
   }
 
   return (
-    <Wrapper align="start" direction="column" gap="gap-6">
+    <Wrapper align="start" direction="column" gap="gap-4">
       <FormInput
         control={control}
         errors={errors}
         name="name"
-        label="Nome da Criança"
+        label="Nome da criança"
+        labelProps={{
+          className:
+            "mb-1 text-xs font-semibold uppercase tracking-wide text-primary-400",
+        }}
         inputProps={{
-          placeholder: "Digite o nome da criança",
+          placeholder: "Ex: Lucas Silva",
           autoCorrect: false,
           style: {
             width: "100%",
           },
-          className: "bg-white flex-grow-1",
+          className: "flex-grow-1 bg-white",
         }}
       />
 
-      <GenderSelector gender={gender} onChange={changeGender} />
-
-      <AgeSelector
-        birthDate={birthDate}
-        onSelectDate={chooseBirthDate}
-        error={errors.birthDate?.message as string | undefined}
-        isEditingBirthDate={isEditingBirthDate}
-        setIsEditingBirthDate={setIsEditingBirthDate}
-      />
+      <View className="w-full flex-row gap-3">
+        <View className="flex-1">
+          <BirthDateInput
+            value={birthDate}
+            onChange={chooseBirthDate}
+            error={errors.birthDate?.message as string | undefined}
+          />
+        </View>
+        <View className="flex-1">
+          <GenderSelector gender={gender} onChange={changeGender} />
+        </View>
+      </View>
 
       <Wrapper direction="row" align="center" justify="start" gap="gap-2">
         <Checkbox
@@ -163,7 +158,7 @@ export function RegisterKidForm({
       <Button
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
-        className="mb-4 w-full"
+        className="h-14 w-full rounded-xl"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>

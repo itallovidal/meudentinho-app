@@ -39,8 +39,7 @@ export function Smile() {
   const kidsPending = kidsQuery.isPending;
 
   const kids = useMemo(
-    () =>
-      (kidsData?.data ?? []).map((kid) => ({ id: kid.id, name: kid.name })),
+    () => (kidsData?.data ?? []).map((kid) => ({ id: kid.id, name: kid.name })),
     [kidsData],
   );
   const kidsReady = !kidsPending;
@@ -78,8 +77,13 @@ export function Smile() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, request }: { id: string; request: ToothEventRequestDTO }) =>
-      updateToothEvent(id, authToken ?? "", request),
+    mutationFn: ({
+      id,
+      request,
+    }: {
+      id: string;
+      request: ToothEventRequestDTO;
+    }) => updateToothEvent(id, authToken ?? "", request),
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ["tooth-events", selectedKidId],
@@ -97,13 +101,11 @@ export function Smile() {
     try {
       await registerMutation.mutateAsync(payload);
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.code === "TOOTH_EVENT_DUPLICATE"
-      ) {
-        const cached = queryClient.getQueryData<
-          ResponsePayload<ToothEvent[]>
-        >(["tooth-events", selectedKidId]);
+      if (error instanceof ApiError && error.code === "TOOTH_EVENT_DUPLICATE") {
+        const cached = queryClient.getQueryData<ResponsePayload<ToothEvent[]>>([
+          "tooth-events",
+          selectedKidId,
+        ]);
         const match = (cached?.data ?? []).find(
           (event) =>
             event.quadrant === payload.quadrant &&
@@ -122,10 +124,7 @@ export function Smile() {
   const stats = useMemo(() => {
     const exfoliated = new Set<string>();
     for (const event of events) {
-      if (
-        event.eventType === "exfoliation" &&
-        event.dentition === "primary"
-      ) {
+      if (event.eventType === "exfoliation" && event.dentition === "primary") {
         exfoliated.add(`${event.quadrant}:${event.toothType}`);
       }
     }
@@ -182,7 +181,10 @@ export function Smile() {
             </Text>
             <Button
               onPress={() =>
-                navigation.navigate("Profile", { screen: "Login" })
+                navigation.navigate("Profile", {
+                  screen: "Login",
+                  params: { fromTab: "Smile" },
+                })
               }
             >
               <Text>Fazer login</Text>
@@ -245,7 +247,10 @@ export function Smile() {
             </Text>
             <Button
               onPress={() =>
-                navigation.navigate("Profile", { screen: "Dependents" })
+                navigation.navigate("Profile", {
+                  screen: "Dependents",
+                  params: { fromTab: "Smile" },
+                })
               }
             >
               <Text>Gerenciar dependentes</Text>
@@ -285,7 +290,10 @@ export function Smile() {
             selectedId={selectedKidId}
             onSelect={setSelectedKidId}
             onAdd={() =>
-              navigation.navigate("Profile", { screen: "Dependents" })
+              navigation.navigate("Profile", {
+                screen: "Dependents",
+                params: { fromTab: "Smile" },
+              })
             }
           />
 

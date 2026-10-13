@@ -16,8 +16,8 @@ type GenderSelectionProps = {
 };
 
 const OPTIONS = [
-  { value: "male", label: "Masculino" },
-  { value: "female", label: "Feminino" },
+  { value: "male", label: "M" },
+  { value: "female", label: "F" },
 ] as const;
 
 export function GenderSelector({
@@ -43,15 +43,17 @@ export function GenderSelector({
 
   return (
     <Wrapper direction="column" className={className} gap="gap-2">
-      <Text className="w-full font-bold">Gênero</Text>
+      <Text className="text-xs font-semibold uppercase tracking-wide text-primary-400">
+        Sexo
+      </Text>
 
       <View
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-        className="relative flex-row rounded-md bg-base-200 p-1 shadow-sm shadow-base-300"
+        className="relative flex-row rounded-lg bg-base-200 p-1"
       >
         <Animated.View
           pointerEvents="none"
-          className="absolute bottom-1 left-1 top-1 rounded bg-primary"
+          className="absolute bottom-1 left-1 top-1 rounded-md bg-white shadow-sm shadow-base-300"
           style={indicatorStyle}
         />
         {OPTIONS.map((option) => (
@@ -63,8 +65,8 @@ export function GenderSelector({
             <Text
               className={
                 gender === option.value
-                  ? "font-bold text-white"
-                  : "text-base-500"
+                  ? "font-bold text-primary-900"
+                  : "font-medium text-base-400"
               }
             >
               {option.label}

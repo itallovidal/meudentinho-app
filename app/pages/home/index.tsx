@@ -118,11 +118,7 @@ export function Home() {
             </Wrapper>
           )}
 
-          <Wrapper
-            direction="column"
-            align="start"
-            justify="start"
-          >
+          <Wrapper direction="column" align="start" justify="start">
             <Text variant={"h4"} className="mb-4">
               Dicas e Artigos
             </Text>
@@ -135,6 +131,7 @@ export function Home() {
               isLoading={isLoading}
               isError={isError}
               onRetry={onRefresh}
+              fromTab="Home"
             />
           </Wrapper>
 

@@ -6,9 +6,11 @@ import { ClockIcon } from "phosphor-react-native";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { THEME } from "@/lib/theme";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
+import type { TabName } from "@/navigation/types";
 
 interface ArticleCardProps extends ArticlePreviewDTO {
   className?: string;
+  fromTab?: TabName;
 }
 
 export function ArticleCard({
@@ -17,6 +19,7 @@ export function ArticleCard({
   readingTime,
   id,
   className = "",
+  fromTab,
 }: ArticleCardProps) {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
 
@@ -27,7 +30,7 @@ export function ArticleCard({
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
-          params: { id: id },
+          params: { id: id, ...(fromTab ? { fromTab } : {}) },
           initial: false,
         })
       }
