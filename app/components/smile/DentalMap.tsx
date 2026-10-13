@@ -11,7 +11,7 @@ import { Wrapper } from "@/components/wrapper";
 import ToothSVG from "./teeth/ToothSVG";
 import { FDI_TEETH } from "./teeth/fdiTeeth";
 import { Text } from "@/components/ui/text";
-import ToothEventModal from "./ToothEventModal";
+import { ToothEventModal } from "./ToothEventModal";
 import { ageInMonths } from "@/lib/utils";
 import { parseToothId } from "@/lib/teethLabels";
 import {
@@ -243,7 +243,7 @@ export function DentalMap({
   function renderOpenArch(
     right: ToothPosition[],
     left: ToothPosition[],
-    upper: boolean,
+    upper?: boolean,
   ) {
     const cx = archWidth / 2;
     const yBase = upper ? 30 : OPEN_ARCH_HEIGHT - 30;
@@ -350,6 +350,7 @@ export function DentalMap({
   ) {
     return (
       <View className="w-full">
+        {title == "Inferior" && renderOpenArch(right, left)}
         <Wrapper direction="row" justify="between" className="mb-1 w-full">
           <Text className="text-xs font-bold text-base-500">
             {`${title} · Direito`}
@@ -358,7 +359,7 @@ export function DentalMap({
             {`${title} · Esquerdo`}
           </Text>
         </Wrapper>
-        {renderOpenArch(right, left, title === "Superior")}
+        {title == "Superior" && renderOpenArch(right, left, true)}
       </View>
     );
   }
