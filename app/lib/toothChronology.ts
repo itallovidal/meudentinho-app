@@ -1,6 +1,7 @@
 import type {
   Arch,
   Dentition,
+  Quadrant,
   Side,
   ToothEvent,
   ToothType,
@@ -78,13 +79,16 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
   },
 };
 
+const DECIDUOUS_COUNTERPART: Partial<Record<ToothType, ToothType>> = {
+  central_incisor: "central_incisor",
+  lateral_incisor: "lateral_incisor",
+  canine: "canine",
+  first_premolar: "first_molar",
+  second_premolar: "second_molar",
+};
+
 export type MapToothState =
-  | "unregistered"
-  | "dimmed"
-  | "bornMilk"
-  | "bornPermanent"
-  | "fell"
-  | "delayed";
+  "unregistered" | "bornMilk" | "bornPermanent" | "fell";
 
 export function getChronology(
   arch: Arch,
@@ -112,9 +116,44 @@ export function expectedDentition(
   return "primary";
 }
 
+export function isInEruptionWindow(
+  arch: Arch,
+  toothType: ToothType,
+  ageMonths: number | null,
+): boolean {
+  const info = getChronology(arch, toothType);
+  if (!info || ageMonths === null || Number.isNaN(ageMonths) || ageMonths < 0) {
+    return false;
+  }
+  const inDeciduous =
+    info.deciduous !== null &&
+    ageMonths >= info.deciduous.at &&
+    ageMonths <= info.deciduous.limit;
+  const inPermanent =
+    ageMonths >= info.permanent.from && ageMonths <= info.permanent.limit;
+  return inDeciduous || inPermanent;
+}
+
+export function pendingDeciduousFall(
+  quadrant: Quadrant,
+  toothType: ToothType,
+  events: ToothEvent[],
+): ToothType | null {
+  const counterpart = DECIDUOUS_COUNTERPART[toothType];
+  if (!counterpart) {
+    return null;
+  }
+  const fell = events.some(
+    (event) =>
+      event.quadrant === quadrant &&
+      event.toothType === counterpart &&
+      event.eventType === "exfoliation",
+  );
+  return fell ? null : counterpart;
+}
+
 export function toothState(
   position: { toothType: ToothType; arch: Arch; side: Side },
-  ageMonths: number | null,
   events: ToothEvent[],
 ): MapToothState {
   const key = `${position.arch}_${position.side}:${position.toothType}`;
@@ -135,20 +174,5 @@ export function toothState(
   if (mine.some((event) => event.eventType === "eruption")) {
     return "bornMilk";
   }
-  const info = getChronology(position.arch, position.toothType);
-  if (
-    !info ||
-    ageMonths === null ||
-    Number.isNaN(ageMonths) ||
-    ageMonths < 0
-  ) {
-    return "unregistered";
-  }
-  if (ageMonths >= info.permanent.from) {
-    return ageMonths > info.permanent.limit ? "delayed" : "unregistered";
-  }
-  if (!info.deciduous || ageMonths < info.deciduous.at) {
-    return "dimmed";
-  }
-  return ageMonths > info.deciduous.limit ? "delayed" : "unregistered";
+  return "unregistered";
 }

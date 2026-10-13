@@ -20,12 +20,13 @@ import {
   localDateKeyToISO,
   toLocalDateKey,
 } from "@/lib/utils";
-import { expectedDentition } from "@/lib/toothChronology";
+import { expectedDentition, pendingDeciduousFall } from "@/lib/toothChronology";
 import {
   dentitionLabel,
   parseToothId,
   toothEventVerb,
   toothIdLabel,
+  toothTypeLabel,
 } from "@/lib/teethLabels";
 import type {
   Dentition,
@@ -39,6 +40,7 @@ export default function ToothEventModal({
   kidId,
   kidBirthDate,
   toothEvents,
+  events,
   onClose,
   onSubmit,
 }: {
@@ -47,6 +49,7 @@ export default function ToothEventModal({
   kidId: string | null;
   kidBirthDate: string | null;
   toothEvents: ToothEvent[];
+  events: ToothEvent[];
   onClose: () => void;
   onSubmit: (
     payload: ToothEventRequestDTO,
@@ -138,6 +141,11 @@ export default function ToothEventModal({
     ? toothEvents.find((event) => event.id === editingId)
     : undefined;
 
+  const pendingCounterpart =
+    parsed !== null && eventType === "eruption" && dentition === "permanent"
+      ? pendingDeciduousFall(parsed.quadrant, parsed.toothType, events)
+      : null;
+
   return (
     <>
       <Dialog
@@ -146,110 +154,116 @@ export default function ToothEventModal({
           if (!open) onClose();
         }}
       >
-      <DialogContent className="gap-4 p-5">
-        <DialogHeader>
-          <DialogTitle>{toothIdLabel(toothId)}</DialogTitle>
-          {editingRecord && (
-            <DialogDescription>
-              {`Editando registro de ${formatDatePtBR(editingRecord.occurrenceDate) ?? ""}`}
-            </DialogDescription>
+        <DialogContent className="gap-4 p-5">
+          <DialogHeader>
+            <DialogTitle>{toothIdLabel(toothId)}</DialogTitle>
+            {editingRecord && (
+              <DialogDescription>
+                {`Editando registro de ${formatDatePtBR(editingRecord.occurrenceDate) ?? ""}`}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          <Wrapper direction="column" gap="gap-2">
+            <Text className="font-bold">O que aconteceu?</Text>
+            <Wrapper className="flex-row gap-2">
+              <TouchableOpacity
+                onPress={() => changeEventType("eruption")}
+                className={`rounded-full px-3 py-2 ${eventType === "eruption" ? "bg-primary-200" : "bg-base-200"}`}
+              >
+                <Text>{toothEventVerb("eruption")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => changeEventType("exfoliation")}
+                className={`rounded-full px-3 py-2 ${eventType === "exfoliation" ? "bg-primary-200" : "bg-base-200"}`}
+              >
+                <Text>{toothEventVerb("exfoliation")}</Text>
+              </TouchableOpacity>
+            </Wrapper>
+          </Wrapper>
+
+          <Wrapper direction="column" gap="gap-2">
+            <Text className="font-bold">Dentição</Text>
+            <Wrapper className="flex-row gap-2">
+              <TouchableOpacity
+                onPress={() => setDentition("primary")}
+                className={`rounded-full px-3 py-2 ${dentition === "primary" ? "bg-primary-200" : "bg-base-200"}`}
+              >
+                <Text>{dentitionLabel("primary")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setDentition("permanent")}
+                className={`rounded-full px-3 py-2 ${dentition === "permanent" ? "bg-primary-200" : "bg-base-200"}`}
+              >
+                <Text>{dentitionLabel("permanent")}</Text>
+              </TouchableOpacity>
+            </Wrapper>
+          </Wrapper>
+
+          <Wrapper direction="column" gap="gap-2">
+            <Text className="font-bold">Data do acontecimento</Text>
+            <Wrapper direction="row" align="center" gap="gap-2">
+              <Input
+                editable={false}
+                value={formatDatePtBR(date) ?? date}
+                className="flex-1 bg-base-100"
+              />
+              <TouchableOpacity
+                onPress={() => setShowCalendar((current) => !current)}
+                className="rounded bg-base-200 p-2.5"
+              >
+                <CalendarBlankIcon size={20} weight="bold" />
+              </TouchableOpacity>
+            </Wrapper>
+            {showCalendar && (
+              <CustomCalendar
+                onDayPress={(day) => {
+                  setDate(day.dateString);
+                  setShowCalendar(false);
+                }}
+                markedDates={{
+                  [date]: {
+                    selected: true,
+                    selectedColor: "#1E3A5F",
+                    selectedTextColor: "#FFFFFF",
+                  },
+                }}
+              />
+            )}
+          </Wrapper>
+
+          {pendingCounterpart && (
+            <Text className="text-destructive text-sm">
+              {`Registre primeiro a queda do dente de leite (${toothTypeLabel(pendingCounterpart)}) deste lado antes de registrar o nascimento do permanente.`}
+            </Text>
           )}
-        </DialogHeader>
 
-        <Wrapper direction="column" gap="gap-2">
-          <Text className="font-bold">O que aconteceu?</Text>
-          <Wrapper className="flex-row gap-2">
-            <TouchableOpacity
-              onPress={() => changeEventType("eruption")}
-              className={`rounded-full px-3 py-2 ${eventType === "eruption" ? "bg-primary-200" : "bg-base-200"}`}
-            >
-              <Text>{toothEventVerb("eruption")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => changeEventType("exfoliation")}
-              className={`rounded-full px-3 py-2 ${eventType === "exfoliation" ? "bg-primary-200" : "bg-base-200"}`}
-            >
-              <Text>{toothEventVerb("exfoliation")}</Text>
-            </TouchableOpacity>
-          </Wrapper>
-        </Wrapper>
+          <Textarea
+            value={note}
+            onChangeText={setNote}
+            placeholder="Observação (opcional)"
+            maxLength={500}
+            numberOfLines={3}
+            className="bg-base-100"
+          />
 
-        <Wrapper direction="column" gap="gap-2">
-          <Text className="font-bold">Dentição</Text>
-          <Wrapper className="flex-row gap-2">
+          <Wrapper className="mt-2 flex-row gap-2">
             <TouchableOpacity
-              onPress={() => setDentition("primary")}
-              className={`rounded-full px-3 py-2 ${dentition === "primary" ? "bg-primary-200" : "bg-base-200"}`}
+              onPress={onClose}
+              className="rounded bg-base-200 px-4 py-2"
             >
-              <Text>{dentitionLabel("primary")}</Text>
+              <Text>Fechar</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setDentition("permanent")}
-              className={`rounded-full px-3 py-2 ${dentition === "permanent" ? "bg-primary-200" : "bg-base-200"}`}
+              onPress={handleConfirmPress}
+              disabled={!parsed || pendingCounterpart !== null}
+              className="rounded bg-primary-700 px-4 py-2"
             >
-              <Text>{dentitionLabel("permanent")}</Text>
+              <Text className="text-white">Confirmar</Text>
             </TouchableOpacity>
           </Wrapper>
-        </Wrapper>
-
-        <Wrapper direction="column" gap="gap-2">
-          <Text className="font-bold">Data do acontecimento</Text>
-          <Wrapper direction="row" align="center" gap="gap-2">
-            <Input
-              editable={false}
-              value={formatDatePtBR(date) ?? date}
-              className="flex-1 bg-base-100"
-            />
-            <TouchableOpacity
-              onPress={() => setShowCalendar((current) => !current)}
-              className="rounded bg-base-200 p-2.5"
-            >
-              <CalendarBlankIcon size={20} weight="bold" />
-            </TouchableOpacity>
-          </Wrapper>
-          {showCalendar && (
-            <CustomCalendar
-              onDayPress={(day) => {
-                setDate(day.dateString);
-                setShowCalendar(false);
-              }}
-              markedDates={{
-                [date]: {
-                  selected: true,
-                  selectedColor: "#1E3A5F",
-                  selectedTextColor: "#FFFFFF",
-                },
-              }}
-            />
-          )}
-        </Wrapper>
-
-        <Textarea
-          value={note}
-          onChangeText={setNote}
-          placeholder="Observação (opcional)"
-          maxLength={500}
-          numberOfLines={3}
-          className="bg-base-100"
-        />
-
-        <Wrapper className="mt-2 flex-row gap-2">
-          <TouchableOpacity
-            onPress={onClose}
-            className="rounded bg-base-200 px-4 py-2"
-          >
-            <Text>Fechar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleConfirmPress}
-            disabled={!parsed}
-            className="rounded bg-primary-700 px-4 py-2"
-          >
-            <Text className="text-white">Confirmar</Text>
-          </TouchableOpacity>
-        </Wrapper>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={confirmOpen}

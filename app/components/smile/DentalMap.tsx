@@ -6,15 +6,19 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { Wrapper } from "@/components/wrapper";
 import ToothSVG from "./teeth/ToothSVG";
 import { FDI_TEETH } from "./teeth/fdiTeeth";
 import { Text } from "@/components/ui/text";
-import { ToothIcon } from "phosphor-react-native";
 import ToothEventModal from "./ToothEventModal";
 import { ageInMonths } from "@/lib/utils";
 import { parseToothId } from "@/lib/teethLabels";
-import { toothState, type MapToothState } from "@/lib/toothChronology";
+import {
+  isInEruptionWindow,
+  toothState,
+  type MapToothState,
+} from "@/lib/toothChronology";
 import type {
   Arch,
   Quadrant,
@@ -62,26 +66,52 @@ const FDI_UNIT: Record<ToothType, string> = {
   third_molar: "8",
 };
 
-const STATE_COLORS: Record<MapToothState, string> = {
-  unregistered: "#8E97A3",
-  dimmed: "#C4CBD4",
-  bornMilk: "#4C9BDD",
-  bornPermanent: "#1E3A5F",
-  fell: "#DE7F02",
-  delayed: "#DA4E4E",
+type LegendKey = MapToothState | "eruptionWindow";
+
+const TOOTH_STYLE: Record<LegendKey, { fill: string; stroke: string }> = {
+  unregistered: { fill: "#E2E8F0", stroke: "#475569" },
+  bornMilk: { fill: "#7DD3FC", stroke: "#0C4A6E" },
+  bornPermanent: { fill: "#34D399", stroke: "#065F46" },
+  fell: { fill: "#FCA5A5", stroke: "#7F1D1D" },
+  eruptionWindow: { fill: "#FDE047", stroke: "#854D0E" },
 };
 
-const LEGEND: { state: MapToothState; label: string; color: string }[] = [
-  { state: "unregistered", label: "Sem registro", color: "#8E97A3" },
-  { state: "dimmed", label: "Fora da faixa etária", color: "#D9D9D9" },
-  { state: "bornMilk", label: "Nasceu (leite)", color: "#4C9BDD" },
-  { state: "bornPermanent", label: "Nasceu (permanente)", color: "#1E3A5F" },
-  { state: "fell", label: "Caiu", color: "#DE7F02" },
-  { state: "delayed", label: "Atrasado", color: "#DA4E4E" },
+const LEGEND: { key: LegendKey; label: string; description: string }[] = [
+  {
+    key: "unregistered",
+    label: "Sem registro",
+    description: "Ainda não foi informado",
+  },
+  {
+    key: "eruptionWindow",
+    label: "Hora de nascer",
+    description: "Período esperado, ainda sem registro",
+  },
+  {
+    key: "bornMilk",
+    label: "Nasceu (de leite)",
+    description: "Dente de leite que surgiu",
+  },
+  {
+    key: "bornPermanent",
+    label: "Nasceu (definitivo)",
+    description: "Dente permanente que surgiu",
+  },
+  {
+    key: "fell",
+    label: "Caiu",
+    description: "Dente de leite que foi trocado",
+  },
 ];
+
+const LEGEND_TOOTH = FDI_TEETH["11"];
+
+type LegendCounts = Record<MapToothState, number> & { eruptionWindow: number };
 
 const OPEN_TOOTH_SIZE = 28;
 const OPEN_ARCH_HEIGHT = 190;
+const GUM_COLOR = "#F4A3A6";
+const GUM_EDGE_COLOR = "#C2555F";
 
 function buildArch(arch: Arch, side: Side): ToothPosition[] {
   const quadrant = `${arch}_${side}` as Quadrant;
@@ -142,29 +172,37 @@ export function DentalMap({
       for (const position of positions) {
         map.set(
           `${position.quadrant}:${position.toothType}`,
-          toothState(position, ageMonths, events),
+          toothState(position, events),
         );
       }
     }
     return map;
-  }, [arches, ageMonths, events]);
+  }, [arches, events]);
 
   const archWidth = Math.max(300, screenWidth - 100);
 
   const legendCounts = useMemo(() => {
-    const counts: Record<MapToothState, number> = {
+    const counts: LegendCounts = {
       unregistered: 0,
-      dimmed: 0,
       bornMilk: 0,
       bornPermanent: 0,
       fell: 0,
-      delayed: 0,
+      eruptionWindow: 0,
     };
-    for (const state of states.values()) {
-      counts[state] += 1;
+    for (const positions of Object.values(arches)) {
+      for (const position of positions) {
+        const state =
+          states.get(`${position.quadrant}:${position.toothType}`) ??
+          "unregistered";
+        if (state === "unregistered" && eruptionWindowOf(position)) {
+          counts.eruptionWindow += 1;
+        } else {
+          counts[state] += 1;
+        }
+      }
     }
     return counts;
-  }, [states]);
+  }, [arches, states, ageMonths]);
 
   const onToothPress = useCallback((toothId: string) => {
     setSelectedTooth(toothId);
@@ -192,10 +230,13 @@ export function DentalMap({
       )
     : [];
 
+  function eruptionWindowOf(position: ToothPosition): boolean {
+    return isInEruptionWindow(position.arch, position.toothType, ageMonths);
+  }
+
   function stateOf(position: ToothPosition): MapToothState {
     return (
-      states.get(`${position.quadrant}:${position.toothType}`) ??
-      "unregistered"
+      states.get(`${position.quadrant}:${position.toothType}`) ?? "unregistered"
     );
   }
 
@@ -219,6 +260,17 @@ export function DentalMap({
       return { x, y, rotation };
     }
 
+    const gumPoints: string[] = [];
+    for (let k = 7; k >= 0; k -= 0.5) {
+      const { x, y } = place(-1, k);
+      gumPoints.push(`${x},${y}`);
+    }
+    for (let k = 0; k <= 7; k += 0.5) {
+      const { x, y } = place(1, k);
+      gumPoints.push(`${x},${y}`);
+    }
+    const gumPath = `M${gumPoints.join(" L")}`;
+
     function renderPlaced(
       position: ToothPosition,
       sign: 1 | -1,
@@ -230,6 +282,9 @@ export function DentalMap({
       }
       const { x, y, rotation } = place(sign, curveIndex);
       const state = stateOf(position);
+      const highlighted =
+        state === "unregistered" && eruptionWindowOf(position);
+      const style = TOOTH_STYLE[highlighted ? "eruptionWindow" : state];
       return (
         <TouchableOpacity
           key={position.id}
@@ -240,14 +295,14 @@ export function DentalMap({
             left: x - OPEN_TOOTH_SIZE / 2,
             top: y - OPEN_TOOTH_SIZE / 2,
             transform: [{ rotate: `${rotation}deg` }],
-            opacity: state === "dimmed" ? 0.35 : 1,
           }}
         >
           <ToothSVG
             viewBox={tooth.viewBox}
             contour={tooth.contour}
             details={tooth.details}
-            fill={STATE_COLORS[state]}
+            fill={style.fill}
+            stroke={style.stroke}
             width={OPEN_TOOTH_SIZE}
             height={OPEN_TOOTH_SIZE}
           />
@@ -260,9 +315,29 @@ export function DentalMap({
         style={{ width: archWidth, height: OPEN_ARCH_HEIGHT }}
         className="self-center"
       >
-        {right.map((position, index) =>
-          renderPlaced(position, -1, 7 - index),
-        )}
+        <Svg
+          width={archWidth}
+          height={OPEN_ARCH_HEIGHT}
+          style={{ position: "absolute", left: 0, top: 0 }}
+        >
+          <Path
+            d={gumPath}
+            fill="none"
+            stroke={GUM_EDGE_COLOR}
+            strokeWidth={OPEN_TOOTH_SIZE + 12}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d={gumPath}
+            fill="none"
+            stroke={GUM_COLOR}
+            strokeWidth={OPEN_TOOTH_SIZE + 4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+        {right.map((position, index) => renderPlaced(position, -1, 7 - index))}
         {left.map((position, index) => renderPlaced(position, 1, index))}
       </View>
     );
@@ -301,38 +376,45 @@ export function DentalMap({
           Mapa do Sorriso
         </Text>
 
-        {renderArchSection(
-          arches.upperRight,
-          arches.upperLeft,
-          "Superior",
-        )}
-        {renderArchSection(
-          arches.lowerRight,
-          arches.lowerLeft,
-          "Inferior",
-        )}
+        {renderArchSection(arches.upperRight, arches.upperLeft, "Superior")}
+        {renderArchSection(arches.lowerRight, arches.lowerLeft, "Inferior")}
 
         <Wrapper
           justify="center"
           align="center"
           direction="column"
-          gap="gap-1"
+          gap="gap-2"
           className="mt-1 w-full"
         >
           {LEGEND.map((entry) => (
             <Wrapper
-              key={entry.state}
+              key={entry.key}
               direction="row"
               align="center"
               justify="between"
               className="w-full px-1"
             >
-              <Wrapper direction="row" align="center" gap="gap-2">
-                <ToothIcon size={18} color={entry.color} weight="fill" />
-                <Text className="text-sm text-base-500">{entry.label}</Text>
+              <Wrapper direction="row" align="center" gap="gap-3">
+                <ToothSVG
+                  viewBox={LEGEND_TOOTH.viewBox}
+                  contour={LEGEND_TOOTH.contour}
+                  details={LEGEND_TOOTH.details}
+                  fill={TOOTH_STYLE[entry.key].fill}
+                  stroke={TOOTH_STYLE[entry.key].stroke}
+                  width={22}
+                  height={22}
+                />
+                <View>
+                  <Text className="text-sm font-semibold text-base-600">
+                    {entry.label}
+                  </Text>
+                  <Text className="text-xs text-base-500">
+                    {entry.description}
+                  </Text>
+                </View>
               </Wrapper>
               <Text className="text-sm font-bold text-base-600">
-                {legendCounts[entry.state]}
+                {legendCounts[entry.key]}
               </Text>
             </Wrapper>
           ))}
@@ -345,6 +427,7 @@ export function DentalMap({
         kidId={kidId}
         kidBirthDate={kidBirthDate}
         toothEvents={selectedToothEvents}
+        events={events}
         onClose={() => setModalVisible(false)}
         onSubmit={handleRegister}
       />
