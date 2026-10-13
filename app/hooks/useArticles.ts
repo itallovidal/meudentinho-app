@@ -71,10 +71,15 @@ export function useArticles(options: UseArticlesOptions = {}) {
     (withCategories && categoriesQuery.isFetching);
 
   async function onRefresh() {
-    await Promise.all([
+    const jobs = [
       queryClient.invalidateQueries({ queryKey: ["articles-preview"] }),
-      queryClient.invalidateQueries({ queryKey: ["article-categories"] }),
-    ]);
+    ];
+    if (withCategories) {
+      jobs.push(
+        queryClient.invalidateQueries({ queryKey: ["article-categories"] }),
+      );
+    }
+    await Promise.all(jobs);
   }
 
   return {
