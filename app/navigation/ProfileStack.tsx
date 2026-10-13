@@ -7,9 +7,11 @@ import { Signup } from "@/pages/profile/signup";
 import { Index } from "@/pages/profile";
 import { RouteProp } from "@react-navigation/native";
 import { BasicUser } from "@/types/domain";
+import { KidResponseDTO } from "@/types/dtos/user";
 import { AdminPage } from "@/pages/profile/adminPage";
 import { Dependents } from "@/pages/profile/dependents";
 import { Responsible } from "@/pages/profile/responsible";
+import { EditDependent } from "@/pages/profile/editDependent";
 import { ChangePassword } from "@/pages/profile/changePassword";
 import type { CrossTabOrigin } from "./types";
 
@@ -21,6 +23,7 @@ export type ProfileRouteParams = {
   Responsible: undefined;
   ChangePassword: undefined;
   Dependents: undefined | CrossTabOrigin;
+  EditDependent: undefined | { kid?: KidResponseDTO };
 };
 
 export type ProfileNavegationProp =
@@ -38,6 +41,7 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     Responsible,
     ChangePassword,
     Dependents,
+    EditDependent,
   },
   screenOptions: {
     headerShown: false,

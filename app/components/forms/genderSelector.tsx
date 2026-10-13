@@ -53,7 +53,7 @@ export function GenderSelector({
       >
         <Animated.View
           pointerEvents="none"
-          className="absolute bottom-1 left-1 top-1 rounded-md bg-white shadow-sm shadow-base-300"
+          className="absolute bottom-1 left-1 top-1 rounded-md bg-primary-500"
           style={indicatorStyle}
         />
         {OPTIONS.map((option) => (
@@ -65,7 +65,7 @@ export function GenderSelector({
             <Text
               className={
                 gender === option.value
-                  ? "font-bold text-primary-900"
+                  ? "font-bold text-base-100"
                   : "font-medium text-base-400"
               }
             >

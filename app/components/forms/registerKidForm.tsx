@@ -2,17 +2,25 @@ import { kidSchema } from "@/lib/schemas/kid";
 import { ApiError } from "@/types/domain";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ReactNode, useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
 import { Wrapper } from "../wrapper";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Text } from "../ui/text";
 import { FormInput } from "../formInput";
 import { Controller, useForm } from "react-hook-form";
-import { Checkbox } from "expo-checkbox";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { QuestionIcon } from "phosphor-react-native";
+import { THEME } from "@/lib/theme";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { AnimatedCheckbox } from "./animatedCheckbox";
 import { GenderSelector } from "./genderSelector";
 import { BirthDateInput } from "./birthDateInput";
+import { PrematureWeeksSelector } from "./prematureWeeksSelector";
 
 interface Props {
   onSubmit: (data: KidRequestDTO) => void | Promise<void>;
@@ -20,7 +28,10 @@ interface Props {
   defaultValues?: Partial<KidRequestDTO>;
   submitLabel?: string;
   submittingLabel?: string;
+  footer?: ReactNode;
 }
+
+const SECTION_MAX_HEIGHT = 300;
 
 export function RegisterKidForm({
   onSubmit,
@@ -28,13 +39,15 @@ export function RegisterKidForm({
   submitLabel = "Confirmar",
   submittingLabel = "Salvando...",
   submitError,
+  footer,
 }: Props) {
+  const colors = THEME.light;
   const [isPremature, setIsPremature] = useState(
     Boolean(
       defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
     ),
   );
-
+  const sectionProgress = useSharedValue(isPremature ? 1 : 0);
   const {
     control,
     handleSubmit,
@@ -69,8 +82,23 @@ export function RegisterKidForm({
     }
   }, [isPremature, setValue]);
 
+  useEffect(() => {
+    sectionProgress.value = withTiming(isPremature ? 1 : 0, {
+      duration: 180,
+    });
+  }, [isPremature, sectionProgress]);
+
+  const sectionStyle = useAnimatedStyle(() => ({
+    maxHeight: sectionProgress.value * SECTION_MAX_HEIGHT,
+    opacity: sectionProgress.value,
+  }));
+
   function changeGender(gender: "male" | "female") {
     setValue("gender", gender, { shouldDirty: true });
+  }
+
+  function togglePremature() {
+    setIsPremature((previous) => !previous);
   }
 
   function chooseBirthDate(isoDate: string) {
@@ -87,7 +115,7 @@ export function RegisterKidForm({
         control={control}
         errors={errors}
         name="name"
-        label="Nome da criança"
+        label="Nome do dependente"
         labelProps={{
           className:
             "mb-1 text-xs font-semibold uppercase tracking-wide text-primary-400",
@@ -98,7 +126,7 @@ export function RegisterKidForm({
           style: {
             width: "100%",
           },
-          className: "flex-grow-1 bg-white",
+          className: "flex-grow-1",
         }}
       />
 
@@ -115,41 +143,67 @@ export function RegisterKidForm({
         </View>
       </View>
 
-      <Wrapper direction="row" align="center" justify="start" gap="gap-2">
-        <Checkbox
-          value={isPremature}
-          onValueChange={(checked: boolean) => setIsPremature(checked)}
-          color={isPremature ? "#4630EB" : undefined}
-        />
-        <Text className="font-bold">A criança nasceu prematura?</Text>
-      </Wrapper>
+      <View className="w-full flex-row items-start gap-3">
+        <View className="mt-0.5">
+          <AnimatedCheckbox
+            checked={isPremature}
+            onChange={togglePremature}
+            accessibilityLabel="A criança nasceu antes do tempo previsto?"
+          />
+        </View>
+        <Pressable onPress={togglePremature} hitSlop={4} className="flex-1">
+          <Text className="font-bold">
+            A criança nasceu antes do tempo previsto?
+          </Text>
+        </Pressable>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="O que é prematuridade?"
+              accessibilityHint="Mostra a explicação sobre prematuridade"
+              hitSlop={8}
+            >
+              <QuestionIcon size={22} color={colors.base400} weight="fill" />
+            </Pressable>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            sideOffset={8}
+            className="w-64 border-0 bg-transparent p-0 shadow-none"
+          >
+            <View className="rounded-2xl bg-base-400 px-4 py-3 shadow-lg">
+              <Text className="text-sm leading-5 text-base-100">
+                A prematuridade acontece quando o nascimento ocorre antes de 37
+                semanas de gestação.
+              </Text>
+            </View>
+          </PopoverContent>
+        </Popover>
+      </View>
 
-      {isPremature && (
-        <Controller
-          control={control}
-          name="prematureWeeks"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Wrapper direction="column" className="w-full">
-              <Text className="mb-1 font-bold">Semanas de Prematuridade</Text>
-              <Input
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value ?? ""}
-                placeholder="Número de semanas"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="numeric"
-                className="w-full bg-white"
+      <Animated.View
+        style={sectionStyle}
+        className="w-full overflow-hidden"
+        pointerEvents={isPremature ? "auto" : "none"}
+        aria-hidden={!isPremature}
+      >
+        <View className="w-full flex-col gap-4">
+          <View className="h-px w-full bg-base-300" />
+          <Controller
+            control={control}
+            name="prematureWeeks"
+            render={({ field: { onChange, value } }) => (
+              <PrematureWeeksSelector
+                value={value}
+                onChange={onChange}
+                error={errors.prematureWeeks?.message}
               />
-              {errors.prematureWeeks?.message && (
-                <Text className="mt-1 text-destructive" variant="small">
-                  {String(errors.prematureWeeks.message)}
-                </Text>
-              )}
-            </Wrapper>
-          )}
-        />
-      )}
+            )}
+          />
+        </View>
+      </Animated.View>
 
       {submitError && (
         <Text className="text-red-600">{submitError.message}</Text>
@@ -158,10 +212,12 @@ export function RegisterKidForm({
       <Button
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
-        className="h-14 w-full rounded-xl"
+        className="h-14 w-full rounded-full mt-6"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>
+
+      {footer}
     </Wrapper>
   );
 }

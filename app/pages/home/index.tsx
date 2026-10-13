@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
+import { useKids } from "@/hooks/useKids";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { KidRequestDTO } from "@/types/dtos/user";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
-import { getAllKids } from "@/api/kids/getAllKids";
 import { createKid } from "@/api/kids/createKid";
 
 export function Home() {
@@ -38,15 +38,8 @@ export function Home() {
     isError,
   } = useArticles({ withCategories: false });
 
-  const { data: kidsResponse, isPending: kidsPending } = useQuery({
-    queryKey: ["kids", authToken],
-    queryFn: () => getAllKids(authToken!),
-    enabled: !!authToken,
-    staleTime: 1000 * 60 * 5,
-    refetchOnMount: false,
-  });
+  const { kids, isLoading: kidsPending } = useKids(authToken);
 
-  const kids = kidsResponse?.data ?? [];
   const showOnboarding =
     hydrated && !!authToken && !kidsPending && kids.length === 0;
 

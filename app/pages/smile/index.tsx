@@ -13,8 +13,8 @@ import RecentEventsList from "@/components/smile/RecentEventsList";
 import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { useKids } from "@/hooks/useKids";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
-import { getAllKids } from "@/api/kids/getAllKids";
 import { getToothEventsByKid } from "@/api/smile/getToothEvents";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
@@ -29,18 +29,15 @@ export function Smile() {
   const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
 
-  const kidsQuery = useQuery({
-    queryKey: ["kids", authToken],
-    queryFn: () => getAllKids(authToken!),
-    enabled: !!authToken,
-    staleTime: 1000 * 60 * 5,
-  });
-  const kidsData = kidsQuery.data;
-  const kidsPending = kidsQuery.isPending;
+  const {
+    kids: kidsList,
+    isLoading: kidsPending,
+    isFetching: kidsFetching,
+  } = useKids(authToken);
 
   const kids = useMemo(
-    () => (kidsData?.data ?? []).map((kid) => ({ id: kid.id, name: kid.name })),
-    [kidsData],
+    () => kidsList.map((kid) => ({ id: kid.id, name: kid.name })),
+    [kidsList],
   );
   const kidsReady = !kidsPending;
 
@@ -135,9 +132,7 @@ export function Smile() {
   }, [events]);
 
   const selectedKid = kids.find((kid) => kid.id === selectedKidId);
-  const selectedKidRecord = (kidsData?.data ?? []).find(
-    (kid) => kid.id === selectedKidId,
-  );
+  const selectedKidRecord = kidsList.find((kid) => kid.id === selectedKidId);
   const kidBirthDate = selectedKidRecord ? selectedKidRecord.birthDate : null;
 
   const kidUnlinked =
@@ -273,7 +268,7 @@ export function Smile() {
         className="w-full"
         refreshControl={
           <RefreshControl
-            refreshing={kidsQuery.isFetching || eventsQuery.isFetching}
+            refreshing={kidsFetching || eventsQuery.isFetching}
             onRefresh={() => void handleRefreshKids()}
           />
         }

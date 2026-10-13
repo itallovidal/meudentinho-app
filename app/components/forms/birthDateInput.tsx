@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { View } from "react-native";
+import { CalendarBlankIcon } from "phosphor-react-native";
+import { THEME } from "@/lib/theme";
 import { Input } from "../ui/input";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
@@ -17,6 +20,7 @@ export function BirthDateInput({
   error,
   className,
 }: BirthDateInputProps) {
+  const colors = THEME.light;
   const [text, setText] = useState(() => (value ? isoToBrDate(value) : ""));
 
   useEffect(() => {
@@ -50,15 +54,23 @@ export function BirthDateInput({
       <Text className="text-xs font-semibold uppercase tracking-wide text-primary-400">
         Data de nascimento
       </Text>
-      <Input
-        value={text}
-        onChangeText={handleChangeText}
-        placeholder="DD/MM/AAAA"
-        keyboardType="numeric"
-        maxLength={10}
-        autoCorrect={false}
-        className="w-full"
-      />
+      <View className="relative w-full">
+        <Input
+          value={text}
+          onChangeText={handleChangeText}
+          placeholder="dd/mm/aaaa"
+          keyboardType="numeric"
+          maxLength={10}
+          autoCorrect={false}
+          className="w-full pr-12"
+        />
+        <View
+          pointerEvents="none"
+          className="absolute bottom-0 right-3 top-0 justify-center"
+        >
+          <CalendarBlankIcon size={20} color={colors.base500} weight="bold" />
+        </View>
+      </View>
       {error ? (
         <Text className="text-destructive" variant="small">
           {error}
