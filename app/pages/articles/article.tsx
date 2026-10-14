@@ -40,8 +40,6 @@ export function Article() {
 
   const categories = article?.categories.join(", ") ?? "";
 
-  // Revalida ao focar sem limpar o artigo atual: evita flash do skeleton.
-  // O dado em cache segue visível enquanto `isFetching` indica a atualização.
   useFocusEffect(
     useCallback(() => {
       if (id.length > 0) {

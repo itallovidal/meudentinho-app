@@ -158,11 +158,12 @@ export function Home() {
             </Wrapper>
           )}
 
-          <Wrapper direction="column" align="start" justify="start">
-            <Text variant={"h4"} className="mb-4">
-              Dicas e Artigos
-            </Text>
-
+          <Wrapper
+            direction="column"
+            align="start"
+            justify="start"
+            className="w-full"
+          >
             <ArticleListSection
               articles={articles}
               latestArticle={latestArticle}
@@ -174,13 +175,6 @@ export function Home() {
               fromTab="Home"
             />
           </Wrapper>
-
-          <Button
-            className="w-full"
-            onPress={() => navigation.navigate("Articles")}
-          >
-            <Text>Ver mais artigos</Text>
-          </Button>
         </Wrapper>
       </ScrollView>
     </Wrapper>

@@ -57,11 +57,6 @@ export function Index() {
       <ScrollView
         className="w-full flex-1"
         refreshControl={
-          // useArticles expõe isFetching (inclui carga inicial) como
-          // `isRefreshing`; mascaramos a carga inicial aqui porque ela já
-          // é coberta pelo skeleton — o spinner fica só para o refetch.
-          // Proposta para o hook (Colmeia/Cofre): expor
-          // `isRefreshing = isFetching && !isPending` + `isRefetching`.
           <RefreshControl
             refreshing={isRefreshing && !isLoading}
             onRefresh={onRefresh}
