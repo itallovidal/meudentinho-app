@@ -3,14 +3,14 @@ import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Card } from "@/components/card";
 import {
   ArrowsClockwiseIcon,
   BookOpenIcon,
   MailboxIcon,
 } from "phosphor-react-native";
-import { useContext, useRef, useState } from "react";
+import { useContext, useCallback, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
@@ -25,22 +25,35 @@ export function Signup() {
   const formRef = useRef<View>(null);
 
   const [error, setError] = useState<ApiError | null>(null);
-  const { updateAppUser } = useContext(UserContext)!;
+  const { updateAppUser, user, authToken, hydrated } = useContext(UserContext)!;
 
   const colors = THEME.light;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (hydrated && user && authToken) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Index", params: { payload: user } }],
+        });
+      }
+    }, [hydrated, user, authToken, navigation]),
+  );
 
   async function onSubmit(SignupRequest: SignupRequest) {
     setError(null);
     try {
       const { data } = await signup(SignupRequest);
 
+      const responseEmail =
+        (data as unknown as { email?: string }).email ?? SignupRequest.email;
       const basicUser = {
         name: data.name,
-        email: SignupRequest.email,
+        email: responseEmail,
         isAdmin: data.isAdmin,
       };
 
-      updateAppUser(
+      await updateAppUser(
         basicUser,
         data.token,
         data.refreshToken ?? null,

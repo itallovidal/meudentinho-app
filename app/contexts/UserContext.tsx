@@ -20,7 +20,7 @@ export interface UserContextProps {
     authToken: string | null,
     refreshToken?: string | null,
     userId?: string | null,
-  ) => void;
+  ) => Promise<void>;
   clearSessionExpired: () => void;
 }
 
@@ -66,12 +66,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
         void persistRefreshedSession(token, refresh);
       },
       onSessionExpired: () => {
-        setSessionExpired(true);
-        void updateAppUser(null, null);
+        void (async () => {
+          await updateAppUser(null, null);
+          setSessionExpired(true);
+        })();
       },
     });
     return () => configureAuthFetch(null);
   }, []);
+
+  function safeParse<T>(raw: string | null): T | null {
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
 
   async function loadUserFromStorage() {
     try {
@@ -80,44 +93,54 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const storedRefreshToken = await getLocalStorageItem("refreshToken");
       const storedUserId = await getLocalStorageItem("userId");
 
-      if (storedUser && storedToken) {
-        const parsedUser = JSON.parse(storedUser);
-        const parsedToken = JSON.parse(storedToken);
-        if (parsedUser && parsedToken) {
-          setUser(parsedUser);
-          setAuthToken(parsedToken);
-          if (storedRefreshToken) {
-            const parsedRefresh = JSON.parse(storedRefreshToken);
-            if (parsedRefresh) {
-              setRefreshToken(parsedRefresh);
-            }
-          }
-          if (storedUserId) {
-            const parsedUserId = JSON.parse(storedUserId);
-            if (parsedUserId) {
-              setUserId(parsedUserId);
-            }
-          }
-        } else {
+      if (!storedUser || !storedToken) {
+        if (storedUser || storedToken || storedRefreshToken || storedUserId) {
           await clearAllLocalStorage();
         }
+        return;
+      }
+
+      const parsedUser = safeParse<BasicUser>(storedUser);
+      const parsedToken = safeParse<string>(storedToken);
+      const parsedRefresh = safeParse<string>(storedRefreshToken);
+      const parsedUserId = safeParse<string>(storedUserId);
+
+      const storageCorrupted =
+        (storedUser && !parsedUser) ||
+        (storedToken && !parsedToken) ||
+        (storedRefreshToken && !parsedRefresh) ||
+        (storedUserId && !parsedUserId);
+
+      if (storageCorrupted || !parsedUser || !parsedToken) {
+        await clearAllLocalStorage();
+        return;
+      }
+
+      setUser(parsedUser);
+      setAuthToken(parsedToken);
+      if (parsedRefresh) {
+        setRefreshToken(parsedRefresh);
+      }
+      if (parsedUserId) {
+        setUserId(parsedUserId);
       }
     } catch (err) {
       console.log("Error loading user from storage:", err);
+      await clearAllLocalStorage();
     } finally {
       setHydrated(true);
     }
   }
 
   useEffect(() => {
-    loadUserFromStorage();
+    void loadUserFromStorage();
   }, []);
 
   async function updateAppUser(
     user: BasicUser | null,
     authToken: string | null = null,
-    refreshToken: string | null = null,
-    userId: string | null = null,
+    refreshToken?: string | null,
+    userId?: string | null,
   ) {
     try {
       if (user === null || authToken === null) {
@@ -125,27 +148,47 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setRefreshToken(null);
         setUserId(null);
+        sessionRef.current = {
+          user: null,
+          authToken: null,
+          refreshToken: null,
+          userId: null,
+        };
+        setSessionExpired(false);
         await clearAllLocalStorage();
 
         return;
       }
 
+      const nextRefreshToken =
+        refreshToken === undefined
+          ? sessionRef.current.refreshToken
+          : refreshToken;
+      const nextUserId =
+        userId === undefined ? sessionRef.current.userId : userId;
+
       setUser(user);
       setAuthToken(authToken);
-      setRefreshToken(refreshToken);
-      setUserId(userId);
+      setRefreshToken(nextRefreshToken);
+      setUserId(nextUserId);
+      sessionRef.current = {
+        user,
+        authToken,
+        refreshToken: nextRefreshToken,
+        userId: nextUserId,
+      };
       setSessionExpired(false);
 
       await setLocalStorageItem("user", JSON.stringify(user));
       await setLocalStorageItem("token", JSON.stringify(authToken));
-      if (refreshToken) {
+      if (nextRefreshToken) {
         await setLocalStorageItem(
           "refreshToken",
-          JSON.stringify(refreshToken),
+          JSON.stringify(nextRefreshToken),
         );
       }
-      if (userId) {
-        await setLocalStorageItem("userId", JSON.stringify(userId));
+      if (nextUserId) {
+        await setLocalStorageItem("userId", JSON.stringify(nextUserId));
       }
     } catch (err) {
       console.log("Error updating user:", err);

@@ -31,7 +31,10 @@ export function Responsible() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.navigate("Login");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
     }
   }, [hydrated, authToken, navigation]);
 
@@ -58,7 +61,7 @@ export function Responsible() {
           email: profile.email,
         });
 
-        updateAppUser(
+        await updateAppUser(
           { ...user, name: profile.name, email: profile.email },
           authToken,
         );

@@ -33,13 +33,15 @@ export function Login() {
     try {
       const { data } = await login(LoginRequest);
 
+      const responseEmail =
+        (data as unknown as { email?: string }).email ?? LoginRequest.email;
       const basicUser = {
         name: data.name,
-        email: LoginRequest.email,
+        email: responseEmail,
         isAdmin: data.isAdmin,
       };
 
-      updateAppUser(
+      await updateAppUser(
         basicUser,
         data.token,
         data.refreshToken ?? null,

@@ -26,7 +26,9 @@ export function Index() {
 
   const handleLogout = async () => {
     try {
-      await logout(refreshToken ?? "");
+      if (refreshToken) {
+        await logout(refreshToken);
+      }
     } finally {
       await updateAppUser(null, null);
       navigation.reset({
