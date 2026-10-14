@@ -11,7 +11,9 @@ export interface User {
   kids: Kid[];
 }
 
-export type BasicUser = Pick<User, "name" | "email" | "isAdmin"> & { kids?: Kid[] };
+export type BasicUser = Pick<User, "name" | "email" | "isAdmin"> & {
+  kids?: Kid[];
+};
 
 export interface Kid {
   id: string;
@@ -64,9 +66,9 @@ export class ApiError implements ErrorPayload {
 
 export interface MetaApiPayload {
   page: number;
-  perPage: number;
+  per_page: number;
   total: number;
-  totalPages: number;
+  total_pages: number;
 }
 
 export interface ResponsePayload<T> {
