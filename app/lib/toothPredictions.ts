@@ -94,8 +94,7 @@ function isSidePending(
         event.eventType === "eruption" && event.dentition === "permanent",
     );
   }
-  // Um dente de leite deixa de ser previsto quando nasce, cai ou já foi
-  // substituído pelo permanente correspondente.
+
   return !mine.some(
     (event) =>
       event.eventType === "eruption" || event.eventType === "exfoliation",
@@ -111,12 +110,6 @@ function keyToDate(key: string): Date {
   return new Date(year, month - 1, day);
 }
 
-/**
- * Estimativas de erupção por arcada e tipo de dente, com base na idade da
- * criança e na cronologia de `toothChronology.ts`. Dentes que já nasceram,
- * caíram ou foram substituídos deixam de ser previstos. Janelas já encerradas
- * também são omitidas. As datas são aproximações, não diagnósticos.
- */
 export function buildToothPredictions(
   birthDate: string | null,
   events: ToothEvent[],
@@ -163,13 +156,19 @@ export function buildToothPredictions(
   );
 }
 
-export function formatPredictionWindow(startKey: string, endKey: string): string {
+export function formatPredictionWindow(
+  startKey: string,
+  endKey: string,
+): string {
   const [startYear, startMonth, startDay] = startKey.split("-").map(Number);
   const [endYear, endMonth, endDay] = endKey.split("-").map(Number);
   if (startKey === endKey) {
     return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
   }
-  if (startYear === endYear && startMonth === endMonth) {
+  if (startYear !== endYear) {
+    return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} de ${startYear} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]} de ${endYear}`;
+  }
+  if (startMonth === endMonth) {
     return `${startDay} a ${endDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
   }
   return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]}`;
