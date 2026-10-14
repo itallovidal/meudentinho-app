@@ -7,7 +7,7 @@ import { isApiError } from "@/types/predicates";
 
 export async function getKidById(
   kidId: string,
-  token: string,
+  token?: string | null,
 ): Promise<ResponsePayload<KidResponseDTO>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids/${kidId}`,
@@ -17,7 +17,7 @@ export async function getKidById(
         "Content-Type": "application/json",
       },
     },
-    token,
+    token ?? null,
   );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;

@@ -13,25 +13,28 @@ type SaveKidVariables = {
 
 export function useKidMutations(authToken: string | null | undefined) {
   const queryClient = useQueryClient();
-  const token = authToken ?? "";
 
   function invalidateKids() {
     return queryClient.invalidateQueries({ queryKey: ["kids"] });
   }
 
   const createKidMutation = useMutation({
-    mutationFn: (data: KidRequestDTO) => createKid(data, token),
+    // Lê o token no momento da chamada (sem congelar): null cai no
+    // authFetch via sessão fresca (getSession + refresh automático).
+    mutationFn: (data: KidRequestDTO) => createKid(data, authToken ?? null),
     onSuccess: invalidateKids,
   });
 
   const saveKidMutation = useMutation({
     mutationFn: ({ kidId, data, usePut }: SaveKidVariables) =>
-      usePut ? updateKid(kidId, token, data) : patchKid(kidId, token, data),
+      usePut
+        ? updateKid(kidId, authToken ?? null, data)
+        : patchKid(kidId, authToken ?? null, data),
     onSuccess: invalidateKids,
   });
 
   const deleteKidMutation = useMutation({
-    mutationFn: (kidId: string) => deleteKid(kidId, token),
+    mutationFn: (kidId: string) => deleteKid(kidId, authToken ?? null),
     onSuccess: invalidateKids,
   });
 

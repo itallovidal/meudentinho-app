@@ -6,7 +6,7 @@ import { isApiError } from "@/types/predicates";
 
 export async function getToothEventsByKid(
   kidId: string,
-  token: string,
+  token?: string | null,
 ): Promise<ResponsePayload<ToothEvent[]>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/tooth-events/kid/${kidId}`,
@@ -16,7 +16,7 @@ export async function getToothEventsByKid(
         "Content-Type": "application/json",
       },
     },
-    token,
+    token ?? null,
   );
 
   const payload = (await response.json()) as ResponsePayload<ToothEvent[]>;

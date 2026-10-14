@@ -5,7 +5,7 @@ import { KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function getAllKids(
-  token: string,
+  token?: string | null,
 ): Promise<ResponsePayload<KidResponseDTO[]>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids`,
@@ -15,7 +15,7 @@ export async function getAllKids(
         "Content-Type": "application/json",
       },
     },
-    token,
+    token ?? null,
   );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;

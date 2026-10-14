@@ -6,7 +6,7 @@ import { isApiError } from "@/types/predicates";
 
 export async function patchKid(
   kidId: string,
-  token: string,
+  token: string | null | undefined,
   kidData: Partial<KidRequestDTO>,
 ): Promise<ResponsePayload<KidResponseDTO>> {
   const payloadToSend: Partial<KidRequestDTO> = {
@@ -25,7 +25,7 @@ export async function patchKid(
         "Content-Type": "application/json",
       },
     },
-    token,
+    token ?? null,
   );
 
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;

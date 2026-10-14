@@ -5,7 +5,7 @@ import { isApiError } from "@/types/predicates";
 
 export async function deleteKid(
   kidId: string,
-  token: string,
+  token?: string | null,
 ): Promise<ResponsePayload<void>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/kids/${kidId}`,
@@ -15,7 +15,7 @@ export async function deleteKid(
         "Content-Type": "application/json",
       },
     },
-    token,
+    token ?? null,
   );
 
   const payload = (await response.json()) as ResponsePayload<void>;
