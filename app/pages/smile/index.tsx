@@ -20,6 +20,7 @@ import { createToothEvent } from "@/api/smile/createToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
+import { birthDateToString } from "@/lib/utils";
 
 const TOTAL_MILK_TEETH = 20;
 
@@ -36,7 +37,7 @@ export function Smile() {
   } = useKids(authToken);
 
   const kids = useMemo(
-    () => kidsList.map((kid) => ({ id: kid.id, name: kid.name })),
+    () => kidsList.map((kid) => ({ id: kid.id, name: kid.name, birthDate: birthDateToString(kid.birthDate) })),
     [kidsList],
   );
   const kidsReady = !kidsPending;
