@@ -67,6 +67,7 @@ export function RegisterKidForm({
 
   const gender = watch("gender");
   const birthDate = watch("birthDate");
+  const prematureWeeksValue = watch("prematureWeeks");
 
   useEffect(() => {
     setIsPremature(
@@ -75,6 +76,15 @@ export function RegisterKidForm({
       ),
     );
   }, [defaultValues?.prematureWeeks]);
+
+  // Sincroniza o checkbox quando o valor do form muda por fora do toggle
+  // (ex.: edição com valor existente, reset). Só liga — nunca desliga aqui,
+  // para não fechar a seção enquanto o usuário ainda escolhe as semanas.
+  useEffect(() => {
+    if (prematureWeeksValue && prematureWeeksValue !== "0") {
+      setIsPremature(true);
+    }
+  }, [prematureWeeksValue]);
 
   useEffect(() => {
     if (!isPremature) {
