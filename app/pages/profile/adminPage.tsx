@@ -23,9 +23,19 @@ export function AdminPage() {
       return;
     }
     if (!authToken) {
-      navigation.navigate("Login");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
     } else if (!user?.isAdmin) {
-      navigation.goBack();
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Index" }],
+        });
+      }
     }
   }, [hydrated, authToken, user, navigation]);
 

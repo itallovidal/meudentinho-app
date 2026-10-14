@@ -40,7 +40,7 @@ function PasswordField({
   const colors = THEME.light;
   const [isVisible, setIsVisible] = useState(false);
   const currentValue = useWatch({ control, name });
-  const showToggle = !revealOnInput || currentValue.length > 0;
+  const showToggle = !revealOnInput || (currentValue ?? "").length > 0;
 
   return (
     <FieldShell label={label} error={error}>
@@ -98,7 +98,10 @@ export function ChangePassword() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.navigate("Login");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
     }
   }, [hydrated, authToken, navigation]);
 

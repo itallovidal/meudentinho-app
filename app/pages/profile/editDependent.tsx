@@ -31,11 +31,9 @@ export function EditDependent() {
     useKidMutations(authToken);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const firstName = kid?.name.split(" ")[0] ?? "";
-
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.navigate("Login");
+      navigation.replace("Login");
     }
   }, [hydrated, authToken, navigation]);
 
@@ -86,6 +84,25 @@ export function EditDependent() {
     } catch {
       Alert.alert("Erro", "Não foi possível excluir o dependente.");
     }
+  }
+
+  if (!hydrated) {
+    return (
+      <Wrapper
+        className="flex-1 bg-base-200"
+        direction="column"
+        align="center"
+        justify="start"
+        gap="gap-0"
+      >
+        <Header hasBackButton />
+        <Text>Carregando...</Text>
+      </Wrapper>
+    );
+  }
+
+  if (!authToken) {
+    return null;
   }
 
   return (

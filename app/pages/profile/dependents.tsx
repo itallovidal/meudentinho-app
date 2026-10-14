@@ -29,12 +29,12 @@ export function Dependents() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.navigate("Login");
+      navigation.replace("Login");
     }
   }, [hydrated, authToken, navigation]);
 
   function handleLoginAgain() {
-    navigation.navigate("Login");
+    navigation.replace("Login");
   }
 
   function handleSelectKid(kid: KidResponseDTO) {
