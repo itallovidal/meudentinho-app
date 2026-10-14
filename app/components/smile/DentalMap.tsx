@@ -77,6 +77,12 @@ const TOOTH_STYLE: Record<LegendKey, { fill: string; stroke: string }> = {
   eruptionWindow: { fill: "#FDE047", stroke: "#854D0E" },
 };
 
+const MILK_SYMBOL_DASH = "3 2";
+
+function isMilkSymbol(key: LegendKey): boolean {
+  return key === "bornMilk" || key === "fell";
+}
+
 const LEGEND: { key: LegendKey; label: string; description: string }[] = [
   {
     key: "unregistered",
@@ -292,7 +298,9 @@ export function DentalMap({
       const state = stateOf(position);
       const highlighted =
         state === "unregistered" && eruptionWindowOf(position);
-      const style = TOOTH_STYLE[highlighted ? "eruptionWindow" : state];
+      const key = highlighted ? "eruptionWindow" : state;
+      const style = TOOTH_STYLE[key];
+      const milk = isMilkSymbol(key);
       return (
         <TouchableOpacity
           key={position.id}
@@ -311,6 +319,7 @@ export function DentalMap({
             details={tooth.details}
             fill={style.fill}
             stroke={style.stroke}
+            strokeDasharray={milk ? MILK_SYMBOL_DASH : undefined}
             width={OPEN_TOOTH_SIZE}
             height={OPEN_TOOTH_SIZE}
           />
@@ -410,6 +419,9 @@ export function DentalMap({
                   details={LEGEND_TOOTH.details}
                   fill={TOOTH_STYLE[entry.key].fill}
                   stroke={TOOTH_STYLE[entry.key].stroke}
+                  strokeDasharray={
+                    isMilkSymbol(entry.key) ? MILK_SYMBOL_DASH : undefined
+                  }
                   width={22}
                   height={22}
                 />

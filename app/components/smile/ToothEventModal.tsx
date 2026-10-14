@@ -226,6 +226,11 @@ export function ToothEventModal({
                   <Text className="text-xl font-bold text-base-900">
                     {toothIdLabel(toothId)}
                   </Text>
+                  {editingEvent && (
+                    <Text className="text-sm text-base-500">
+                      {`Dentição: ${dentitionLabel(editingEvent.dentition)}`}
+                    </Text>
+                  )}
                 </View>
                 <Pressable
                   onPress={onClose}

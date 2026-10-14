@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { CalendarCheckIcon, StarIcon, ToothIcon } from "phosphor-react-native";
+import { BabyIcon, CalendarCheckIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirmDialog";
@@ -21,14 +21,19 @@ import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventsInfinite } from "@/hooks/useToothEventsInfinite";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import type { SmileStackParamList } from "@/navigation/SmileStack";
-import { archLabel, toothEventVerb, toothTypeLabel } from "@/lib/teethLabels";
+import { archLabel, toothEventTitle, toothTypeLabel } from "@/lib/teethLabels";
 import { parseLocalDate } from "@/lib/utils";
 import type { ToothEvent } from "@/types/teeth";
 import { THEME } from "@/lib/theme";
 
-const EVENT_ICON_MAP: Record<string, { Icon: any; color: string }> = {
-  exfoliation: { Icon: ToothIcon, color: THEME.light.primary400 },
-  eruption: { Icon: StarIcon, color: THEME.light.tertiary400 },
+const EVENT_COLOR_MAP: Record<string, string> = {
+  exfoliation: THEME.light.primary400,
+  eruption: THEME.light.tertiary400,
+};
+
+const DENTITION_ICON_MAP: Record<string, any> = {
+  primary: BabyIcon,
+  permanent: ToothIcon,
 };
 
 const DEFAULT_EVENT_ICON = {
@@ -106,8 +111,8 @@ export function SmileHistory() {
   }
 
   function renderEvent(event: ToothEvent) {
-    const { Icon, color } =
-      EVENT_ICON_MAP[event.eventType] || DEFAULT_EVENT_ICON;
+    const Icon = DENTITION_ICON_MAP[event.dentition] ?? DEFAULT_EVENT_ICON.Icon;
+    const color = EVENT_COLOR_MAP[event.eventType] ?? DEFAULT_EVENT_ICON.color;
     return (
       <Pressable
         key={event.id}
@@ -121,7 +126,7 @@ export function SmileHistory() {
           <View className="flex-row items-center gap-2">
             <Icon size={16} color={color} weight="bold" />
             <Text className="flex-1 text-sm font-semibold text-primary-800">
-              {`${toothTypeLabel(event.toothType)} ${archLabel(event.arch)} ${toothEventVerb(event.eventType)}`}
+              {toothEventTitle(event)}
             </Text>
           </View>
           {event.note ? (

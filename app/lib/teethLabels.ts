@@ -120,6 +120,16 @@ export function parseToothId(toothId: string | null): ParsedToothId | null {
   };
 }
 
+export function toothEventTitle(event: {
+  toothType: string;
+  arch: string;
+  eventType: string;
+  dentition: string;
+}): string {
+  const base = `${toothTypeLabel(event.toothType)} ${archLabel(event.arch)} ${toothEventVerb(event.eventType)}`;
+  return `${base} (${dentitionLabel(event.dentition).toLowerCase()})`;
+}
+
 export function toothIdLabel(toothId: string | null): string {
   if (!toothId) {
     return "não selecionado";

@@ -7,6 +7,7 @@ export function ToothSVG({
   fill = "#0B1B2B",
   stroke = "#1F2937",
   strokeWidth = 1.4,
+  strokeDasharray,
   width = 28,
   height = 28,
   onPress,
@@ -17,16 +18,14 @@ export function ToothSVG({
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  strokeDasharray?: string;
   width?: number;
   height?: number;
   onPress?: () => void;
 }) {
-  // O primeiro subcaminho do contorno é a silhueta externa do dente; os demais
-  // formam a borda e deixam o interior vazado. A silhueta é pintada por baixo
-  // e os detalhes usam a mesma cor, para o dente aparecer inteiro. O traço
-  // escuro realça o contorno e os sulcos.
   const outline = contour.match(/M[^M]*/)?.[0] ?? contour;
-  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"`;
+  const dash = strokeDasharray ? ` stroke-dasharray="${strokeDasharray}"` : "";
+  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"${dash}`;
   const pathsXml =
     `<path d="${outline}" ${edge}/>` +
     `<path d="${contour}" ${edge}/>` +
