@@ -122,7 +122,8 @@ export function localDateKeyToISO(value: string): string | null {
     return null;
   }
   date.setHours(12, 0, 0, 0);
-  return date.toISOString();
+  const now = new Date();
+  return (date > now ? now : date).toISOString();
 }
 
 export function ageInMonths(birthDate: string): number | null {

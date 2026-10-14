@@ -1,25 +1,29 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, RefreshControl, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
 import { KidSelector } from "@/components/smile/KidSelector";
 import RecentEventsList from "@/components/smile/RecentEventsList";
 import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
+import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKids } from "@/hooks/useKids";
+import { useToothEvents } from "@/hooks/useToothEvents";
+import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
-import { getToothEventsByKid } from "@/api/smile/getToothEvents";
 import { createToothEvent } from "@/api/smile/createToothEvent";
-import { updateToothEvent } from "@/api/smile/updateToothEvent";
+import PredictionsCard from "@/components/smile/PredictionsCard";
 import { ApiError } from "@/types/domain";
-import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
+import type { ToothEventRequestDTO } from "@/types/teeth";
 import { ageInMonths, birthDateToString } from "@/lib/utils";
+import { buildToothPredictions } from "@/lib/toothPredictions";
 
 const TOTAL_MILK_TEETH = 20;
 
@@ -38,7 +42,12 @@ export function Smile() {
   } = useKids(authToken);
 
   const kids = useMemo(
-    () => kidsList.map((kid) => ({ id: kid.id, name: kid.name, birthDate: birthDateToString(kid.birthDate) })),
+    () =>
+      kidsList.map((kid) => ({
+        id: kid.id,
+        name: kid.name,
+        birthDate: birthDateToString(kid.birthDate),
+      })),
     [kidsList],
   );
   const kidsReady = !kidsPending && !kidsFailure;
@@ -59,22 +68,8 @@ export function Smile() {
     }
   }, [kids, selectedKidId]);
 
-  const eventsQuery = useQuery({
-    queryKey: ["tooth-events", accountKey, selectedKidId],
-    queryFn: () =>
-      getToothEventsByKid(selectedKidId!, authToken!).then(
-        (response) => response.data,
-      ),
-    enabled: !!selectedKidId && !!authToken,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const events = useMemo(() => {
-    const data = eventsQuery.data ?? [];
-    return [...data].sort((a, b) =>
-      a.occurrenceDate < b.occurrenceDate ? 1 : -1,
-    );
-  }, [eventsQuery.data]);
+  const eventsQuery = useToothEvents(selectedKidId, authToken);
+  const { events } = eventsQuery;
 
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
@@ -90,56 +85,8 @@ export function Smile() {
       ),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      request,
-    }: {
-      id: string;
-      request: ToothEventRequestDTO;
-    }) => updateToothEvent(id, authToken ?? null, request),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["tooth-events", accountKey, selectedKidId],
-      }),
-    onError: () =>
-      Alert.alert(
-        "Erro",
-        "Não foi possível atualizar o evento. Verifique sua conexão.",
-      ),
-  });
-
-  async function handleRegisterEvent(
-    payload: ToothEventRequestDTO,
-    editingId: string | null,
-  ) {
-    if (editingId) {
-      await updateMutation.mutateAsync({ id: editingId, request: payload });
-      return;
-    }
-    try {
-      await registerMutation.mutateAsync(payload);
-    } catch (error) {
-      if (error instanceof ApiError && error.code === "TOOTH_EVENT_DUPLICATE") {
-        // O queryFn retorna o array puro (response.data), não o ResponsePayload.
-        const cached = queryClient.getQueryData<ToothEvent[]>([
-          "tooth-events",
-          accountKey,
-          selectedKidId,
-        ]);
-        const match = (cached ?? []).find(
-          (event) =>
-            event.quadrant === payload.quadrant &&
-            event.toothType === payload.toothType &&
-            event.eventType === payload.eventType,
-        );
-        if (match) {
-          await updateMutation.mutateAsync({ id: match.id, request: payload });
-          return;
-        }
-      }
-      throw error;
-    }
+  async function handleRegisterEvent(payload: ToothEventRequestDTO) {
+    await registerMutation.mutateAsync(payload);
   }
 
   const stats = useMemo(() => {
@@ -184,6 +131,36 @@ export function Smile() {
         "Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!",
     };
   }, [stats.exchanged, kidAgeMonths]);
+
+  const predictions = useMemo(
+    () => buildToothPredictions(kidBirthDate, events),
+    [kidBirthDate, events],
+  );
+
+  const editor = useToothEventEditor({
+    kidId: selectedKidId,
+    kidBirthDate,
+    authToken,
+    events,
+  });
+
+  function openHistory() {
+    if (selectedKidId) {
+      navigation.navigate("Smile", {
+        screen: "SmileHistory",
+        params: { kidId: selectedKidId },
+      });
+    }
+  }
+
+  function openPredictions() {
+    if (selectedKidId) {
+      navigation.navigate("Smile", {
+        screen: "SmilePredictions",
+        params: { kidId: selectedKidId },
+      });
+    }
+  }
 
   const kidUnlinked =
     eventsQuery.error instanceof ApiError &&
@@ -437,7 +414,15 @@ export function Smile() {
                 title={dentalTip.title}
                 description={dentalTip.description}
               />
-              <RecentEventsList items={events.slice(0, 5)} />
+              <RecentEventsList
+                items={events.slice(0, 3)}
+                onHistoryPress={openHistory}
+                onItemPress={editor.openEditor}
+              />
+              <PredictionsCard
+                items={predictions.slice(0, 3)}
+                onPress={openPredictions}
+              />
               {events.length > 0 && (
                 <TeethExchangeCard
                   total={stats.totalMilkTeeth}
@@ -449,6 +434,10 @@ export function Smile() {
           )}
         </Wrapper>
       </ScrollView>
+
+      <ToothEventModal {...editor.modalProps} />
+
+      <ConfirmDialog {...editor.confirmProps} />
     </Wrapper>
   );
 }

@@ -19,6 +19,7 @@ import {
   toothState,
   type MapToothState,
 } from "@/lib/toothChronology";
+import { ApiError } from "@/types/domain";
 import type {
   Arch,
   Quadrant,
@@ -129,10 +130,7 @@ type DentalMapProps = {
   kidId: string;
   kidBirthDate: string | null;
   events: ToothEvent[];
-  onRegisterEvent: (
-    payload: ToothEventRequestDTO,
-    editingId: string | null,
-  ) => Promise<void>;
+  onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
 };
 
 export function DentalMap({
@@ -210,12 +208,22 @@ export function DentalMap({
   }, []);
 
   const handleRegister = useCallback(
-    async (payload: ToothEventRequestDTO, editingId: string | null) => {
+    async (payload: ToothEventRequestDTO) => {
       try {
-        await onRegisterEvent(payload, editingId);
+        await onRegisterEvent(payload);
         setModalVisible(false);
-      } catch {
-        Alert.alert("Erro", "Não foi possível registrar o evento.");
+      } catch (error) {
+        console.log("[smile] falha ao registrar evento", error);
+        const detail =
+          error instanceof ApiError
+            ? `${error.message} (${error.code})`
+            : error instanceof Error
+              ? error.message
+              : String(error);
+        Alert.alert(
+          "Erro",
+          `Não foi possível registrar o evento.\n\n${detail}`,
+        );
       }
     },
     [onRegisterEvent],

@@ -1,8 +1,12 @@
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { ToothPrediction } from "@/types/teeth";
+import {
+  formatPredictionWindow,
+  PREDICTION_STATUS_LABEL,
+} from "@/lib/toothPredictions";
 import {
   ArrowRightIcon,
   CalendarBlankIcon,
@@ -11,8 +15,10 @@ import {
 
 export default function PredictionsCard({
   items,
+  onPress,
 }: {
   items: ToothPrediction[];
+  onPress?: () => void;
 }) {
   if (items.length === 0) {
     return null;
@@ -31,36 +37,39 @@ export default function PredictionsCard({
         className="mb-4 flex-1 w-full"
       >
         <Text className="text-xl font-semibold text-white">Previsões</Text>
-        <ArrowRightIcon size={22} color="white" weight="bold" />
+        <Pressable
+          onPress={onPress}
+          disabled={!onPress}
+          accessibilityRole="button"
+          accessibilityLabel="Ver todas as previsões"
+          hitSlop={8}
+        >
+          <ArrowRightIcon size={22} color="white" weight="bold" />
+        </Pressable>
       </Wrapper>
 
       <View className="gap-2">
         {items.map((it: ToothPrediction) => (
-            <View key={it.id} className="rounded-lg bg-white/10 px-3.5 py-3">
-              <Text className="text-sm font-semibold text-white">
-                {it.title}
+          <View key={it.id} className="rounded-lg bg-white/10 px-3.5 py-3">
+            <Text className="text-sm font-semibold text-white">{it.title}</Text>
+            <Wrapper
+              direction="row"
+              align="center"
+              gap="gap-1"
+              className="mt-1"
+            >
+              <ClockIcon
+                size={14}
+                color="rgba(255, 255, 255, 0.6)"
+                weight="bold"
+              />
+              <Text className="text-xs text-white/60">
+                {`${PREDICTION_STATUS_LABEL[it.status]}: ${formatPredictionWindow(it.windowStart, it.windowEnd)}`}
               </Text>
-              <Wrapper
-                direction="row"
-                align="center"
-                gap="gap-1"
-                className="mt-1"
-              >
-                <ClockIcon
-                  size={14}
-                  color="rgba(255, 255, 255, 0.6)"
-                  weight="bold"
-                />
-                <Text className="text-xs text-white/60">
-                  Previsto:{" "}
-                  {new Date(it.expectedDate).toLocaleDateString("pt-BR", {
-                    month: "short",
-                  })}
-                </Text>
-              </Wrapper>
-            </View>
-          ))}
-        </View>
+            </Wrapper>
+          </View>
+        ))}
+      </View>
 
       <View className="absolute bottom-0 right-0 opacity-[0.08]">
         <CalendarBlankIcon size={80} color="white" weight="regular" />

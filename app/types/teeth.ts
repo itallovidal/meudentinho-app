@@ -51,11 +51,18 @@ export interface ToothEventRequestDTO {
   note?: string;
 }
 
+export type ToothPredictionStatus = 'current' | 'upcoming';
+
 export interface ToothPrediction {
   id: string;
   toothType: ToothType;
-  expectedDate: string; // ISO
+  arch: Arch;
+  dentition: Dentition;
   title: string;
+  pendingSides: number;
+  status: ToothPredictionStatus;
+  windowStart: string; // YYYY-MM-DD
+  windowEnd: string; // YYYY-MM-DD
 }
 
 export interface TeethExchangeStats {

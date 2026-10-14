@@ -14,6 +14,7 @@ import { HomeStack } from "./HomeStack";
 import { ArticlesStack } from "./ArticlesStack";
 import type { ArticlesStackParamList } from "./ArticlesStack";
 import { SmileStack } from "./SmileStack";
+import type { SmileStackParamList } from "./SmileStack";
 import { ProfileStack } from "./ProfileStack";
 import type { ProfileRouteParams } from "./ProfileStack";
 import {
@@ -32,7 +33,7 @@ const unfocusedColor = colors.base500;
 
 export type TabNavigatorRouteParams = {
   Home: undefined;
-  Smile: undefined;
+  Smile: NavigatorScreenParams<SmileStackParamList> | undefined;
   Articles: NavigatorScreenParams<ArticlesStackParamList> | undefined;
   Profile: NavigatorScreenParams<ProfileRouteParams> | undefined;
 };

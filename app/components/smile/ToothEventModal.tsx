@@ -15,13 +15,16 @@ import {
   localDateKeyToISO,
   toLocalDateKey,
 } from "@/lib/utils";
-import { expectedDentition, pendingDeciduousFall } from "@/lib/toothChronology";
+import {
+  expectedDentition,
+  hasDeciduousForm,
+  pendingMilkStep,
+} from "@/lib/toothChronology";
 import {
   dentitionLabel,
   parseToothId,
   toothEventVerb,
   toothIdLabel,
-  toothTypeLabel,
 } from "@/lib/teethLabels";
 import type {
   Dentition,
@@ -38,8 +41,10 @@ export function ToothEventModal({
   kidBirthDate,
   toothEvents,
   events,
+  editingEvent = null,
   onClose,
   onSubmit,
+  onDelete,
 }: {
   visible: boolean;
   toothId: string | null;
@@ -47,11 +52,10 @@ export function ToothEventModal({
   kidBirthDate: string | null;
   toothEvents: ToothEvent[];
   events: ToothEvent[];
+  editingEvent?: ToothEvent | null;
   onClose: () => void;
-  onSubmit: (
-    payload: ToothEventRequestDTO,
-    editingId: string | null,
-  ) => Promise<void>;
+  onSubmit: (payload: ToothEventRequestDTO) => Promise<void>;
+  onDelete?: () => void;
 }) {
   const [eventType, setEventType] = useState<"eruption" | "exfoliation">(
     "eruption",
@@ -60,26 +64,60 @@ export function ToothEventModal({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [showCalendar, setShowCalendar] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
-  const defaultDentition =
+  const milkStepPending =
     parsed !== null
+      ? pendingMilkStep(parsed.arch, parsed.quadrant, parsed.toothType, events)
+      : null;
+  const milkFell =
+    parsed !== null &&
+    events.some(
+      (event) =>
+        event.quadrant === parsed.quadrant &&
+        event.toothType === parsed.toothType &&
+        event.dentition === "primary" &&
+        event.eventType === "exfoliation",
+    );
+  const permanentErupted =
+    parsed !== null &&
+    events.some(
+      (event) =>
+        event.quadrant === parsed.quadrant &&
+        event.toothType === parsed.toothType &&
+        event.dentition === "permanent" &&
+        event.eventType === "eruption",
+    );
+  const milkEruptionRecorded =
+    parsed !== null &&
+    events.some(
+      (event) =>
+        event.quadrant === parsed.quadrant &&
+        event.toothType === parsed.toothType &&
+        event.dentition === "primary" &&
+        event.eventType === "eruption",
+    );
+  const lockedToPermanent = milkFell && !permanentErupted;
+  const exfoliationOnlyLeft =
+    (milkEruptionRecorded && !milkFell) || permanentErupted;
+  const initialEventType: "eruption" | "exfoliation" = exfoliationOnlyLeft
+    ? "exfoliation"
+    : "eruption";
+  const exfoliationDentition: Dentition = permanentErupted
+    ? "permanent"
+    : "primary";
+  const defaultDentition = lockedToPermanent
+    ? "permanent"
+    : parsed !== null && milkStepPending === null
       ? expectedDentition(parsed.toothType, parsed.arch, ageMonths)
       : "primary";
 
-  function loadRecord(
-    record: ToothEvent | undefined,
-    fallbackDentition: Dentition,
-  ) {
-    setEditingId(record?.id ?? null);
-    setDentition(record?.dentition ?? fallbackDentition);
-    setNote(record?.note ?? "");
-    setDate(
-      record ? record.occurrenceDate.split("T")[0] : toLocalDateKey(new Date()),
-    );
+  function resetForm(fallbackDentition: Dentition) {
+    setDentition(fallbackDentition);
+    setNote("");
+    setDate(toLocalDateKey(new Date()));
     setShowCalendar(false);
   }
 
@@ -87,19 +125,29 @@ export function ToothEventModal({
     if (!visible) {
       return;
     }
-    setEventType("eruption");
-    loadRecord(
-      toothEvents.find((event) => event.eventType === "eruption"),
-      defaultDentition,
+    setEventType(initialEventType);
+    resetForm(
+      initialEventType === "exfoliation"
+        ? exfoliationDentition
+        : defaultDentition,
     );
-  }, [visible, toothId]);
+    if (editingEvent) {
+      setEventType(editingEvent.eventType);
+      setDentition(editingEvent.dentition);
+      setNote(editingEvent.note ?? "");
+      setDate(toLocalDateKey(new Date(editingEvent.occurrenceDate)));
+    }
+  }, [visible, toothId, editingEvent]);
 
   function changeEventType(next: "eruption" | "exfoliation") {
     setEventType(next);
-    loadRecord(
-      toothEvents.find((event) => event.eventType === next),
-      defaultDentition,
-    );
+    const nextDentition =
+      next === "exfoliation" ? exfoliationDentition : defaultDentition;
+    if (editingEvent) {
+      setDentition(nextDentition);
+      return;
+    }
+    resetForm(nextDentition);
   }
 
   async function performSave() {
@@ -110,36 +158,36 @@ export function ToothEventModal({
     if (!occurrenceDate) {
       return;
     }
-    await onSubmit(
-      {
-        kidId,
-        occurrenceDate,
-        dentition,
-        arch: parsed.arch,
-        side: parsed.side,
-        toothType: parsed.toothType,
-        eventType,
-        quadrant: parsed.quadrant,
-        note: note.trim() ? note.trim() : undefined,
-      },
-      editingId,
-    );
+    await onSubmit({
+      kidId,
+      occurrenceDate,
+      dentition,
+      arch: parsed.arch,
+      side: parsed.side,
+      toothType: parsed.toothType,
+      eventType,
+      quadrant: parsed.quadrant,
+      note: note.trim() ? note.trim() : undefined,
+    });
   }
 
   function handleConfirmPress() {
     void performSave();
   }
 
-  const editingRecord = editingId
-    ? toothEvents.find((event) => event.id === editingId)
-    : undefined;
+  const milkAllowed =
+    parsed !== null && hasDeciduousForm(parsed.arch, parsed.toothType);
 
-  const pendingCounterpart =
-    parsed !== null && eventType === "eruption" && dentition === "permanent"
-      ? pendingDeciduousFall(parsed.quadrant, parsed.toothType, events)
-      : null;
+  const alreadyRegistered = toothEvents.some(
+    (event) => event.eventType === eventType && event.dentition === dentition,
+  );
 
-  const confirmDisabled = !parsed || pendingCounterpart !== null;
+  const confirmDisabled =
+    !parsed ||
+    alreadyRegistered ||
+    (eventType === "eruption" &&
+      milkStepPending !== null &&
+      dentition === "permanent");
 
   return (
     <>
@@ -178,11 +226,6 @@ export function ToothEventModal({
                   <Text className="text-xl font-bold text-base-900">
                     {toothIdLabel(toothId)}
                   </Text>
-                  {editingRecord && (
-                    <Text className="mt-1 text-sm text-base-500">
-                      {`Editando registro de ${formatDatePtBR(editingRecord.occurrenceDate) ?? ""}`}
-                    </Text>
-                  )}
                 </View>
                 <Pressable
                   onPress={onClose}
@@ -195,39 +238,56 @@ export function ToothEventModal({
                 </Pressable>
               </View>
 
-              <View className="gap-3">
-                <Text className="text-base text-base-500">
-                  O que aconteceu?
-                </Text>
-                <View className="flex-row gap-3">
-                  <Chip
-                    label={toothEventVerb("eruption")}
-                    selected={eventType === "eruption"}
-                    onPress={() => changeEventType("eruption")}
-                  />
-                  <Chip
-                    label={toothEventVerb("exfoliation")}
-                    selected={eventType === "exfoliation"}
-                    onPress={() => changeEventType("exfoliation")}
-                  />
-                </View>
-              </View>
+              {!editingEvent && (
+                <>
+                  <View className="gap-3">
+                    <Text className="text-base text-base-500">
+                      O que aconteceu?
+                    </Text>
+                    <View className="flex-row gap-3">
+                      <Chip
+                        label={toothEventVerb("eruption")}
+                        selected={eventType === "eruption"}
+                        disabled={exfoliationOnlyLeft}
+                        onPress={() => changeEventType("eruption")}
+                      />
+                      <Chip
+                        label={toothEventVerb("exfoliation")}
+                        selected={eventType === "exfoliation"}
+                        disabled={
+                          !(milkEruptionRecorded || permanentErupted) ||
+                          lockedToPermanent
+                        }
+                        onPress={() => changeEventType("exfoliation")}
+                      />
+                    </View>
+                  </View>
 
-              <View className="gap-3">
-                <Text className="text-base text-base-500">Dentição</Text>
-                <View className="flex-row gap-3">
-                  <Chip
-                    label={dentitionLabel("primary")}
-                    selected={dentition === "primary"}
-                    onPress={() => setDentition("primary")}
-                  />
-                  <Chip
-                    label={dentitionLabel("permanent")}
-                    selected={dentition === "permanent"}
-                    onPress={() => setDentition("permanent")}
-                  />
-                </View>
-              </View>
+                  <View className="gap-3">
+                    <Text className="text-base text-base-500">Dentição</Text>
+                    <View className="flex-row gap-3">
+                      <Chip
+                        label={dentitionLabel("primary")}
+                        selected={dentition === "primary"}
+                        disabled={
+                          !milkAllowed || lockedToPermanent || permanentErupted
+                        }
+                        onPress={() => setDentition("primary")}
+                      />
+                      <Chip
+                        label={dentitionLabel("permanent")}
+                        selected={dentition === "permanent"}
+                        disabled={
+                          eventType === "exfoliation"
+                            ? !permanentErupted
+                            : milkStepPending !== null
+                        }
+                        onPress={() => setDentition("permanent")}
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
 
               <View className="gap-3">
                 <Text className="text-base text-base-500">
@@ -245,7 +305,11 @@ export function ToothEventModal({
                     accessibilityLabel="Abrir calendário"
                     className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
                   >
-                    <CalendarBlankIcon size={22} color={colors.base600} weight="regular"/>
+                    <CalendarBlankIcon
+                      size={22}
+                      color={colors.base600}
+                      weight="regular"
+                    />
                   </Pressable>
                 </View>
                 {showCalendar && (
@@ -264,12 +328,6 @@ export function ToothEventModal({
                   />
                 )}
               </View>
-
-              {pendingCounterpart && (
-                <Text className="text-sm text-destructive">
-                  {`Registre primeiro a queda do dente de leite (${toothTypeLabel(pendingCounterpart)}) deste lado antes de registrar o nascimento do permanente.`}
-                </Text>
-              )}
 
               <View className="gap-3">
                 <Text className="text-base text-base-500">Observação</Text>
@@ -293,9 +351,21 @@ export function ToothEventModal({
                 )}
               >
                 <Text className="text-base font-bold text-base-100">
-                  Confirmar
+                  {editingEvent ? "Salvar alterações" : "Confirmar"}
                 </Text>
               </Pressable>
+
+              {editingEvent && onDelete && (
+                <Pressable
+                  onPress={onDelete}
+                  accessibilityRole="button"
+                  className="h-14 w-full items-center justify-center rounded-full active:opacity-70"
+                >
+                  <Text className="text-base font-bold text-destructive">
+                    Excluir registro
+                  </Text>
+                </Pressable>
+              )}
             </ScrollView>
           </SafeAreaView>
         </View>
@@ -307,20 +377,24 @@ export function ToothEventModal({
 function Chip({
   label,
   selected,
+  disabled = false,
   onPress,
 }: {
   label: string;
   selected: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
       className={cn(
         "relative rounded-full px-5 py-2.5",
         selected ? "bg-primary-500" : "bg-base-200",
+        disabled && "opacity-50",
       )}
     >
       {selected ? (
