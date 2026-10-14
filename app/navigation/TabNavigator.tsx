@@ -146,11 +146,6 @@ export function popNestedStackToTop<
     navigation.dispatch({ ...StackActions.popToTop(), target: nested.key });
     return;
   }
-  // A aba pode ter sido poluída por navegação cross-tab fria: ex. abrir
-  // Smile -> Profile/Dependents monta Profile como [Dependents] sem o
-  // [Index] embaixo. Nesse caso index é 0 e o popToTop seria no-op,
-  // deixando o detalhe como "raiz" da aba. Detecta e reseta para a raiz
-  // esperada da aba.
   const rawTabName = pressed?.name;
   if (!rawTabName || !isTabName(rawTabName)) {
     return;

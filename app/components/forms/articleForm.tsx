@@ -84,7 +84,6 @@ export function ArticleForm({
     const currentCategories = getValues("categories") || [];
 
     if (currentCategories.includes(category.name)) {
-      // removing..
       const filtered = currentCategories.filter(
         (name) => name !== category.name,
       );
@@ -95,7 +94,6 @@ export function ArticleForm({
         return;
       }
 
-      // adding..
       setValue("categories", [...currentCategories, category.name]);
     }
   }

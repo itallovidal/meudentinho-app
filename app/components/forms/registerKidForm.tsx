@@ -77,9 +77,6 @@ export function RegisterKidForm({
     );
   }, [defaultValues?.prematureWeeks]);
 
-  // Sincroniza o checkbox quando o valor do form muda por fora do toggle
-  // (ex.: edição com valor existente, reset). Só liga — nunca desliga aqui,
-  // para não fechar a seção enquanto o usuário ainda escolhe as semanas.
   useEffect(() => {
     if (prematureWeeksValue && prematureWeeksValue !== "0") {
       setIsPremature(true);

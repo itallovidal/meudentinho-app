@@ -29,13 +29,6 @@ export function Header({ hasBackButton }: HeaderProps) {
 
     if (params.fromTab && isTabName(params.fromTab)) {
       const fromTab = params.fromTab;
-      // A tela foi aberta a partir de outra aba: volta para a origem
-      // e limpa a pilha da aba atual para não poluir a seção.
-      // Se a pilha tem mais de uma rota, o goBack remove o detalhe e
-      // revela a raiz. Se tem rota única poluída (ex: [Dependents] sem
-      // [Index] embaixo), o goBack seria no-op e a aba ficaria presa
-      // no detalhe — por isso fazemos reset para a raiz antes de trocar
-      // de aba.
       const state = navigation.getState?.();
       const routes = state?.routes;
       if (navigation.canGoBack()) {
@@ -64,8 +57,6 @@ export function Header({ hasBackButton }: HeaderProps) {
       return;
     }
 
-    // Navegação dentro da própria seção: volta para a tela anterior,
-    // respeitando a tela inicial (na raiz, não faz nada).
     if (navigation.canGoBack()) {
       navigation.goBack();
     }

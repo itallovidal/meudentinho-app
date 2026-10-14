@@ -57,8 +57,6 @@ function logSessionRefresh(token: string) {
   }
 }
 
-// Contrato único de refresh: reutiliza api/auth/refresh.ts em vez de
-// duplicar o fetch para /auth/refresh aqui.
 async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
   if (!refreshPromise) {
     refreshPromise = (async (): Promise<RefreshResult> => {
@@ -99,7 +97,6 @@ export async function authFetch(
     authToken: null,
     refreshToken: null,
   };
-  // Prefere a sessão fresca ao tokenOverride possivelmente stale.
   const effectiveToken = session.authToken ?? tokenOverride;
   const response = await fetch(
     input,
@@ -120,8 +117,6 @@ export async function authFetch(
     );
   }
 
-  // O token usado pode estar stale enquanto a sessão já foi renovada em
-  // paralelo: tenta uma vez com o token fresco antes de renovar de novo.
   if (effectiveToken !== latest.authToken && latest.authToken) {
     const retry = await fetch(input, withToken(init, latest.authToken));
     if (retry.status !== 401) {
@@ -139,8 +134,6 @@ export async function authFetch(
         "INVALID_CREDENTIALS",
       );
     }
-    // Padroniza o 401: não devolve Response 401 cru para os wrappers
-    // interpretarem via body — lança ApiError para tratamento uniforme.
     throw new ApiError(
       "Não foi possível renovar a sessão. Tente novamente.",
       "INTERNAL_SERVER_ERROR",
