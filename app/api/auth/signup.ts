@@ -8,11 +8,21 @@ export async function signup(
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetch(`${ENV.BASE_API_URL}/auth/signup`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(SignupRequest),
   });
 
-  const payload =
-    (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
+  let payload: ResponsePayload<UserAuthResponseDTO> | null = null;
+  try {
+    payload = (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
+  } catch {
+    throw new ApiError(
+      "Erro inesperado ocorreu durante o registro",
+      "INTERNAL_SERVER_ERROR",
+    );
+  }
 
   if (payload.status !== 201 && isApiError(payload.error)) {
     throw new ApiError(payload.error.message, payload.error.code);
