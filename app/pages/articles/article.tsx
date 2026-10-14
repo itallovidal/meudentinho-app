@@ -6,58 +6,59 @@ import { getArticleById } from "@/api/article/getArticleById";
 import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
 import { Badge } from "@/components/ui/badge";
-import { Image, RefreshControl, ScrollView, View } from "react-native";
+import { Image, RefreshControl, ScrollView } from "react-native";
 import { Markdown } from "react-native-remark";
 import { ClockIcon } from "phosphor-react-native";
-import { useCallback, useState } from "react";
-import { Article as ArticleDomain } from "@/types/domain";
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SkeletonArticlePage } from "@/skeletons/pages/skeletonArticlePage";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
 
-const MAX_LOAD_ATTEMPTS = 3;
+const ARTICLE_RETRY_COUNT = 3;
+const MAX_RETRY_DELAY_MS = 5000;
 
 export function Article() {
   const route = useRoute<ArticleRouteProp>();
   const id = route.params?.id ?? "";
-  const [article, setArticle] = useState<ArticleDomain | null>(null);
-  const [loadError, setLoadError] = useState(false);
+
+  const {
+    data: article,
+    isPending,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["article", id],
+    queryFn: () => getArticleById(id).then((res) => res.data),
+    enabled: id.length > 0,
+    retry: ARTICLE_RETRY_COUNT,
+    retryDelay: (attemptIndex) =>
+      Math.min(500 * 2 ** attemptIndex, MAX_RETRY_DELAY_MS),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const categories = article?.categories.join(", ") ?? "";
 
+  // Revalida ao focar sem limpar o artigo atual: evita flash do skeleton.
+  // O dado em cache segue visível enquanto `isFetching` indica a atualização.
   useFocusEffect(
     useCallback(() => {
-      setArticle(null);
-      setLoadError(false);
-      void loadArticle(MAX_LOAD_ATTEMPTS);
-    }, [id]),
+      if (id.length > 0) {
+        void refetch();
+      }
+    }, [id, refetch]),
   );
 
-  async function loadArticle(triesLeft: number): Promise<void> {
-    try {
-      const { data } = await getArticleById(id);
-      setArticle(data);
-    } catch {
-      if (triesLeft > 1) {
-        await loadArticle(triesLeft - 1);
-      } else {
-        setLoadError(true);
-      }
-    }
-  }
-
   function handleRetry(): void {
-    setLoadError(false);
-    void loadArticle(MAX_LOAD_ATTEMPTS);
+    void refetch();
   }
 
   function handleRefresh(): void {
-    setArticle(null);
-    setLoadError(false);
-    void loadArticle(MAX_LOAD_ATTEMPTS);
+    void refetch();
   }
 
-  if (loadError) {
+  if (!id || isError) {
     return (
       <Wrapper
         className="flex-1 bg-base-100"
@@ -86,7 +87,7 @@ export function Article() {
     );
   }
 
-  if (!article) {
+  if (isPending || !article) {
     return <SkeletonArticlePage />;
   }
 
@@ -102,7 +103,10 @@ export function Article() {
 
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={!article && !loadError} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isFetching && !isPending}
+            onRefresh={handleRefresh}
+          />
         }
       >
         <Wrapper
@@ -132,7 +136,7 @@ export function Article() {
             gap="gap-4"
           >
             <Image
-              src={article.imageCoverURL}
+              source={{ uri: article.imageCoverURL }}
               className="h-56 w-full rounded-2xl bg-base-200"
             />
 

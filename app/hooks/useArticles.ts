@@ -67,8 +67,8 @@ export function useArticles(options: UseArticlesOptions = {}) {
     articlesQuery.isError || (withCategories && categoriesQuery.isError);
 
   const isRefreshing =
-    articlesQuery.isFetching ||
-    (withCategories && categoriesQuery.isFetching);
+    articlesQuery.isRefetching ||
+    (withCategories && categoriesQuery.isRefetching);
 
   async function onRefresh() {
     const jobs = [
