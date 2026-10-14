@@ -15,7 +15,16 @@ type LooseNavigation = {
   goBack: () => void;
   getParent: () => LooseNavigation | undefined;
   navigate: (screen: string, params?: unknown) => void;
+  getState?: () => { routes: Array<{ name: string }> };
+  reset?: (state: { index: number; routes: Array<{ name: string }> }) => void;
 };
+
+function rootForCrossTabRoute(routeName: string): string | null {
+  if (routeName === "Article" || routeName === "ArticlesList") {
+    return "ArticlesList";
+  }
+  return "Index";
+}
 
 export function Header({ hasBackButton }: HeaderProps) {
   const navigation = useNavigation() as unknown as LooseNavigation;
@@ -27,9 +36,27 @@ export function Header({ hasBackButton }: HeaderProps) {
 
     if (params.fromTab) {
       // A tela foi aberta a partir de outra aba: volta para a origem
-      // e remove a tela atual da pilha para não poluir a seção.
+      // e limpa a pilha da aba atual para não poluir a seção.
+      // Se a pilha tem mais de uma rota, o goBack remove o detalhe e
+      // revela a raiz. Se tem rota única poluída (ex: [Dependents] sem
+      // [Index] embaixo), o goBack seria no-op e a aba ficaria presa
+      // no detalhe — por isso fazemos reset para a raiz antes de trocar
+      // de aba.
+      const state = navigation.getState?.();
+      const routes = state?.routes;
       if (navigation.canGoBack()) {
         navigation.goBack();
+      } else if (routes?.length === 1 && routes[0].name) {
+        const currentName = routes[0].name || route.name;
+        const root = rootForCrossTabRoute(currentName);
+        if (root && currentName !== root) {
+          navigation.reset?.({ index: 0, routes: [{ name: root }] });
+        }
+      } else if (!routes && route.name) {
+        const root = rootForCrossTabRoute(route.name);
+        if (root && route.name !== root) {
+          navigation.reset?.({ index: 0, routes: [{ name: root }] });
+        }
       }
       const target = navigation.getParent() ?? navigation;
       if (params.fromScreen) {

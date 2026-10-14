@@ -5,7 +5,8 @@ import {
   type BottomTabBarProps,
 } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
-import { StackActions } from "@react-navigation/native";
+import { StackActions, CommonActions } from "@react-navigation/native";
+import { TAB_ROOT_SCREEN } from "./types";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
@@ -124,16 +125,47 @@ export function popNestedStackToTop<
   const pressed = tabState.routes.find((route) => route.key === routeKey);
   const nested = pressed?.state;
   if (
-    nested &&
-    "type" in nested &&
-    nested.type === "stack" &&
-    "key" in nested &&
-    typeof nested.key === "string" &&
-    "index" in nested &&
-    typeof nested.index === "number" &&
-    nested.index > 0
+    !nested ||
+    !("type" in nested) ||
+    nested.type !== "stack" ||
+    !("key" in nested) ||
+    typeof nested.key !== "string" ||
+    !("index" in nested) ||
+    typeof nested.index !== "number"
   ) {
+    return;
+  }
+  if (nested.index > 0) {
     navigation.dispatch({ ...StackActions.popToTop(), target: nested.key });
+    return;
+  }
+  // A aba pode ter sido poluída por navegação cross-tab fria: ex. abrir
+  // Smile -> Profile/Dependents monta Profile como [Dependents] sem o
+  // [Index] embaixo. Nesse caso index é 0 e o popToTop seria no-op,
+  // deixando o detalhe como "raiz" da aba. Detecta e reseta para a raiz
+  // esperada da aba.
+  const tabName = pressed?.name as keyof typeof TAB_ROOT_SCREEN | undefined;
+  const expectedRoot = tabName ? TAB_ROOT_SCREEN[tabName] : undefined;
+  if (!expectedRoot) {
+    return;
+  }
+  const nestedRoutes =
+    "routes" in nested && Array.isArray(nested.routes)
+      ? (nested.routes as Array<{ name?: string }>)
+      : [];
+  const firstRouteName = nestedRoutes[0]?.name;
+  if (
+    nestedRoutes.length > 0 &&
+    firstRouteName &&
+    firstRouteName !== expectedRoot
+  ) {
+    navigation.dispatch({
+      ...CommonActions.reset({
+        index: 0,
+        routes: [{ name: expectedRoot }],
+      }),
+      target: nested.key,
+    });
   }
 }
 
