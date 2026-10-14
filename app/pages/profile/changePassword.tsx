@@ -63,9 +63,9 @@ function PasswordField({
       {showToggle && (
         <Pressable onPress={() => setIsVisible((v) => !v)} hitSlop={8}>
           {isVisible ? (
-            <EyeIcon color={colors.primary500} />
+            <EyeIcon color={colors.primary500} weight="regular"/>
           ) : (
-            <EyeSlashIcon color={colors.primary500} />
+            <EyeSlashIcon color={colors.primary500} weight="regular" />
           )}
         </Pressable>
       )}
@@ -181,6 +181,7 @@ export function ChangePassword() {
           label="Senha Atual"
           placeholder="Digite sua senha atual"
           error={errors.currentPassword?.message}
+          revealOnInput
         />
         <PasswordField
           control={control}
