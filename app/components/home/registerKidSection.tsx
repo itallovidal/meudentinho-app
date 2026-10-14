@@ -8,12 +8,22 @@ import { ApiError } from "@/types/domain";
 type RegisterKidSectionProps = {
   onRegisterKid: (kidDTO: KidRequestDTO) => Promise<void>;
   registerKidError: ApiError | null;
+  /** Mutation pendente no pai: bloqueia duplo submit enquanto cadastra. */
+  isPending?: boolean;
 };
 
 export function RegisterKidSection({
   onRegisterKid,
   registerKidError,
+  isPending = false,
 }: RegisterKidSectionProps) {
+  async function handleSubmit(kidDTO: KidRequestDTO) {
+    if (isPending) {
+      return;
+    }
+    await onRegisterKid(kidDTO);
+  }
+
   return (
     <Wrapper
       className="flex-1 mt-4"
@@ -34,7 +44,7 @@ export function RegisterKidSection({
 
       <View className="w-full rounded-xl bg-base-100 p-6 shadow-sm shadow-base-300">
         <RegisterKidForm
-          onSubmit={onRegisterKid}
+          onSubmit={handleSubmit}
           submitError={registerKidError}
         />
       </View>

@@ -48,12 +48,18 @@ export function Home() {
     !kidsFailure &&
     kids.length === 0;
 
+  const showKidsError =
+    hydrated && !!authToken && !kidsPending && kidsFailure !== null;
+
   const createKidMutation = useMutation({
     mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kids"] }),
   });
 
   async function onRegisterKid(kidDTO: KidRequestDTO) {
+    if (createKidMutation.isPending) {
+      return;
+    }
     try {
       if (!authToken) {
         Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
@@ -62,6 +68,7 @@ export function Home() {
 
       await createKidMutation.mutateAsync(kidDTO);
 
+      setRegisterKidError(null);
       showToast("Dependente cadastrado com sucesso.");
     } catch (error) {
       if (error instanceof ApiError) {
@@ -109,7 +116,35 @@ export function Home() {
             <RegisterKidSection
               onRegisterKid={onRegisterKid}
               registerKidError={registerKidError}
+              isPending={createKidMutation.isPending}
             />
+          )}
+
+          {hydrated && showKidsError && (
+            <Wrapper
+              direction="column"
+              gap="gap-2"
+              className="mt-4 w-full rounded-xl bg-base-100 p-5"
+            >
+              <Text variant="h4" className="mb-0">
+                {kidsFailure === "auth"
+                  ? "Sessão expirada"
+                  : "Não foi possível carregar"}
+              </Text>
+              <Text className="text-muted">
+                {kidsFailure === "auth"
+                  ? "Faça login novamente para cadastrar o dependente."
+                  : "Verifique sua conexão e tente novamente."}
+              </Text>
+              {kidsFailure !== "auth" && (
+                <Button
+                  className="mt-2 w-full"
+                  onPress={() => void refetchKids()}
+                >
+                  <Text>Tentar novamente</Text>
+                </Button>
+              )}
+            </Wrapper>
           )}
 
           {hydrated && !authToken && (
