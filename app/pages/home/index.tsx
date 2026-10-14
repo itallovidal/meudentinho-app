@@ -38,10 +38,15 @@ export function Home() {
     isError,
   } = useArticles({ withCategories: false });
 
-  const { kids, isLoading: kidsPending } = useKids(authToken);
+  const { kids, isLoading: kidsPending, failure: kidsFailure, refetch: refetchKids, isRefreshing: kidsRefreshing } =
+    useKids(authToken);
 
   const showOnboarding =
-    hydrated && !!authToken && !kidsPending && kids.length === 0;
+    hydrated &&
+    !!authToken &&
+    !kidsPending &&
+    !kidsFailure &&
+    kids.length === 0;
 
   const createKidMutation = useMutation({
     mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
@@ -72,6 +77,10 @@ export function Home() {
     }
   }
 
+  async function handleRefresh() {
+    await Promise.all([onRefresh(), refetchKids()]);
+  }
+
   return (
     <Wrapper
       direction="column"
@@ -83,7 +92,10 @@ export function Home() {
       <ScrollView
         className="w-full flex-1"
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={isRefreshing || kidsRefreshing}
+            onRefresh={() => void handleRefresh()}
+          />
         }
       >
         <Wrapper
