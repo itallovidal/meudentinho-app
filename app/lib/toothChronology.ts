@@ -79,14 +79,6 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
   },
 };
 
-const DECIDUOUS_COUNTERPART: Partial<Record<ToothType, ToothType>> = {
-  central_incisor: "central_incisor",
-  lateral_incisor: "lateral_incisor",
-  canine: "canine",
-  first_premolar: "first_molar",
-  second_premolar: "second_molar",
-};
-
 export type MapToothState =
   "unregistered" | "bornMilk" | "bornPermanent" | "fell";
 
@@ -95,6 +87,11 @@ export function getChronology(
   toothType: ToothType,
 ): ToothChronology | null {
   return CHRONOLOGY[`${arch}:${toothType}`] ?? null;
+}
+
+export function hasDeciduousForm(arch: Arch, toothType: ToothType): boolean {
+  const info = getChronology(arch, toothType);
+  return info !== null && info.deciduous !== null;
 }
 
 export function expectedDentition(
@@ -134,22 +131,30 @@ export function isInEruptionWindow(
   return inDeciduous || inPermanent;
 }
 
-export function pendingDeciduousFall(
+export type PendingMilkStep = "eruption" | "exfoliation";
+
+export function pendingMilkStep(
+  arch: Arch,
   quadrant: Quadrant,
   toothType: ToothType,
   events: ToothEvent[],
-): ToothType | null {
-  const counterpart = DECIDUOUS_COUNTERPART[toothType];
-  if (!counterpart) {
+): PendingMilkStep | null {
+  if (!hasDeciduousForm(arch, toothType)) {
     return null;
   }
-  const fell = events.some(
+  const milkEvents = events.filter(
     (event) =>
       event.quadrant === quadrant &&
-      event.toothType === counterpart &&
-      event.eventType === "exfoliation",
+      event.toothType === toothType &&
+      event.dentition === "primary",
   );
-  return fell ? null : counterpart;
+  if (!milkEvents.some((event) => event.eventType === "eruption")) {
+    return "eruption";
+  }
+  if (!milkEvents.some((event) => event.eventType === "exfoliation")) {
+    return "exfoliation";
+  }
+  return null;
 }
 
 export function toothState(
