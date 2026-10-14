@@ -8,9 +8,9 @@ import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
+
 import { KidSelector } from "@/components/smile/KidSelector";
 import RecentEventsList from "@/components/smile/RecentEventsList";
-import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -111,9 +111,9 @@ export function Smile() {
     };
   }, [events]);
 
-  const selectedKid = kids.find((kid) => kid.id === selectedKidId);
   const selectedKidRecord = kidsList.find((kid) => kid.id === selectedKidId);
   const kidBirthDate = selectedKidRecord ? selectedKidRecord.birthDate : null;
+  const kidGender = selectedKidRecord?.gender ?? null;
   const kidAgeMonths = kidBirthDate ? ageInMonths(kidBirthDate) : null;
 
   const dentalTip = useMemo(() => {
@@ -139,13 +139,14 @@ export function Smile() {
   }, [stats.exchanged, kidAgeMonths]);
 
   const predictions = useMemo(
-    () => buildToothPredictions(kidBirthDate, events),
-    [kidBirthDate, events],
+    () => buildToothPredictions(kidBirthDate, events, kidGender),
+    [kidBirthDate, kidGender, events],
   );
 
   const editor = useToothEventEditor({
     kidId: selectedKidId,
     kidBirthDate,
+    kidGender,
     authToken,
     events,
   });
@@ -413,6 +414,7 @@ export function Smile() {
               <DentalMap
                 kidId={selectedKidId}
                 kidBirthDate={kidBirthDate}
+                kidGender={kidGender}
                 events={events}
                 onRegisterEvent={handleRegisterEvent}
               />
@@ -429,13 +431,6 @@ export function Smile() {
                 items={predictions.slice(0, 3)}
                 onPress={openPredictions}
               />
-              {events.length > 0 && (
-                <TeethExchangeCard
-                  total={stats.totalMilkTeeth}
-                  exchanged={stats.exchanged}
-                  kidName={selectedKid?.name}
-                />
-              )}
             </>
           )}
         </Wrapper>

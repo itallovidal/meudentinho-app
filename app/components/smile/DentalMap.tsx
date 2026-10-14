@@ -17,6 +17,7 @@ import { parseToothId } from "@/lib/teethLabels";
 import {
   isInEruptionWindow,
   toothState,
+  type ChronologyGender,
   type MapToothState,
 } from "@/lib/toothChronology";
 import { ApiError } from "@/types/domain";
@@ -135,6 +136,7 @@ function buildArch(arch: Arch, side: Side): ToothPosition[] {
 type DentalMapProps = {
   kidId: string;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
 };
@@ -142,6 +144,7 @@ type DentalMapProps = {
 export function DentalMap({
   kidId,
   kidBirthDate,
+  kidGender,
   events,
   onRegisterEvent,
 }: DentalMapProps) {
@@ -245,7 +248,13 @@ export function DentalMap({
     : [];
 
   function eruptionWindowOf(position: ToothPosition): boolean {
-    return isInEruptionWindow(position.arch, position.toothType, ageMonths);
+    return isInEruptionWindow(
+      position.arch,
+      position.toothType,
+      ageMonths,
+      position.side,
+      kidGender,
+    );
   }
 
   function stateOf(position: ToothPosition): MapToothState {
@@ -447,6 +456,7 @@ export function DentalMap({
         toothId={selectedTooth}
         kidId={kidId}
         kidBirthDate={kidBirthDate}
+        kidGender={kidGender}
         toothEvents={selectedToothEvents}
         events={events}
         onClose={() => setModalVisible(false)}

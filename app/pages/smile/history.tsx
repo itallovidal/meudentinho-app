@@ -61,12 +61,14 @@ export function SmileHistory() {
     refetch,
   } = useToothEventsInfinite(params.kidId, authToken);
   const { kids } = useKids(authToken);
-  const kidBirthDate =
-    kids.find((kid) => kid.id === params.kidId)?.birthDate ?? null;
+  const kidRecord = kids.find((kid) => kid.id === params.kidId);
+  const kidBirthDate = kidRecord?.birthDate ?? null;
+  const kidGender = kidRecord?.gender ?? null;
 
   const editor = useToothEventEditor({
     kidId: params.kidId,
     kidBirthDate,
+    kidGender,
     authToken,
     events: allEventsQuery.events,
   });

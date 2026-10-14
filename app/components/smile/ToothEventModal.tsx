@@ -19,6 +19,7 @@ import {
   expectedDentition,
   hasDeciduousForm,
   pendingMilkStep,
+  type ChronologyGender,
 } from "@/lib/toothChronology";
 import {
   dentitionLabel,
@@ -39,6 +40,7 @@ export function ToothEventModal({
   toothId,
   kidId,
   kidBirthDate,
+  kidGender,
   toothEvents,
   events,
   editingEvent = null,
@@ -50,6 +52,7 @@ export function ToothEventModal({
   toothId: string | null;
   kidId: string | null;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   toothEvents: ToothEvent[];
   events: ToothEvent[];
   editingEvent?: ToothEvent | null;
@@ -111,7 +114,13 @@ export function ToothEventModal({
   const defaultDentition = lockedToPermanent
     ? "permanent"
     : parsed !== null && milkStepPending === null
-      ? expectedDentition(parsed.toothType, parsed.arch, ageMonths)
+      ? expectedDentition(
+          parsed.toothType,
+          parsed.arch,
+          ageMonths,
+          parsed.side,
+          kidGender,
+        )
       : "primary";
 
   function resetForm(fallbackDentition: Dentition) {

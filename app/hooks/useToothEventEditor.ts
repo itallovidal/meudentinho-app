@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { UserContext } from "@/contexts/UserContext";
+import type { ChronologyGender } from "@/lib/toothChronology";
 import { toothEventTitle } from "@/lib/teethLabels";
 import { ApiError } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
@@ -38,11 +39,13 @@ function getDeleteMessage(
 export function useToothEventEditor({
   kidId,
   kidBirthDate,
+  kidGender,
   authToken,
   events,
 }: {
   kidId: string | null;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   authToken: string | null | undefined;
   events: ToothEvent[];
 }) {
@@ -129,6 +132,7 @@ export function useToothEventEditor({
         : null,
       kidId,
       kidBirthDate,
+      kidGender,
       toothEvents: editingToothEvents,
       events: otherEvents,
       editingEvent,
