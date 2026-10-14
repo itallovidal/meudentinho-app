@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,7 +66,6 @@ export function ToothEventModal({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [showCalendar, setShowCalendar] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;

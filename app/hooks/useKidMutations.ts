@@ -19,8 +19,6 @@ export function useKidMutations(authToken: string | null | undefined) {
   }
 
   const createKidMutation = useMutation({
-    // Lê o token no momento da chamada (sem congelar): null cai no
-    // authFetch via sessão fresca (getSession + refresh automático).
     mutationFn: (data: KidRequestDTO) => createKid(data, authToken ?? null),
     onSuccess: invalidateKids,
   });

@@ -16,13 +16,6 @@ type ArticleListRenderProps = {
   fromTab?: TabName;
 };
 
-/**
- * Regra de negócio (fonte: `useArticles`): o artigo mais recente
- * (`latestArticle`, `articles[0]` da API) é exibido em destaque no
- * `ArticleBanner` e é EXCLUÍDO das listas por categoria — `articles` e
- * `articlesByCategory` já vêm sem ele (`articles.slice(1)`). Não
- * re-incluir o latest nas categorias aqui.
- */
 export function ArticleListRender({
   latestArticle,
   articles,
@@ -69,28 +62,13 @@ export function ArticleListRender({
   const visibleCategories =
     isAllSelected || !selectedCategory ? categories : [selectedCategory];
 
-  const hasAnyContent = Boolean(latestArticle) || articles.length > 0;
-
-  if (!hasAnyContent) {
-    return (
-      <Wrapper
-        direction="column"
-        align="center"
-        justify="center"
-        gap="gap-2"
-        className="w-full py-8"
-      >
-        <Text className="text-center">Nenhum artigo</Text>
-      </Wrapper>
-    );
-  }
-
   return (
     <Wrapper
       direction="column"
       align="start"
       justify="start"
       gap={hasCategories ? "gap-0" : "gap-2"}
+      className="w-full"
     >
       {latestArticle && (
         <ArticleBanner

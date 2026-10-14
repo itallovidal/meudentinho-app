@@ -19,7 +19,6 @@ const GUIDE_COLORS = {
 };
 
 function OpenMouthIllustration() {
-  // Boca aberta estilizada: rosto + fileira de dentinhos coloridos por função
   const upper: { fill: string; stroke: string }[] = [
     { fill: "#FFFFFF", stroke: GUIDE_COLORS.backStroke },
     { fill: "#FFFFFF", stroke: GUIDE_COLORS.backStroke },

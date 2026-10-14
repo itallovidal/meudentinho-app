@@ -3,7 +3,6 @@ import { parseLocalDate } from "@/lib/utils";
 
 function isRealDate(value: string): boolean {
   if (!value) {
-    // Deixa o `min(1)` abaixo reportar "obrigatória".
     return true;
   }
   const date = parseLocalDate(value.split("T")[0]);
@@ -16,7 +15,6 @@ function isNotFutureDate(value: string): boolean {
   }
   const date = parseLocalDate(value.split("T")[0]);
   if (!date) {
-    // Deixa a regra de formato reportar "data válida".
     return true;
   }
   const today = new Date();
@@ -38,8 +36,5 @@ export const kidSchema = z.object({
     .refine(isRealDate, "Digite uma data válida.")
     .refine(isNotFutureDate, "A data não pode ser futura."),
   gender: z.enum(["male", "female"], { message: "O gênero é obrigatório." }),
-  // `undefined` = "não prematuro / desmarcado" (o form faz
-  // `setValue("prematureWeeks", undefined)` ao desmarcar). O default "0"
-  // mantém o contrato com a API.
   prematureWeeks: z.string().optional().default("0"),
 });

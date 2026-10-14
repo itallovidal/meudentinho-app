@@ -16,7 +16,6 @@ import { THEME } from "@/lib/theme";
 import {
   buildPredictionCalendarMarks,
   buildToothPredictions,
-  formatPredictionWindow,
   getCalendarFocus,
   getPredictionFocusKey,
   PREDICTION_STATUS_LABEL,

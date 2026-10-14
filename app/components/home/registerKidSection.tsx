@@ -8,7 +8,6 @@ import { ApiError } from "@/types/domain";
 type RegisterKidSectionProps = {
   onRegisterKid: (kidDTO: KidRequestDTO) => Promise<void>;
   registerKidError: ApiError | null;
-  /** Mutation pendente no pai: bloqueia duplo submit enquanto cadastra. */
   isPending?: boolean;
 };
 

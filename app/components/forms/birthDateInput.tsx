@@ -31,7 +31,6 @@ export function BirthDateInput({
     if (formatted && formatted !== text) {
       setText(formatted);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   function handleChangeText(raw: string) {
@@ -41,9 +40,6 @@ export function BirthDateInput({
       const iso = brDateToIsoKey(masked);
       onChange(iso ?? "");
     } else if (masked.length === 0 && value) {
-      // Só limpa o valor do form quando o campo foi totalmente apagado.
-      // Em digitação parcial (ex.: apagando 1 dígito de uma data válida),
-      // mantém o último valor válido em vez de zerar e disparar erro.
       onChange("");
     }
   }

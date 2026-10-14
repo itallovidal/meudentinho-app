@@ -24,19 +24,24 @@ import { ApiError } from "@/types/domain";
 import type { ToothEventRequestDTO } from "@/types/teeth";
 import { ageInMonths, birthDateToString } from "@/lib/utils";
 import { buildToothPredictions } from "@/lib/toothPredictions";
+import { SkeletonDentalMap } from "@/skeletons/components/SkeletonDentalMap";
+import { SkeletonDentalTipCard } from "@/skeletons/components/skeletonDentalTipCard";
+import { SkeletonRecentEventsList } from "@/skeletons/components/skeletonRecentEventsList";
+import { SkeletonSmilePage } from "@/skeletons/pages/skeletonSmilePage";
+import { SkeletonTeethExchangeCard } from "@/skeletons/components/skeletonTeethExchangeCard";
 
 const TOTAL_MILK_TEETH = 20;
 
 export function Smile() {
-  const { user, authToken, userId } = useContext(UserContext)!;
+  const { user, authToken, userId, hydrated } = useContext(UserContext)!;
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
 
   const {
     kids: kidsList,
-    isLoading: kidsPending,
-    isFetching: kidsFetching,
+    isLoading: kidsInitialLoading,
+    isRefreshing: kidsRefreshing,
     failure: kidsFailure,
     refetch: refetchKids,
   } = useKids(authToken);
@@ -50,7 +55,6 @@ export function Smile() {
       })),
     [kidsList],
   );
-  const kidsReady = !kidsPending && !kidsFailure;
 
   const accountKey = userId ?? authToken ?? "";
 
@@ -68,6 +72,13 @@ export function Smile() {
 
   const eventsQuery = useToothEvents(selectedKidId, authToken);
   const { events } = eventsQuery;
+
+  // Primeira busca (sem cache): mostra skeletons inline. `isLoading`
+  // (pending + fetching) é falso em refetch com cache e em query
+  // desabilitada, então o pull-to-refresh nunca troca o conteúdo por
+  // skeleton — apenas gira o RefreshControl via `isRefetching`.
+  const eventsInitialLoading = eventsQuery.isLoading;
+  const eventsRefreshing = eventsQuery.isRefetching;
 
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
@@ -179,6 +190,9 @@ export function Smile() {
       queryClient.invalidateQueries({ queryKey: ["tooth-events"] }),
     ]);
   }
+  if (!hydrated) {
+    return <SkeletonSmilePage />;
+  }
 
   if (!authToken || !user) {
     return (
@@ -224,24 +238,12 @@ export function Smile() {
     );
   }
 
-  if (kidsPending) {
+  if (kidsInitialLoading) {
     return (
-      <Wrapper
-        direction="column"
-        align="center"
-        justify="start"
-        className="flex-1 bg-base-200"
-      >
-        <Header />
-        <Wrapper
-          direction="column"
-          align="center"
-          justify="center"
-          className="w-full flex-1 px-6"
-        >
-          <Text className="text-base-500">Carregando dependentes...</Text>
-        </Wrapper>
-      </Wrapper>
+      <SkeletonSmilePage
+        refreshing={kidsRefreshing}
+        onRefresh={() => void refetchKids()}
+      />
     );
   }
 
@@ -298,7 +300,7 @@ export function Smile() {
     );
   }
 
-  if (kidsReady && kids.length === 0) {
+  if (kids.length === 0) {
     return (
       <Wrapper
         direction="column"
@@ -355,7 +357,7 @@ export function Smile() {
         className="w-full"
         refreshControl={
           <RefreshControl
-            refreshing={kidsFetching || eventsQuery.isFetching}
+            refreshing={kidsRefreshing || eventsRefreshing}
             onRefresh={() => void handleRefreshKids()}
           />
         }
@@ -380,8 +382,13 @@ export function Smile() {
             }
           />
 
-          {eventsQuery.isPending && (
-            <Text className="text-base-500">Carregando eventos...</Text>
+          {!eventsQuery.isError && (eventsInitialLoading || !selectedKidId) && (
+            <>
+              <SkeletonDentalMap />
+              <SkeletonDentalTipCard />
+              <SkeletonRecentEventsList />
+              <SkeletonTeethExchangeCard />
+            </>
           )}
 
           {eventsQuery.isError && (
@@ -409,7 +416,7 @@ export function Smile() {
             </Wrapper>
           )}
 
-          {!eventsQuery.isPending && !eventsQuery.isError && selectedKidId && (
+          {!eventsInitialLoading && !eventsQuery.isError && selectedKidId && (
             <>
               <DentalMap
                 kidId={selectedKidId}

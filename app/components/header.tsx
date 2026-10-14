@@ -1,7 +1,7 @@
 import { TouchableNativeFeedback, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
-import { BellIcon, CaretLeftIcon } from "phosphor-react-native";
+import { CaretLeftIcon } from "phosphor-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { THEME } from "@/lib/theme";
 import {
