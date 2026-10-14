@@ -28,13 +28,13 @@ export default function PredictionsCard({
       direction="column"
       align="center"
       justify="start"
-      className="flex-1 w-full overflow-hidden rounded-2xl bg-primary-500 p-5"
+      className="w-full flex-1 overflow-hidden rounded-2xl bg-primary-500 p-5"
     >
       <Wrapper
         direction="row"
         align="center"
         justify="between"
-        className="mb-4 flex-1 w-full"
+        className="mb-4 w-full"
       >
         <Text className="text-xl font-semibold text-white">Previsões</Text>
         <Pressable
@@ -48,25 +48,22 @@ export default function PredictionsCard({
         </Pressable>
       </Wrapper>
 
-      <View className="gap-2">
+      <View className="w-full gap-2">
         {items.map((it: ToothPrediction) => (
-          <View key={it.id} className="rounded-lg bg-white/10 px-3.5 py-3">
+          <View key={it.id} className="w-full rounded-lg bg-white/10 p-3.5">
             <Text className="text-sm font-semibold text-white">{it.title}</Text>
-            <Wrapper
-              direction="row"
-              align="center"
-              gap="gap-1"
-              className="mt-1"
-            >
-              <ClockIcon
-                size={14}
-                color="rgba(255, 255, 255, 0.6)"
-                weight="bold"
-              />
-              <Text className="text-xs text-white/60">
+            <View className="mt-1 flex-row items-start gap-1.5">
+              <View className="mt-0.5">
+                <ClockIcon
+                  size={14}
+                  color="rgba(255, 255, 255, 0.6)"
+                  weight="bold"
+                />
+              </View>
+              <Text className="flex-1 text-xs text-white/60">
                 {`${PREDICTION_STATUS_LABEL[it.status]}: ${formatPredictionWindow(it.windowStart, it.windowEnd)}`}
               </Text>
-            </Wrapper>
+            </View>
           </View>
         ))}
       </View>
