@@ -21,7 +21,7 @@ interface ArticleFormProps {
   submittingLabel?: string;
 }
 
-const MAX_CATEGORIES = 2;
+const MAX_CATEGORIES = 1;
 
 export function ArticleForm({
   onSubmit,
@@ -133,7 +133,7 @@ export function ArticleForm({
         />
 
         <Text className="w-full font-bold">
-          Categorias (Selecione até {MAX_CATEGORIES})
+          Categoria
         </Text>
 
         <PropsBadge
