@@ -1,4 +1,5 @@
-import { ENV } from "./env";
+import { refreshSession } from "@/api/auth/refresh";
+import { ApiError } from "@/types/domain";
 
 type SessionSnapshot = {
   authToken: string | null;
@@ -56,34 +57,30 @@ function logSessionRefresh(token: string) {
   }
 }
 
+// Contrato único de refresh: reutiliza api/auth/refresh.ts em vez de
+// duplicar o fetch para /auth/refresh aqui.
 async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
   if (!refreshPromise) {
     refreshPromise = (async (): Promise<RefreshResult> => {
       try {
-        const response = await fetch(`${ENV.BASE_API_URL}/auth/refresh`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
-        });
-        if (response.status === 401) {
-          return { refreshed: false, expired: true };
-        }
-        if (!response.ok) {
-          return { refreshed: false, expired: false };
-        }
-        const payload = (await response.json()) as {
-          data?: { token?: string; refreshToken?: string | null };
-        };
-        if (!payload?.data?.token) {
+        const { data } = await refreshSession(refreshToken);
+        if (!data?.token) {
           return { refreshed: false, expired: false };
         }
         handlers?.onSessionRefreshed(
-          payload.data.token,
-          payload.data.refreshToken ?? null,
+          data.token,
+          data.refreshToken ?? null,
         );
-        logSessionRefresh(payload.data.token);
+        logSessionRefresh(data.token);
         return { refreshed: true };
-      } catch {
+      } catch (err) {
+        if (
+          err instanceof ApiError &&
+          (err.code === "INVALID_CREDENTIALS" ||
+            err.code === "USER_NOT_FOUND")
+        ) {
+          return { refreshed: false, expired: true };
+        }
         return { refreshed: false, expired: false };
       } finally {
         refreshPromise = null;
@@ -102,25 +99,52 @@ export async function authFetch(
     authToken: null,
     refreshToken: null,
   };
+  // Prefere a sessão fresca ao tokenOverride possivelmente stale.
+  const effectiveToken = session.authToken ?? tokenOverride;
   const response = await fetch(
     input,
-    withToken(init, tokenOverride ?? session.authToken),
+    withToken(init, effectiveToken),
   );
 
-  if (response.status !== 401 || !session.refreshToken) {
-    if (response.status === 401 && !session.refreshToken) {
-      handlers?.onSessionExpired();
-    }
+  if (response.status !== 401) {
     return response;
   }
 
-  const result = await tryRefresh(session.refreshToken);
+  const latest = handlers?.getSession() ?? session;
+  const latestRefresh = latest.refreshToken ?? session.refreshToken;
+  if (!latestRefresh) {
+    handlers?.onSessionExpired();
+    throw new ApiError(
+      "Sessão expirada. Faça login novamente.",
+      "INVALID_CREDENTIALS",
+    );
+  }
+
+  // O token usado pode estar stale enquanto a sessão já foi renovada em
+  // paralelo: tenta uma vez com o token fresco antes de renovar de novo.
+  if (effectiveToken !== latest.authToken && latest.authToken) {
+    const retry = await fetch(input, withToken(init, latest.authToken));
+    if (retry.status !== 401) {
+      return retry;
+    }
+  }
+
+  const result = await tryRefresh(latestRefresh);
 
   if (!result.refreshed) {
     if (result.expired) {
       handlers?.onSessionExpired();
+      throw new ApiError(
+        "Sessão expirada. Faça login novamente.",
+        "INVALID_CREDENTIALS",
+      );
     }
-    return response;
+    // Padroniza o 401: não devolve Response 401 cru para os wrappers
+    // interpretarem via body — lança ApiError para tratamento uniforme.
+    throw new ApiError(
+      "Não foi possível renovar a sessão. Tente novamente.",
+      "INTERNAL_SERVER_ERROR",
+    );
   }
 
   const fresh = handlers?.getSession();

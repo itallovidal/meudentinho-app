@@ -14,7 +14,14 @@ export async function refreshSession(
     },
   });
 
-  const payload = (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
+  const payload = await response.json().catch(() => null) as ResponsePayload<UserAuthResponseDTO> | null;
+
+  if (!payload || typeof payload.status !== "number") {
+    throw new ApiError(
+      "Erro inesperado ocorreu durante a renovação da sessão",
+      "INTERNAL_SERVER_ERROR",
+    );
+  }
 
   if (payload.status !== 200 && isApiError(payload.error)) {
     throw new ApiError(payload.error.message, payload.error.code);
