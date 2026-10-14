@@ -10,6 +10,10 @@ import { useKidMutations } from "@/hooks/useKidMutations";
 import { shouldUsePut } from "@/lib/utils";
 import { THEME } from "@/lib/theme";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import {
+  goBackToOriginTab,
+  type LooseNavigation,
+} from "@/navigation/crossTabBack";
 import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { TrashIcon } from "phosphor-react-native";
@@ -31,6 +35,19 @@ export function EditDependent() {
     useKidMutations(authToken);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  function exitScreen() {
+    if (
+      goBackToOriginTab(
+        navigation as unknown as LooseNavigation,
+        "EditDependent",
+        params,
+      )
+    ) {
+      return;
+    }
+    navigation.goBack();
+  }
+
   useEffect(() => {
     if (hydrated && !authToken) {
       navigation.replace("Login");
@@ -41,7 +58,7 @@ export function EditDependent() {
     try {
       await createKidMutation.mutateAsync(data);
       showToast("Dependente cadastrado com sucesso.");
-      navigation.goBack();
+      exitScreen();
     } catch {
       Alert.alert("Erro", "Não foi possível cadastrar o dependente.");
     }
@@ -66,7 +83,7 @@ export function EditDependent() {
       );
       await saveKidMutation.mutateAsync({ kidId: kid.id, data, usePut });
       showToast("Dependente atualizado com sucesso.");
-      navigation.goBack();
+      exitScreen();
     } catch {
       Alert.alert("Erro", "Não foi possível atualizar o dependente.");
     }
@@ -80,7 +97,7 @@ export function EditDependent() {
     try {
       await deleteKidMutation.mutateAsync(kid.id);
       showToast("Dependente excluído com sucesso.");
-      navigation.goBack();
+      exitScreen();
     } catch {
       Alert.alert("Erro", "Não foi possível excluir o dependente.");
     }
@@ -139,7 +156,7 @@ export function EditDependent() {
               footer={
                 <Button
                   variant="outline"
-                  onPress={() => navigation.goBack()}
+                  onPress={exitScreen}
                   className="h-14 w-full rounded-full border-primary-500 bg-base-100"
                 >
                   <Text className="font-medium text-primary-500">Cancelar</Text>

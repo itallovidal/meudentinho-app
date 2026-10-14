@@ -14,6 +14,7 @@ type KidSelectorProps = {
   kids: KidOption[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onOpen?: (id: string) => void;
   onAdd?: () => void;
 };
 
@@ -21,6 +22,7 @@ export function KidSelector({
   kids,
   selectedId,
   onSelect,
+  onOpen,
   onAdd,
 }: KidSelectorProps) {
   const colors = THEME.light;
@@ -42,6 +44,10 @@ export function KidSelector({
             <TouchableOpacity
               key={kid.id}
               onPress={() => onSelect(kid.id)}
+              onLongPress={() => {
+                onSelect(kid.id);
+                onOpen?.(kid.id);
+              }}
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}

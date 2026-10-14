@@ -52,8 +52,6 @@ export function Smile() {
   );
   const kidsReady = !kidsPending && !kidsFailure;
 
-  // Escopo do cache por conta: sem o identificador da conta, os eventos de
-  // um usuário poderiam vazar para outra conta no mesmo aparelho.
   const accountKey = userId ?? authToken ?? "";
 
   useEffect(() => {
@@ -89,6 +87,17 @@ export function Smile() {
     await registerMutation.mutateAsync(payload);
   }
 
+  function handleOpenKid(kidId: string) {
+    const kidRecord = kidsList.find((kid) => kid.id === kidId);
+    if (!kidRecord) {
+      return;
+    }
+    navigation.navigate("Profile", {
+      screen: "EditDependent",
+      params: { kid: kidRecord, fromTab: "Smile" },
+    });
+  }
+
   const stats = useMemo(() => {
     const exfoliated = new Set<string>();
     for (const event of events) {
@@ -107,9 +116,6 @@ export function Smile() {
   const kidBirthDate = selectedKidRecord ? selectedKidRecord.birthDate : null;
   const kidAgeMonths = kidBirthDate ? ageInMonths(kidBirthDate) : null;
 
-  // Dica educativa local (placeholder): o backend ainda não expõe dicas
-  // personalizadas, então alternamos entre textos estáticos conforme a fase
-  // da criança (primeiros dentes → molares → troca).
   const dentalTip = useMemo(() => {
     if (stats.exchanged > 0) {
       return {
@@ -291,7 +297,6 @@ export function Smile() {
     );
   }
 
-  // Só mostra "Nenhum dependente" com dados prontos e sem erro (kidsReady).
   if (kidsReady && kids.length === 0) {
     return (
       <Wrapper
@@ -365,6 +370,7 @@ export function Smile() {
             kids={kids}
             selectedId={selectedKidId}
             onSelect={setSelectedKidId}
+            onOpen={handleOpenKid}
             onAdd={() =>
               navigation.navigate("Profile", {
                 screen: "Dependents",

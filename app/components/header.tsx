@@ -4,20 +4,15 @@ import { Wrapper } from "./wrapper";
 import { BellIcon, CaretLeftIcon } from "phosphor-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { THEME } from "@/lib/theme";
-import { isTabName, rootScreenForRoute, type CrossTabOrigin } from "@/navigation/types";
+import {
+  goBackToOriginTab,
+  type LooseNavigation,
+} from "@/navigation/crossTabBack";
+import type { CrossTabOrigin } from "@/navigation/types";
 
 interface HeaderProps {
   hasBackButton?: boolean;
 }
-
-type LooseNavigation = {
-  canGoBack: () => boolean;
-  goBack: () => void;
-  getParent: () => LooseNavigation | undefined;
-  navigate: (screen: string, params?: unknown) => void;
-  getState?: () => { routes: Array<{ name: string }> };
-  reset?: (state: { index: number; routes: Array<{ name: string }> }) => void;
-};
 
 export function Header({ hasBackButton }: HeaderProps) {
   const navigation = useNavigation() as unknown as LooseNavigation;
@@ -26,46 +21,10 @@ export function Header({ hasBackButton }: HeaderProps) {
 
   function handleBack() {
     const params = (route.params ?? {}) as CrossTabOrigin;
-
-    if (params.fromTab && isTabName(params.fromTab)) {
-      const fromTab = params.fromTab;
-      // A tela foi aberta a partir de outra aba: volta para a origem
-      // e limpa a pilha da aba atual para não poluir a seção.
-      // Se a pilha tem mais de uma rota, o goBack remove o detalhe e
-      // revela a raiz. Se tem rota única poluída (ex: [Dependents] sem
-      // [Index] embaixo), o goBack seria no-op e a aba ficaria presa
-      // no detalhe — por isso fazemos reset para a raiz antes de trocar
-      // de aba.
-      const state = navigation.getState?.();
-      const routes = state?.routes;
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else if (routes?.length === 1) {
-        const currentName = routes[0]?.name ?? route.name;
-        const root = rootScreenForRoute(currentName);
-        if (root && currentName !== root) {
-          navigation.reset?.({ index: 0, routes: [{ name: root }] });
-        }
-      } else if (!routes && route.name) {
-        const root = rootScreenForRoute(route.name);
-        if (root && route.name !== root) {
-          navigation.reset?.({ index: 0, routes: [{ name: root }] });
-        }
-      }
-      const target = navigation.getParent() ?? navigation;
-      if (params.fromScreen) {
-        target.navigate(fromTab, {
-          screen: params.fromScreen,
-          params: params.fromParams,
-        });
-      } else {
-        target.navigate(fromTab);
-      }
+    if (goBackToOriginTab(navigation, route.name, params)) {
       return;
     }
 
-    // Navegação dentro da própria seção: volta para a tela anterior,
-    // respeitando a tela inicial (na raiz, não faz nada).
     if (navigation.canGoBack()) {
       navigation.goBack();
     }
@@ -85,9 +44,6 @@ export function Header({ hasBackButton }: HeaderProps) {
 
       <Text className="font-bold text-primary-500">Meu Dentinho</Text>
 
-      {/* <BellIcon weight="regular" /> */}
-
-      {/* Temporario enquanto BellIcon estiver comentado */}
       <View style={{ width: 24 }} />
     </Wrapper>
   );
