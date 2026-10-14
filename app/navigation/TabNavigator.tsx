@@ -6,7 +6,7 @@ import {
 } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
 import { StackActions, CommonActions } from "@react-navigation/native";
-import { TAB_ROOT_SCREEN } from "./types";
+import { TAB_ROOT_SCREEN, isTabName } from "./types";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
@@ -121,7 +121,13 @@ export function popNestedStackToTop<
   navigation: BottomTabNavigationProp<TabNavigatorRouteParams, RouteName>,
   routeKey: string,
 ) {
-  const tabState = navigation.getState();
+  const tabState =
+    typeof navigation.getState === "function"
+      ? navigation.getState()
+      : undefined;
+  if (!tabState) {
+    return;
+  }
   const pressed = tabState.routes.find((route) => route.key === routeKey);
   const nested = pressed?.state;
   if (
@@ -144,11 +150,11 @@ export function popNestedStackToTop<
   // [Index] embaixo. Nesse caso index é 0 e o popToTop seria no-op,
   // deixando o detalhe como "raiz" da aba. Detecta e reseta para a raiz
   // esperada da aba.
-  const tabName = pressed?.name as keyof typeof TAB_ROOT_SCREEN | undefined;
-  const expectedRoot = tabName ? TAB_ROOT_SCREEN[tabName] : undefined;
-  if (!expectedRoot) {
+  const rawTabName = pressed?.name;
+  if (!rawTabName || !isTabName(rawTabName)) {
     return;
   }
+  const expectedRoot = TAB_ROOT_SCREEN[rawTabName];
   const nestedRoutes =
     "routes" in nested && Array.isArray(nested.routes)
       ? (nested.routes as Array<{ name?: string }>)

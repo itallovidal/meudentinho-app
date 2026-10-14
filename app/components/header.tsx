@@ -4,7 +4,7 @@ import { Wrapper } from "./wrapper";
 import { BellIcon, CaretLeftIcon } from "phosphor-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { THEME } from "@/lib/theme";
-import type { CrossTabOrigin } from "@/navigation/types";
+import { isTabName, rootScreenForRoute, type CrossTabOrigin } from "@/navigation/types";
 
 interface HeaderProps {
   hasBackButton?: boolean;
@@ -19,13 +19,6 @@ type LooseNavigation = {
   reset?: (state: { index: number; routes: Array<{ name: string }> }) => void;
 };
 
-function rootForCrossTabRoute(routeName: string): string | null {
-  if (routeName === "Article" || routeName === "ArticlesList") {
-    return "ArticlesList";
-  }
-  return "Index";
-}
-
 export function Header({ hasBackButton }: HeaderProps) {
   const navigation = useNavigation() as unknown as LooseNavigation;
   const route = useRoute();
@@ -34,7 +27,8 @@ export function Header({ hasBackButton }: HeaderProps) {
   function handleBack() {
     const params = (route.params ?? {}) as CrossTabOrigin;
 
-    if (params.fromTab) {
+    if (params.fromTab && isTabName(params.fromTab)) {
+      const fromTab = params.fromTab;
       // A tela foi aberta a partir de outra aba: volta para a origem
       // e limpa a pilha da aba atual para não poluir a seção.
       // Se a pilha tem mais de uma rota, o goBack remove o detalhe e
@@ -46,26 +40,26 @@ export function Header({ hasBackButton }: HeaderProps) {
       const routes = state?.routes;
       if (navigation.canGoBack()) {
         navigation.goBack();
-      } else if (routes?.length === 1 && routes[0].name) {
-        const currentName = routes[0].name || route.name;
-        const root = rootForCrossTabRoute(currentName);
+      } else if (routes?.length === 1) {
+        const currentName = routes[0]?.name ?? route.name;
+        const root = rootScreenForRoute(currentName);
         if (root && currentName !== root) {
           navigation.reset?.({ index: 0, routes: [{ name: root }] });
         }
       } else if (!routes && route.name) {
-        const root = rootForCrossTabRoute(route.name);
+        const root = rootScreenForRoute(route.name);
         if (root && route.name !== root) {
           navigation.reset?.({ index: 0, routes: [{ name: root }] });
         }
       }
       const target = navigation.getParent() ?? navigation;
       if (params.fromScreen) {
-        target.navigate(params.fromTab, {
+        target.navigate(fromTab, {
           screen: params.fromScreen,
           params: params.fromParams,
         });
       } else {
-        target.navigate(params.fromTab);
+        target.navigate(fromTab);
       }
       return;
     }

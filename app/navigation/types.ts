@@ -9,12 +9,21 @@ export type CrossTabOrigin = {
   fromParams?: Record<string, unknown>;
 };
 
-export const TAB_ROOT_SCREEN: Record<TabName, string> = {
+export const TAB_ROOT_SCREEN = {
   Home: "HomeRoot",
   Smile: "SmileHome",
   Articles: "ArticlesList",
   Profile: "Index",
-};
+} as const;
+
+export function isTabName(value: unknown): value is TabName {
+  return (
+    value === "Home" ||
+    value === "Smile" ||
+    value === "Articles" ||
+    value === "Profile"
+  );
+}
 
 export function rootScreenForRoute(routeName: string): string | null {
   if (routeName === "Article" || routeName === "ArticlesList") {
