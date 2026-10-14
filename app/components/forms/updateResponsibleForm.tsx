@@ -63,7 +63,7 @@ export function UpdateResponsibleForm({
             />
           )}
         />
-        <UserIcon color={colors.primary500} />
+        <UserIcon color={colors.primary500} weight="regular" />
       </FieldShell>
 
       <FieldShell label="E-mail" error={errors.email?.message}>
@@ -83,7 +83,7 @@ export function UpdateResponsibleForm({
             />
           )}
         />
-        <EnvelopeSimpleIcon color={colors.primary500} />
+        <EnvelopeSimpleIcon color={colors.primary500} weight="regular" />
       </FieldShell>
 
       <Pressable
@@ -91,7 +91,7 @@ export function UpdateResponsibleForm({
         className="mt-2 flex-row items-center rounded-xl bg-base-100 p-3 shadow-sm"
       >
         <View className="h-12 w-12 items-center justify-center rounded-lg bg-base-200">
-          <LockIcon color={colors.primary500} />
+          <LockIcon color={colors.primary500} weight="bold"/>
         </View>
         <Text className="ml-3 flex-1 text-base font-medium">Alterar Senha</Text>
         <CaretRightIcon color={colors.primary500} weight="regular" />
