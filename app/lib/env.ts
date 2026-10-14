@@ -11,9 +11,15 @@ const envSchema = z.object({
 
 const parsedEnv = envSchema.safeParse({
   BASE_API_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  ENVIRONMENT: process.env.EXPO_ENVIRONMENT,
+  // NOTA: o Expo só expõe variáveis com prefixo EXPO_PUBLIC_ para o app.
+  // ENVIRONMENT e APP_VERSION aceitam o nome com prefixo (preferido) com
+  // fallback para o nome sem prefixo, para não quebrar .env existentes.
+  // Preferido: EXPO_PUBLIC_ENVIRONMENT / EXPO_PUBLIC_APP_VERSION.
+  ENVIRONMENT:
+    process.env.EXPO_PUBLIC_ENVIRONMENT ?? process.env.EXPO_ENVIRONMENT,
   LOCAL_STORAGE_KEY_PREFIX: process.env.EXPO_PUBLIC_LOCAL_STORAGE_KEY,
-  APP_VERSION: process.env.EXPO_APP_VERSION,
+  APP_VERSION:
+    process.env.EXPO_PUBLIC_APP_VERSION ?? process.env.EXPO_APP_VERSION,
 });
 
 if (!parsedEnv.success) {
