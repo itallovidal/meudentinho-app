@@ -37,12 +37,11 @@ export function ArticleBanner({
         navigation.navigate("Articles", {
           screen: "Article",
           params: { id: id, ...(fromTab ? { fromTab } : {}) },
-          initial: false,
         })
       }
     >
       <Wrapper className="w-full overflow-hidden rounded-lg">
-        <Image src={imageSrc} className="h-60 w-full rounded-lg" />
+        <Image source={{ uri: imageSrc }} className="h-60 w-full rounded-lg" />
         <LinearGradient
           colors={BANNER_GRADIENT_COLORS}
           start={{ x: 0.2, y: 1 }}

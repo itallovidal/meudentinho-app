@@ -31,7 +31,6 @@ export function ArticleCard({
         navigation.navigate("Articles", {
           screen: "Article",
           params: { id: id, ...(fromTab ? { fromTab } : {}) },
-          initial: false,
         })
       }
     >
