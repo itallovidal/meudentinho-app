@@ -245,7 +245,7 @@ export function ToothEventModal({
                     accessibilityLabel="Abrir calendário"
                     className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
                   >
-                    <CalendarBlankIcon size={22} color={colors.base600} />
+                    <CalendarBlankIcon size={22} color={colors.base600} weight="regular"/>
                   </Pressable>
                 </View>
                 {showCalendar && (
