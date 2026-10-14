@@ -388,7 +388,7 @@ export function DentalMap({
         align="start"
         justify="start"
         gap="gap-4"
-        className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
+        className="w-full rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
       >
         <Text variant="h4" className="text-primary-500">
           Mapa do Sorriso
