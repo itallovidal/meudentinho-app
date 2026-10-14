@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView } from "react-native";
+import { Alert, RefreshControl, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
@@ -8,7 +8,6 @@ import { Text } from "@/components/ui/text";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
 import { KidSelector } from "@/components/smile/KidSelector";
-import PredictionsCard from "@/components/smile/PredictionsCard";
 import RecentEventsList from "@/components/smile/RecentEventsList";
 import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
 import { Wrapper } from "@/components/wrapper";
@@ -18,14 +17,14 @@ import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { getToothEventsByKid } from "@/api/smile/getToothEvents";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
-import { ApiError, ResponsePayload } from "@/types/domain";
+import { ApiError } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
-import { birthDateToString } from "@/lib/utils";
+import { ageInMonths, birthDateToString } from "@/lib/utils";
 
 const TOTAL_MILK_TEETH = 20;
 
 export function Smile() {
-  const { user, authToken } = useContext(UserContext)!;
+  const { user, authToken, userId } = useContext(UserContext)!;
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
@@ -34,22 +33,34 @@ export function Smile() {
     kids: kidsList,
     isLoading: kidsPending,
     isFetching: kidsFetching,
+    failure: kidsFailure,
+    refetch: refetchKids,
   } = useKids(authToken);
 
   const kids = useMemo(
     () => kidsList.map((kid) => ({ id: kid.id, name: kid.name, birthDate: birthDateToString(kid.birthDate) })),
     [kidsList],
   );
-  const kidsReady = !kidsPending;
+  const kidsReady = !kidsPending && !kidsFailure;
+
+  // Escopo do cache por conta: sem o identificador da conta, os eventos de
+  // um usuário poderiam vazar para outra conta no mesmo aparelho.
+  const accountKey = userId ?? authToken ?? "";
 
   useEffect(() => {
+    if (kids.length === 0) {
+      if (selectedKidId !== null) {
+        setSelectedKidId(null);
+      }
+      return;
+    }
     if (!kids.some((kid) => kid.id === selectedKidId)) {
-      setSelectedKidId(kids[0]?.id ?? null);
+      setSelectedKidId(kids[0].id);
     }
   }, [kids, selectedKidId]);
 
   const eventsQuery = useQuery({
-    queryKey: ["tooth-events", selectedKidId],
+    queryKey: ["tooth-events", accountKey, selectedKidId],
     queryFn: () =>
       getToothEventsByKid(selectedKidId!, authToken!).then(
         (response) => response.data,
@@ -67,11 +78,16 @@ export function Smile() {
 
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
-      createToothEvent(request, authToken ?? ""),
+      createToothEvent(request, authToken ?? null),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", selectedKidId],
+        queryKey: ["tooth-events", accountKey, selectedKidId],
       }),
+    onError: () =>
+      Alert.alert(
+        "Erro",
+        "Não foi possível registrar o evento. Verifique sua conexão.",
+      ),
   });
 
   const updateMutation = useMutation({
@@ -81,11 +97,16 @@ export function Smile() {
     }: {
       id: string;
       request: ToothEventRequestDTO;
-    }) => updateToothEvent(id, authToken ?? "", request),
+    }) => updateToothEvent(id, authToken ?? null, request),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", selectedKidId],
+        queryKey: ["tooth-events", accountKey, selectedKidId],
       }),
+    onError: () =>
+      Alert.alert(
+        "Erro",
+        "Não foi possível atualizar o evento. Verifique sua conexão.",
+      ),
   });
 
   async function handleRegisterEvent(
@@ -100,11 +121,13 @@ export function Smile() {
       await registerMutation.mutateAsync(payload);
     } catch (error) {
       if (error instanceof ApiError && error.code === "TOOTH_EVENT_DUPLICATE") {
-        const cached = queryClient.getQueryData<ResponsePayload<ToothEvent[]>>([
+        // O queryFn retorna o array puro (response.data), não o ResponsePayload.
+        const cached = queryClient.getQueryData<ToothEvent[]>([
           "tooth-events",
+          accountKey,
           selectedKidId,
         ]);
-        const match = (cached?.data ?? []).find(
+        const match = (cached ?? []).find(
           (event) =>
             event.quadrant === payload.quadrant &&
             event.toothType === payload.toothType &&
@@ -135,6 +158,32 @@ export function Smile() {
   const selectedKid = kids.find((kid) => kid.id === selectedKidId);
   const selectedKidRecord = kidsList.find((kid) => kid.id === selectedKidId);
   const kidBirthDate = selectedKidRecord ? selectedKidRecord.birthDate : null;
+  const kidAgeMonths = kidBirthDate ? ageInMonths(kidBirthDate) : null;
+
+  // Dica educativa local (placeholder): o backend ainda não expõe dicas
+  // personalizadas, então alternamos entre textos estáticos conforme a fase
+  // da criança (primeiros dentes → molares → troca).
+  const dentalTip = useMemo(() => {
+    if (stats.exchanged > 0) {
+      return {
+        title: "Troca de dentes",
+        description:
+          "Os permanentes nascem empurrando os de leite. Mantenha a escovação após as refeições e visite o dentista regularmente.",
+      };
+    }
+    if (kidAgeMonths !== null && kidAgeMonths < 30) {
+      return {
+        title: "Primeiros dentinhos",
+        description:
+          "Os incisivos centrais inferiores costumam nascer por volta dos 6 meses. Alivie o desconforto com mordedores limpos.",
+      };
+    }
+    return {
+      title: "Molar dos 6 anos",
+      description:
+        "Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!",
+    };
+  }, [stats.exchanged, kidAgeMonths]);
 
   const kidUnlinked =
     eventsQuery.error instanceof ApiError &&
@@ -191,7 +240,7 @@ export function Smile() {
     );
   }
 
-  if (!kidsReady) {
+  if (kidsPending) {
     return (
       <Wrapper
         direction="column"
@@ -212,7 +261,61 @@ export function Smile() {
     );
   }
 
-  if (kids.length === 0) {
+  if (kidsFailure) {
+    const isAuth = kidsFailure === "auth";
+    return (
+      <Wrapper
+        direction="column"
+        align="center"
+        justify="start"
+        className="flex-1 bg-base-200"
+      >
+        <Header />
+        <Wrapper
+          direction="column"
+          align="center"
+          justify="center"
+          className="w-full flex-1 px-6"
+        >
+          <Wrapper
+            className="w-full items-center rounded-xl bg-base-100 p-5"
+            direction="column"
+            align="center"
+            justify="center"
+            gap="gap-4"
+          >
+            <Text variant="h4" className="text-center text-primary-500">
+              {isAuth ? "Sessão expirada" : "Não foi possível carregar"}
+            </Text>
+            <Text className="text-center text-base-500">
+              {isAuth
+                ? "Faça login novamente para acompanhar o sorriso."
+                : "Verifique sua conexão e tente novamente."}
+            </Text>
+            {isAuth ? (
+              <Button
+                onPress={() =>
+                  navigation.navigate("Profile", {
+                    screen: "Login",
+                    params: { fromTab: "Smile" },
+                  })
+                }
+              >
+                <Text>Fazer login</Text>
+              </Button>
+            ) : (
+              <Button onPress={() => void refetchKids()}>
+                <Text>Tentar novamente</Text>
+              </Button>
+            )}
+          </Wrapper>
+        </Wrapper>
+      </Wrapper>
+    );
+  }
+
+  // Só mostra "Nenhum dependente" com dados prontos e sem erro (kidsReady).
+  if (kidsReady && kids.length === 0) {
     return (
       <Wrapper
         direction="column"
@@ -331,11 +434,10 @@ export function Smile() {
                 onRegisterEvent={handleRegisterEvent}
               />
               <DentalTipCard
-                title="Molar dos 6 anos"
-                description="Este dente nasce sem cair nenhum outro. Atenção especial à escovação no fundo da boca!"
+                title={dentalTip.title}
+                description={dentalTip.description}
               />
               <RecentEventsList items={events.slice(0, 5)} />
-              <PredictionsCard items={[]} />
               {events.length > 0 && (
                 <TeethExchangeCard
                   total={stats.totalMilkTeeth}
