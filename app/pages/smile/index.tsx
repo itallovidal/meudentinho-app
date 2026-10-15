@@ -73,10 +73,6 @@ export function Smile() {
   const eventsQuery = useToothEvents(selectedKidId, authToken);
   const { events } = eventsQuery;
 
-  // Primeira busca (sem cache): mostra skeletons inline. `isLoading`
-  // (pending + fetching) é falso em refetch com cache e em query
-  // desabilitada, então o pull-to-refresh nunca troca o conteúdo por
-  // skeleton — apenas gira o RefreshControl via `isRefetching`.
   const eventsInitialLoading = eventsQuery.isLoading;
   const eventsRefreshing = eventsQuery.isRefetching;
 

@@ -132,7 +132,6 @@ export function buildToothPredictions(
   const predictions: ToothPrediction[] = [];
   for (const arch of ARCHES) {
     for (const toothType of TOOTH_TYPES) {
-      // Lados com a mesma janela viram um único marco (ex.: "2 lados pendentes").
       const groups = new Map<string, { range: EruptionRange; sides: Side[] }>();
       for (const side of SIDES) {
         for (const range of rangesFor(arch, toothType, side, gender)) {

@@ -81,8 +81,6 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
 
 export type ChronologyGender = "male" | "female";
 
-// Janelas permanentes femininas por quadrante. Espelham a tabela `womenPermanent`
-// do backend (odontogram.go); as janelas deciduais são iguais para ambos os sexos.
 const WOMEN_PERMANENT: Record<string, ToothChronology["permanent"]> = {
   "upper_right:central_incisor": { from: 84, to: 96, limit: 102 },
   "upper_right:lateral_incisor": { from: 96, to: 108, limit: 114 },

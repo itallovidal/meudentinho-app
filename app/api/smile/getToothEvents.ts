@@ -75,7 +75,6 @@ function assertSuccessfulPayload<T>(payload: ResponsePayload<T>) {
   }
 }
 
-// O backend omite campos com valor zero (ex.: total = 0), então completamos os valores ausentes.
 function normalizeMeta(
   meta: Partial<MetaApiPayload> | undefined,
 ): MetaApiPayload | undefined {

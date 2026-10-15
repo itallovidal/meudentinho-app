@@ -57,8 +57,8 @@ export interface ToothPrediction {
   sides: Side[];
   pendingSides: number;
   status: ToothPredictionStatus;
-  windowStart: string; // YYYY-MM-DD
-  windowEnd: string; // YYYY-MM-DD
+  windowStart: string;
+  windowEnd: string;
 }
 
 export interface TeethExchangeStats {
