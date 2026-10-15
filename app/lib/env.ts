@@ -6,7 +6,7 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   LOCAL_STORAGE_KEY_PREFIX: z.string().default("@meudentinho"),
-  APP_VERSION: z.string().default("0.1.0"),
+  APP_VERSION: z.string().default("1.0.0"),
 });
 
 const parsedEnv = envSchema.safeParse({
