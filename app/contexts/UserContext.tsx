@@ -4,7 +4,9 @@ import {
   setLocalStorageItem,
 } from "@/lib/asyncStorage";
 import { configureAuthFetch } from "@/lib/authFetch";
+import { getUserIdFromToken } from "@/lib/utils";
 import { BasicUser } from "@/types/domain";
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -27,6 +29,7 @@ export interface UserContextProps {
 export const UserContext = createContext<UserContextProps | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<BasicUser | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -86,6 +89,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function clearSessionCache() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+  }
+
   async function loadUserFromStorage() {
     try {
       const storedUser = await getLocalStorageItem("user");
@@ -121,8 +129,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (parsedRefresh) {
         setRefreshToken(parsedRefresh);
       }
-      if (parsedUserId) {
-        setUserId(parsedUserId);
+      let resolvedUserId = parsedUserId;
+      if (!resolvedUserId && parsedToken) {
+        try {
+          const decoded = getUserIdFromToken(parsedToken);
+          if (decoded) {
+            resolvedUserId = decoded;
+            await setLocalStorageItem("userId", JSON.stringify(decoded));
+          }
+        } catch {
+          resolvedUserId = null;
+        }
+      }
+      if (resolvedUserId) {
+        setUserId(resolvedUserId);
       }
     } catch (err) {
       console.log("Error loading user from storage:", err);
@@ -144,6 +164,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   ) {
     try {
       if (user === null || authToken === null) {
+        await clearSessionCache();
         setAuthToken(null);
         setUser(null);
         setRefreshToken(null);
@@ -164,8 +185,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
         refreshToken === undefined
           ? sessionRef.current.refreshToken
           : refreshToken;
-      const nextUserId =
+      let nextUserId =
         userId === undefined ? sessionRef.current.userId : userId;
+      if (!nextUserId) {
+        try {
+          const decoded = getUserIdFromToken(authToken);
+          if (decoded) {
+            nextUserId = decoded;
+          }
+        } catch {
+          nextUserId = null;
+        }
+      }
+
+      const previousUserId = sessionRef.current.userId;
+      const previousToken = sessionRef.current.authToken;
+      const isAccountSwitch =
+        !!previousToken &&
+        (previousUserId !== nextUserId || previousToken !== authToken);
+      if (isAccountSwitch) {
+        await clearSessionCache();
+      }
 
       setUser(user);
       setAuthToken(authToken);
