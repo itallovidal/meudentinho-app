@@ -25,7 +25,7 @@ export function RegisterKidSection({
 
   return (
     <Wrapper
-      className="flex-1 mt-4"
+      className="mt-4 flex-1"
       direction="column"
       align="start"
       justify="start"
