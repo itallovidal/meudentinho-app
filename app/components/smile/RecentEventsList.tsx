@@ -2,30 +2,9 @@ import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { ToothEvent } from "@/types/teeth";
-import {
-  BabyIcon,
-  CalendarCheckIcon,
-  ClockCounterClockwiseIcon,
-  ToothIcon,
-} from "phosphor-react-native";
+import { ClockCounterClockwiseIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
-import { toothEventTitle } from "@/lib/teethLabels";
-import { formatDateShortPtBR } from "@/lib/utils";
-
-const EVENT_COLOR_MAP: Record<string, string> = {
-  exfoliation: THEME.light.primary400,
-  eruption: THEME.light.tertiary400,
-};
-
-const DENTITION_ICON_MAP: Record<string, any> = {
-  primary: BabyIcon,
-  permanent: ToothIcon,
-};
-
-const DEFAULT_EVENT_ICON = {
-  Icon: CalendarCheckIcon,
-  color: THEME.light.base500,
-};
+import { ToothEventCard } from "@/components/smile/ToothEventCard";
 
 export default function RecentEventsList({
   items,
@@ -73,38 +52,15 @@ export default function RecentEventsList({
         </Pressable>
       </Wrapper>
 
-      <View className="gap-2">
-        {items.map((it) => {
-          const Icon =
-            DENTITION_ICON_MAP[it.dentition] ?? DEFAULT_EVENT_ICON.Icon;
-          const color =
-            EVENT_COLOR_MAP[it.eventType] ?? DEFAULT_EVENT_ICON.color;
-          return (
-            <Pressable
-              key={it.id}
-              onPress={() => onItemPress?.(it)}
-              disabled={!onItemPress}
-              accessibilityRole="button"
-              accessibilityLabel="Editar registro"
-              className="w-full flex-row items-center gap-3 rounded-xl bg-base-200 p-3.5 shadow-sm shadow-base-300"
-            >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-base-100">
-                <Icon size={20} color={color} weight="bold" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-primary-800">
-                  {toothEventTitle(it)}
-                </Text>
-                <Text className="text-xs text-base-500">
-                  {it.note
-                    ? `${formatDateShortPtBR(it.occurrenceDate) ?? it.occurrenceDate} • ${it.note}`
-                    : (formatDateShortPtBR(it.occurrenceDate) ??
-                      it.occurrenceDate)}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
+      <View className="w-full gap-3">
+        {items.map((item) => (
+          <ToothEventCard
+            key={item.id}
+            event={item}
+            tone="muted"
+            onPress={onItemPress}
+          />
+        ))}
       </View>
     </Wrapper>
   );

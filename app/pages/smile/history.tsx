@@ -2,17 +2,16 @@ import { useContext, useState } from "react";
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Pressable,
   RefreshControl,
   ScrollView,
   View,
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { BabyIcon, CalendarCheckIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
+import { ToothEventCard } from "@/components/smile/ToothEventCard";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -21,25 +20,6 @@ import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventsInfinite } from "@/hooks/useToothEventsInfinite";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import type { SmileStackParamList } from "@/navigation/SmileStack";
-import { archLabel, toothEventTitle, toothTypeLabel } from "@/lib/teethLabels";
-import { parseLocalDate } from "@/lib/utils";
-import type { ToothEvent } from "@/types/teeth";
-import { THEME } from "@/lib/theme";
-
-const EVENT_COLOR_MAP: Record<string, string> = {
-  exfoliation: THEME.light.primary400,
-  eruption: THEME.light.tertiary400,
-};
-
-const DENTITION_ICON_MAP: Record<string, any> = {
-  primary: BabyIcon,
-  permanent: ToothIcon,
-};
-
-const DEFAULT_EVENT_ICON = {
-  Icon: CalendarCheckIcon,
-  color: THEME.light.base500,
-};
 
 const LOAD_MORE_THRESHOLD = 200;
 
@@ -92,53 +72,6 @@ export function SmileHistory() {
   function handleRefresh() {
     void refetch();
     void allEventsQuery.refetch();
-  }
-
-  function renderDateBlock(occurrenceDate: string) {
-    const date = parseLocalDate(occurrenceDate);
-    if (!date) {
-      return null;
-    }
-    const month = date
-      .toLocaleDateString("pt-BR", { month: "short" })
-      .replace(".", "");
-    return (
-      <View className="h-14 w-14 items-center justify-center rounded-2xl bg-base-200">
-        <Text className="text-lg font-bold leading-none text-primary-500">
-          {String(date.getDate()).padStart(2, "0")}
-        </Text>
-        <Text className="text-xs uppercase text-base-500">{month}</Text>
-      </View>
-    );
-  }
-
-  function renderEvent(event: ToothEvent) {
-    const Icon = DENTITION_ICON_MAP[event.dentition] ?? DEFAULT_EVENT_ICON.Icon;
-    const color = EVENT_COLOR_MAP[event.eventType] ?? DEFAULT_EVENT_ICON.color;
-    return (
-      <Pressable
-        key={event.id}
-        onPress={() => editor.openEditor(event)}
-        accessibilityRole="button"
-        accessibilityLabel={`Editar ${toothTypeLabel(event.toothType)} ${archLabel(event.arch)}`}
-        className="w-full flex-row items-center gap-3 rounded-2xl bg-base-100 p-3 shadow-sm shadow-base-300"
-      >
-        {renderDateBlock(event.occurrenceDate)}
-        <View className="flex-1 gap-1">
-          <View className="flex-row items-center gap-2">
-            <Icon size={16} color={color} weight="bold" />
-            <Text className="flex-1 text-sm font-semibold text-primary-800">
-              {toothEventTitle(event)}
-            </Text>
-          </View>
-          {event.note ? (
-            <Text className="text-xs text-base-500" numberOfLines={2}>
-              {event.note}
-            </Text>
-          ) : null}
-        </View>
-      </Pressable>
-    );
   }
 
   function renderFooter() {
@@ -238,7 +171,15 @@ export function SmileHistory() {
           )}
 
           {!isPending && !isError && events.length > 0 && (
-            <View className="w-full gap-3">{events.map(renderEvent)}</View>
+            <View className="w-full gap-3">
+              {events.map((event) => (
+                <ToothEventCard
+                  key={event.id}
+                  event={event}
+                  onPress={editor.openEditor}
+                />
+              ))}
+            </View>
           )}
 
           {!isPending && !isError && renderFooter()}
