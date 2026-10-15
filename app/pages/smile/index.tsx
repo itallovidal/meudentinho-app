@@ -420,14 +420,14 @@ export function Smile() {
                   description={dentalTip.description}
                 />
               )}
+              <PredictionsCard
+                items={predictions.slice(0, 3)}
+                onPress={openPredictions}
+              />
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}
                 onItemPress={editor.openEditor}
-              />
-              <PredictionsCard
-                items={predictions.slice(0, 3)}
-                onPress={openPredictions}
               />
             </>
           )}
