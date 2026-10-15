@@ -9,7 +9,7 @@ import {
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
+import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
 import { ToothEventCard } from "@/components/smile/ToothEventCard";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
@@ -188,7 +188,7 @@ export function SmileHistory() {
 
       <ToothEventModal {...editor.modalProps} />
 
-      <ConfirmDialog {...editor.confirmProps} />
+      <DeleteEventSheet {...editor.confirmProps} />
     </Wrapper>
   );
 }

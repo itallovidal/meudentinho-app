@@ -5,7 +5,6 @@ import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { UserContext } from "@/contexts/UserContext";
 import type { ChronologyGender } from "@/lib/toothChronology";
-import { toothEventTitle } from "@/lib/teethLabels";
 import { ApiError } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
 
@@ -16,24 +15,20 @@ function lifecycleStage(event: ToothEvent): number {
   );
 }
 
-function getDeleteMessage(
+function getDeleteDependents(
   event: ToothEvent | null,
   events: ToothEvent[],
-): string {
+): ToothEvent[] {
   if (!event) {
-    return "O registro será removido do histórico.";
+    return [];
   }
-  const dependents = events.filter(
+  return events.filter(
     (other) =>
       other.id !== event.id &&
       other.quadrant === event.quadrant &&
       other.toothType === event.toothType &&
       lifecycleStage(other) > lifecycleStage(event),
   );
-  if (dependents.length === 0) {
-    return "O registro será removido do histórico.";
-  }
-  return `Também será removido: ${dependents.map(toothEventTitle).join(", ")}.`;
 }
 
 export function useToothEventEditor({
@@ -147,9 +142,8 @@ export function useToothEventEditor({
     confirmProps: {
       open: deletingEvent !== null,
       title: "Excluir registro?",
-      message: getDeleteMessage(deletingEvent, events),
       confirmLabel: "Excluir",
-      destructive: true,
+      dependents: getDeleteDependents(deletingEvent, events),
       onConfirm: () => void handleConfirmDelete(),
       onCancel: () => setDeletingEvent(null),
     },

@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
+import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { AddDependentSheet } from "@/components/smile/AddDependentSheet";
@@ -443,7 +443,7 @@ export function Smile() {
         onSubmit={handleCreateDependent}
       />
 
-      <ConfirmDialog {...editor.confirmProps} />
+      <DeleteEventSheet {...editor.confirmProps} />
     </Wrapper>
   );
 }
