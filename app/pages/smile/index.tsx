@@ -8,9 +8,9 @@ import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
+
 import { KidSelector } from "@/components/smile/KidSelector";
 import RecentEventsList from "@/components/smile/RecentEventsList";
-import TeethExchangeCard from "@/components/smile/TeethExchangeCard";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -55,7 +55,6 @@ export function Smile() {
       })),
     [kidsList],
   );
-  const kidsReady = !kidsInitialLoading && !kidsFailure;
 
   const accountKey = userId ?? authToken ?? "";
 
@@ -74,10 +73,6 @@ export function Smile() {
   const eventsQuery = useToothEvents(selectedKidId, authToken);
   const { events } = eventsQuery;
 
-  // Primeira busca (sem cache): mostra skeletons inline. `isLoading`
-  // (pending + fetching) é falso em refetch com cache e em query
-  // desabilitada, então o pull-to-refresh nunca troca o conteúdo por
-  // skeleton — apenas gira o RefreshControl via `isRefetching`.
   const eventsInitialLoading = eventsQuery.isLoading;
   const eventsRefreshing = eventsQuery.isRefetching;
 
@@ -99,6 +94,17 @@ export function Smile() {
     await registerMutation.mutateAsync(payload);
   }
 
+  function handleOpenKid(kidId: string) {
+    const kidRecord = kidsList.find((kid) => kid.id === kidId);
+    if (!kidRecord) {
+      return;
+    }
+    navigation.navigate("Profile", {
+      screen: "EditDependent",
+      params: { kid: kidRecord, fromTab: "Smile" },
+    });
+  }
+
   const stats = useMemo(() => {
     const exfoliated = new Set<string>();
     for (const event of events) {
@@ -112,9 +118,9 @@ export function Smile() {
     };
   }, [events]);
 
-  const selectedKid = kids.find((kid) => kid.id === selectedKidId);
   const selectedKidRecord = kidsList.find((kid) => kid.id === selectedKidId);
   const kidBirthDate = selectedKidRecord ? selectedKidRecord.birthDate : null;
+  const kidGender = selectedKidRecord?.gender ?? null;
   const kidAgeMonths = kidBirthDate ? ageInMonths(kidBirthDate) : null;
 
   const dentalTip = useMemo(() => {
@@ -140,13 +146,14 @@ export function Smile() {
   }, [stats.exchanged, kidAgeMonths]);
 
   const predictions = useMemo(
-    () => buildToothPredictions(kidBirthDate, events),
-    [kidBirthDate, events],
+    () => buildToothPredictions(kidBirthDate, events, kidGender),
+    [kidBirthDate, kidGender, events],
   );
 
   const editor = useToothEventEditor({
     kidId: selectedKidId,
     kidBirthDate,
+    kidGender,
     authToken,
     events,
   });
@@ -227,12 +234,65 @@ export function Smile() {
     );
   }
 
-  if (kidsInitialLoading || !kidsReady) {
+  if (kidsInitialLoading) {
     return (
       <SkeletonSmilePage
         refreshing={kidsRefreshing}
         onRefresh={() => void refetchKids()}
       />
+    );
+  }
+
+  if (kidsFailure) {
+    const isAuth = kidsFailure === "auth";
+    return (
+      <Wrapper
+        direction="column"
+        align="center"
+        justify="start"
+        className="flex-1 bg-base-200"
+      >
+        <Header />
+        <Wrapper
+          direction="column"
+          align="center"
+          justify="center"
+          className="w-full flex-1 px-6"
+        >
+          <Wrapper
+            className="w-full items-center rounded-xl bg-base-100 p-5"
+            direction="column"
+            align="center"
+            justify="center"
+            gap="gap-4"
+          >
+            <Text variant="h4" className="text-center text-primary-500">
+              {isAuth ? "Sessão expirada" : "Não foi possível carregar"}
+            </Text>
+            <Text className="text-center text-base-500">
+              {isAuth
+                ? "Faça login novamente para acompanhar o sorriso."
+                : "Verifique sua conexão e tente novamente."}
+            </Text>
+            {isAuth ? (
+              <Button
+                onPress={() =>
+                  navigation.navigate("Profile", {
+                    screen: "Login",
+                    params: { fromTab: "Smile" },
+                  })
+                }
+              >
+                <Text>Fazer login</Text>
+              </Button>
+            ) : (
+              <Button onPress={() => void refetchKids()}>
+                <Text>Tentar novamente</Text>
+              </Button>
+            )}
+          </Wrapper>
+        </Wrapper>
+      </Wrapper>
     );
   }
 
@@ -309,6 +369,7 @@ export function Smile() {
             kids={kids}
             selectedId={selectedKidId}
             onSelect={setSelectedKidId}
+            onOpen={handleOpenKid}
             onAdd={() =>
               navigation.navigate("Profile", {
                 screen: "Dependents",
@@ -356,6 +417,7 @@ export function Smile() {
               <DentalMap
                 kidId={selectedKidId}
                 kidBirthDate={kidBirthDate}
+                kidGender={kidGender}
                 events={events}
                 onRegisterEvent={handleRegisterEvent}
               />
@@ -372,13 +434,6 @@ export function Smile() {
                 items={predictions.slice(0, 3)}
                 onPress={openPredictions}
               />
-              {events.length > 0 && (
-                <TeethExchangeCard
-                  total={stats.totalMilkTeeth}
-                  exchanged={stats.exchanged}
-                  kidName={selectedKid?.name}
-                />
-              )}
             </>
           )}
         </Wrapper>

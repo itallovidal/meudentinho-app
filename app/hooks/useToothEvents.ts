@@ -17,8 +17,10 @@ export function useToothEvents(
 
   const events = useMemo(() => {
     const data = query.data ?? [];
-    return [...data].sort((a, b) =>
-      a.occurrenceDate < b.occurrenceDate ? 1 : -1,
+    return [...data].sort(
+      (a, b) =>
+        Date.parse(b.occurrenceDate) - Date.parse(a.occurrenceDate) ||
+        Date.parse(b.createdAt) - Date.parse(a.createdAt),
     );
   }, [query.data]);
 

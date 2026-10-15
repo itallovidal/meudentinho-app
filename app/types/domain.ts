@@ -1,5 +1,3 @@
-// TODO: split this in multiple files: one for user, one for articles,
-
 export interface User {
   id: string;
   name: string;
@@ -43,7 +41,6 @@ export interface ErrorPayload {
   code: (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
 }
 
-// should we move this to another file? maybe in a utils folder? or in the api folder?
 export class ApiError implements ErrorPayload {
   message: string;
   code: (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];

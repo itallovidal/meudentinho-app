@@ -39,9 +39,7 @@ function OpenMouthIllustration() {
 
   return (
     <Svg width={148} height={148} viewBox="0 0 148 148">
-      {/* rosto */}
       <Circle cx={74} cy={74} r={68} fill="#FFDDBE" />
-      {/* boca aberta */}
       <Ellipse
         cx={74}
         cy={82}
@@ -51,9 +49,7 @@ function OpenMouthIllustration() {
         stroke="#5A1F1F"
         strokeWidth={2.5}
       />
-      {/* língua */}
       <Ellipse cx={74} cy={106} rx={24} ry={13} fill="#EE7B7B" />
-      {/* dentes superiores */}
       {upper.map((t, i) => (
         <Rect
           key={`u-${i}`}
@@ -67,7 +63,6 @@ function OpenMouthIllustration() {
           strokeWidth={1.6}
         />
       ))}
-      {/* dentes inferiores */}
       {lower.map((t, i) => (
         <Rect
           key={`l-${i}`}
@@ -132,7 +127,6 @@ export function MouthGuideCard({ kidName }: MouthGuideCardProps) {
         justify="between"
         className="w-full"
       >
-        {/* rótulos da esquerda */}
         <View className="w-[86px] gap-4">
           {LEFT_LABELS.map((item) => (
             <View key={item.title}>
@@ -151,7 +145,6 @@ export function MouthGuideCard({ kidName }: MouthGuideCardProps) {
 
         <OpenMouthIllustration />
 
-        {/* legenda da direita */}
         <View className="w-[76px] gap-3">
           {RIGHT_LEGEND.map((item) => (
             <View key={item.label} className="flex-row items-center gap-1.5">

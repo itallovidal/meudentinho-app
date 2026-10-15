@@ -7,6 +7,7 @@ export function ToothSVG({
   fill = "#0B1B2B",
   stroke = "#1F2937",
   strokeWidth = 1.4,
+  strokeDasharray,
   width = 28,
   height = 28,
   onPress,
@@ -17,12 +18,14 @@ export function ToothSVG({
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  strokeDasharray?: string;
   width?: number;
   height?: number;
   onPress?: () => void;
 }) {
   const outline = contour.match(/M[^M]*/)?.[0] ?? contour;
-  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"`;
+  const dash = strokeDasharray ? ` stroke-dasharray="${strokeDasharray}"` : "";
+  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"${dash}`;
   const pathsXml =
     `<path d="${outline}" ${edge}/>` +
     `<path d="${contour}" ${edge}/>` +

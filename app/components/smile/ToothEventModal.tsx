@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +18,7 @@ import {
   expectedDentition,
   hasDeciduousForm,
   pendingMilkStep,
+  type ChronologyGender,
 } from "@/lib/toothChronology";
 import {
   dentitionLabel,
@@ -39,6 +39,7 @@ export function ToothEventModal({
   toothId,
   kidId,
   kidBirthDate,
+  kidGender,
   toothEvents,
   events,
   editingEvent = null,
@@ -50,6 +51,7 @@ export function ToothEventModal({
   toothId: string | null;
   kidId: string | null;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   toothEvents: ToothEvent[];
   events: ToothEvent[];
   editingEvent?: ToothEvent | null;
@@ -64,7 +66,6 @@ export function ToothEventModal({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [showCalendar, setShowCalendar] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
@@ -111,7 +112,13 @@ export function ToothEventModal({
   const defaultDentition = lockedToPermanent
     ? "permanent"
     : parsed !== null && milkStepPending === null
-      ? expectedDentition(parsed.toothType, parsed.arch, ageMonths)
+      ? expectedDentition(
+          parsed.toothType,
+          parsed.arch,
+          ageMonths,
+          parsed.side,
+          kidGender,
+        )
       : "primary";
 
   function resetForm(fallbackDentition: Dentition) {
@@ -226,6 +233,11 @@ export function ToothEventModal({
                   <Text className="text-xl font-bold text-base-900">
                     {toothIdLabel(toothId)}
                   </Text>
+                  {editingEvent && (
+                    <Text className="text-sm text-base-500">
+                      {`Dentição: ${dentitionLabel(editingEvent.dentition)}`}
+                    </Text>
+                  )}
                 </View>
                 <Pressable
                   onPress={onClose}

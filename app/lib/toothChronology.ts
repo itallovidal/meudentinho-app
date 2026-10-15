@@ -79,14 +79,58 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
   },
 };
 
+export type ChronologyGender = "male" | "female";
+
+const WOMEN_PERMANENT: Record<string, ToothChronology["permanent"]> = {
+  "upper_right:central_incisor": { from: 84, to: 96, limit: 102 },
+  "upper_right:lateral_incisor": { from: 96, to: 108, limit: 114 },
+  "upper_right:canine": { from: 132, to: 144, limit: 147 },
+  "upper_right:first_premolar": { from: 120, to: 132, limit: 141 },
+  "upper_right:second_premolar": { from: 120, to: 144, limit: 153 },
+  "upper_right:first_molar": { from: 72, to: 84, limit: 85 },
+  "upper_right:second_molar": { from: 144, to: 156, limit: 170 },
+  "upper_left:central_incisor": { from: 84, to: 96, limit: 102 },
+  "upper_left:lateral_incisor": { from: 96, to: 108, limit: 114 },
+  "upper_left:canine": { from: 132, to: 144, limit: 145 },
+  "upper_left:first_premolar": { from: 120, to: 132, limit: 141 },
+  "upper_left:second_premolar": { from: 120, to: 144, limit: 155 },
+  "upper_left:first_molar": { from: 72, to: 84, limit: 85 },
+  "upper_left:second_molar": { from: 144, to: 156, limit: 175 },
+  "lower_left:central_incisor": { from: 72, to: 84, limit: 90 },
+  "lower_left:lateral_incisor": { from: 84, to: 96, limit: 102 },
+  "lower_left:canine": { from: 108, to: 132, limit: 133 },
+  "lower_left:first_premolar": { from: 108, to: 132, limit: 140 },
+  "lower_left:second_premolar": { from: 120, to: 144, limit: 153 },
+  "lower_left:first_molar": { from: 72, to: 84, limit: 90 },
+  "lower_left:second_molar": { from: 132, to: 144, limit: 170 },
+  "lower_right:central_incisor": { from: 72, to: 84, limit: 90 },
+  "lower_right:lateral_incisor": { from: 84, to: 96, limit: 102 },
+  "lower_right:canine": { from: 108, to: 132, limit: 133 },
+  "lower_right:first_premolar": { from: 108, to: 132, limit: 141 },
+  "lower_right:second_premolar": { from: 120, to: 144, limit: 154 },
+  "lower_right:first_molar": { from: 72, to: 84, limit: 84 },
+  "lower_right:second_molar": { from: 132, to: 144, limit: 167 },
+  "upper_right:third_molar": { from: 204, to: 360, limit: 1200 },
+  "upper_left:third_molar": { from: 204, to: 360, limit: 1200 },
+  "lower_left:third_molar": { from: 204, to: 360, limit: 1200 },
+  "lower_right:third_molar": { from: 204, to: 360, limit: 1200 },
+};
+
 export type MapToothState =
   "unregistered" | "bornMilk" | "bornPermanent" | "fell";
 
 export function getChronology(
   arch: Arch,
   toothType: ToothType,
+  side?: Side,
+  gender?: ChronologyGender | null,
 ): ToothChronology | null {
-  return CHRONOLOGY[`${arch}:${toothType}`] ?? null;
+  const base = CHRONOLOGY[`${arch}:${toothType}`] ?? null;
+  if (!base || !side || gender !== "female") {
+    return base;
+  }
+  const permanent = WOMEN_PERMANENT[`${arch}_${side}:${toothType}`];
+  return permanent ? { ...base, permanent } : base;
 }
 
 export function hasDeciduousForm(arch: Arch, toothType: ToothType): boolean {
@@ -98,8 +142,10 @@ export function expectedDentition(
   toothType: ToothType,
   arch: Arch,
   ageMonths: number | null,
+  side?: Side,
+  gender?: ChronologyGender | null,
 ): Dentition {
-  const info = getChronology(arch, toothType);
+  const info = getChronology(arch, toothType, side, gender);
   if (!info || !info.deciduous) {
     return "permanent";
   }
@@ -117,8 +163,10 @@ export function isInEruptionWindow(
   arch: Arch,
   toothType: ToothType,
   ageMonths: number | null,
+  side?: Side,
+  gender?: ChronologyGender | null,
 ): boolean {
-  const info = getChronology(arch, toothType);
+  const info = getChronology(arch, toothType, side, gender);
   if (!info || ageMonths === null || Number.isNaN(ageMonths) || ageMonths < 0) {
     return false;
   }
@@ -165,19 +213,17 @@ export function toothState(
   const mine = events.filter(
     (event) => `${event.quadrant}:${event.toothType}` === key,
   );
-  if (
-    mine.some(
-      (event) =>
-        event.eventType === "eruption" && event.dentition === "permanent",
-    )
-  ) {
-    return "bornPermanent";
+
+  const latest = [...mine].sort(
+    (a, b) =>
+      Date.parse(b.occurrenceDate) - Date.parse(a.occurrenceDate) ||
+      Date.parse(b.createdAt) - Date.parse(a.createdAt),
+  )[0];
+  if (!latest) {
+    return "unregistered";
   }
-  if (mine.some((event) => event.eventType === "exfoliation")) {
+  if (latest.eventType === "exfoliation") {
     return "fell";
   }
-  if (mine.some((event) => event.eventType === "eruption")) {
-    return "bornMilk";
-  }
-  return "unregistered";
+  return latest.dentition === "permanent" ? "bornPermanent" : "bornMilk";
 }

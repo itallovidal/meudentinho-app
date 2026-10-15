@@ -4,17 +4,48 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { UserContext } from "@/contexts/UserContext";
+import type { ChronologyGender } from "@/lib/toothChronology";
+import { toothEventTitle } from "@/lib/teethLabels";
 import { ApiError } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
+
+function lifecycleStage(event: ToothEvent): number {
+  return (
+    (event.dentition === "permanent" ? 2 : 0) +
+    (event.eventType === "exfoliation" ? 1 : 0)
+  );
+}
+
+function getDeleteMessage(
+  event: ToothEvent | null,
+  events: ToothEvent[],
+): string {
+  if (!event) {
+    return "O registro será removido do histórico.";
+  }
+  const dependents = events.filter(
+    (other) =>
+      other.id !== event.id &&
+      other.quadrant === event.quadrant &&
+      other.toothType === event.toothType &&
+      lifecycleStage(other) > lifecycleStage(event),
+  );
+  if (dependents.length === 0) {
+    return "O registro será removido do histórico.";
+  }
+  return `Também será removido: ${dependents.map(toothEventTitle).join(", ")}.`;
+}
 
 export function useToothEventEditor({
   kidId,
   kidBirthDate,
+  kidGender,
   authToken,
   events,
 }: {
   kidId: string | null;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   authToken: string | null | undefined;
   events: ToothEvent[];
 }) {
@@ -40,7 +71,7 @@ export function useToothEventEditor({
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteToothEvent(id, authToken ?? ""),
-    onSuccess: () =>
+    onSettled: () =>
       queryClient.invalidateQueries({
         queryKey: ["tooth-events", accountKey, kidId],
       }),
@@ -101,6 +132,7 @@ export function useToothEventEditor({
         : null,
       kidId,
       kidBirthDate,
+      kidGender,
       toothEvents: editingToothEvents,
       events: otherEvents,
       editingEvent,
@@ -115,10 +147,7 @@ export function useToothEventEditor({
     confirmProps: {
       open: deletingEvent !== null,
       title: "Excluir registro?",
-      message:
-        deletingEvent?.eventType === "eruption"
-          ? "Os eventos posteriores deste dente (queda e troca) também serão removidos."
-          : "O registro será removido do histórico.",
+      message: getDeleteMessage(deletingEvent, events),
       confirmLabel: "Excluir",
       destructive: true,
       onConfirm: () => void handleConfirmDelete(),

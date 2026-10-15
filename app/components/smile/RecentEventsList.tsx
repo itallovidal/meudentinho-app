@@ -1,21 +1,25 @@
-import React from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { ToothEvent } from "@/types/teeth";
 import {
+  BabyIcon,
+  CalendarCheckIcon,
   ClockCounterClockwiseIcon,
   ToothIcon,
-  StarIcon,
-  CalendarCheckIcon,
 } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
-import { toothEventVerb, toothTypeLabel, archLabel } from "@/lib/teethLabels";
+import { toothEventTitle } from "@/lib/teethLabels";
 import { formatDateShortPtBR } from "@/lib/utils";
 
-const EVENT_ICON_MAP: Record<string, { Icon: any; color: string }> = {
-  exfoliation: { Icon: ToothIcon, color: THEME.light.primary400 },
-  eruption: { Icon: StarIcon, color: THEME.light.tertiary400 },
+const EVENT_COLOR_MAP: Record<string, string> = {
+  exfoliation: THEME.light.primary400,
+  eruption: THEME.light.tertiary400,
+};
+
+const DENTITION_ICON_MAP: Record<string, any> = {
+  primary: BabyIcon,
+  permanent: ToothIcon,
 };
 
 const DEFAULT_EVENT_ICON = {
@@ -71,8 +75,10 @@ export default function RecentEventsList({
 
       <View className="gap-2">
         {items.map((it) => {
-          const { Icon, color } =
-            EVENT_ICON_MAP[it.eventType] || DEFAULT_EVENT_ICON;
+          const Icon =
+            DENTITION_ICON_MAP[it.dentition] ?? DEFAULT_EVENT_ICON.Icon;
+          const color =
+            EVENT_COLOR_MAP[it.eventType] ?? DEFAULT_EVENT_ICON.color;
           return (
             <Pressable
               key={it.id}
@@ -87,7 +93,7 @@ export default function RecentEventsList({
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-semibold text-primary-800">
-                  {`${toothTypeLabel(it.toothType)} ${archLabel(it.arch)} ${toothEventVerb(it.eventType)}`}
+                  {toothEventTitle(it)}
                 </Text>
                 <Text className="text-xs text-base-500">
                   {it.note

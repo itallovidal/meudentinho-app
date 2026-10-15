@@ -61,7 +61,7 @@ export function ArticleListSection({
   }
 
   return (
-    <View className="w-full flex-1 gap-4">
+    <View className="w-full gap-4">
       {fromTab === "Home" && (
         <Text variant={"h4"} className="mb-4">
           Dicas e Artigos

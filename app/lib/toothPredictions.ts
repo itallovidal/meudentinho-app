@@ -1,4 +1,4 @@
-import { getChronology } from "@/lib/toothChronology";
+import { getChronology, type ChronologyGender } from "@/lib/toothChronology";
 import { archLabel, toothTypeLabel } from "@/lib/teethLabels";
 import { ageInMonths, parseLocalDate, toLocalDateKey } from "@/lib/utils";
 import type {
@@ -54,8 +54,13 @@ interface EruptionRange {
   limit: number;
 }
 
-function rangesFor(arch: Arch, toothType: ToothType): EruptionRange[] {
-  const chronology = getChronology(arch, toothType);
+function rangesFor(
+  arch: Arch,
+  toothType: ToothType,
+  side: Side,
+  gender: ChronologyGender | null,
+): EruptionRange[] {
+  const chronology = getChronology(arch, toothType, side, gender);
   if (!chronology) {
     return [];
   }
@@ -94,8 +99,7 @@ function isSidePending(
         event.eventType === "eruption" && event.dentition === "permanent",
     );
   }
-  // Um dente de leite deixa de ser previsto quando nasce, cai ou já foi
-  // substituído pelo permanente correspondente.
+
   return !mine.some(
     (event) =>
       event.eventType === "eruption" || event.eventType === "exfoliation",
@@ -111,15 +115,10 @@ function keyToDate(key: string): Date {
   return new Date(year, month - 1, day);
 }
 
-/**
- * Estimativas de erupção por arcada e tipo de dente, com base na idade da
- * criança e na cronologia de `toothChronology.ts`. Dentes que já nasceram,
- * caíram ou foram substituídos deixam de ser previstos. Janelas já encerradas
- * também são omitidas. As datas são aproximações, não diagnósticos.
- */
 export function buildToothPredictions(
   birthDate: string | null,
   events: ToothEvent[],
+  gender: ChronologyGender | null = null,
 ): ToothPrediction[] {
   if (!birthDate) {
     return [];
@@ -133,23 +132,31 @@ export function buildToothPredictions(
   const predictions: ToothPrediction[] = [];
   for (const arch of ARCHES) {
     for (const toothType of TOOTH_TYPES) {
-      for (const range of rangesFor(arch, toothType)) {
-        if (ageMonths > range.limit) {
-          continue;
+      const groups = new Map<string, { range: EruptionRange; sides: Side[] }>();
+      for (const side of SIDES) {
+        for (const range of rangesFor(arch, toothType, side, gender)) {
+          if (
+            ageMonths > range.limit ||
+            !isSidePending(events, arch, side, toothType, range.dentition)
+          ) {
+            continue;
+          }
+          const key = `${range.dentition}:${range.start}:${range.end}`;
+          const group = groups.get(key) ?? { range, sides: [] };
+          group.sides.push(side);
+          groups.set(key, group);
         }
-        const pendingSides = SIDES.filter((side) =>
-          isSidePending(events, arch, side, toothType, range.dentition),
-        ).length;
-        if (pendingSides === 0) {
-          continue;
-        }
+      }
+
+      for (const { range, sides } of groups.values()) {
         predictions.push({
-          id: `${arch}:${toothType}:${range.dentition}`,
+          id: `${arch}:${toothType}:${range.dentition}:${range.start}-${range.end}`,
           toothType,
           arch,
           dentition: range.dentition,
           title: `${toothTypeLabel(toothType)} ${archLabel(arch)}`,
-          pendingSides,
+          sides,
+          pendingSides: sides.length,
           status: ageMonths >= range.start ? "current" : "upcoming",
           windowStart: toLocalDateKey(monthsAfter(birth, range.start)),
           windowEnd: toLocalDateKey(monthsAfter(birth, range.end)),
@@ -163,41 +170,111 @@ export function buildToothPredictions(
   );
 }
 
-export function formatPredictionWindow(startKey: string, endKey: string): string {
+export function formatPredictionWindow(
+  startKey: string,
+  endKey: string,
+): string {
   const [startYear, startMonth, startDay] = startKey.split("-").map(Number);
   const [endYear, endMonth, endDay] = endKey.split("-").map(Number);
   if (startKey === endKey) {
     return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
   }
-  if (startYear === endYear && startMonth === endMonth) {
+  if (startYear !== endYear) {
+    return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} de ${startYear} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]} de ${endYear}`;
+  }
+  if (startMonth === endMonth) {
     return `${startDay} a ${endDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
   }
   return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]}`;
 }
 
 export interface PredictionCalendarMark {
-  color: string;
-  startingDay: boolean;
-  endingDay: boolean;
+  inWindow: boolean;
+  windowStart: boolean;
+  windowEnd: boolean;
+  registered: boolean;
 }
 
 export function buildPredictionCalendarMarks(
   predictions: ToothPrediction[],
-  color: string,
+  events: ToothEvent[],
 ): Record<string, PredictionCalendarMark> {
   const marks: Record<string, PredictionCalendarMark> = {};
+  const markFor = (key: string): PredictionCalendarMark => {
+    if (!marks[key]) {
+      marks[key] = {
+        inWindow: false,
+        windowStart: false,
+        windowEnd: false,
+        registered: false,
+      };
+    }
+    return marks[key];
+  };
+
   for (const prediction of predictions) {
     const end = keyToDate(prediction.windowEnd);
     const cursor = keyToDate(prediction.windowStart);
     while (cursor <= end) {
       const key = toLocalDateKey(cursor);
-      marks[key] = {
-        color,
-        startingDay: key === prediction.windowStart,
-        endingDay: key === prediction.windowEnd,
-      };
+      const mark = markFor(key);
+      mark.inWindow = true;
+      if (key === prediction.windowStart) {
+        mark.windowStart = true;
+      }
+      if (key === prediction.windowEnd) {
+        mark.windowEnd = true;
+      }
       cursor.setDate(cursor.getDate() + 1);
     }
   }
+
+  for (const event of events) {
+    markFor(toLocalDateKey(new Date(event.occurrenceDate))).registered = true;
+  }
+
   return marks;
+}
+
+export function getPredictionFocusKey(
+  prediction: ToothPrediction,
+  events: ToothEvent[],
+): string {
+  let latest: string | null = null;
+  for (const event of events) {
+    if (
+      event.toothType !== prediction.toothType ||
+      event.dentition !== prediction.dentition ||
+      !prediction.sides.some(
+        (side) => event.quadrant === `${prediction.arch}_${side}`,
+      )
+    ) {
+      continue;
+    }
+    const key = toLocalDateKey(new Date(event.occurrenceDate));
+    if (!latest || key > latest) {
+      latest = key;
+    }
+  }
+  return latest ?? prediction.windowStart;
+}
+
+export function getCalendarFocus(
+  predictions: ToothPrediction[],
+  today: Date,
+): { prediction: ToothPrediction; date: Date } | null {
+  if (predictions.length === 0) {
+    return null;
+  }
+  const todayKey = toLocalDateKey(today);
+  const upcoming = predictions.find(
+    (prediction) => prediction.windowEnd >= todayKey,
+  );
+  if (!upcoming) {
+    return { prediction: predictions[predictions.length - 1], date: today };
+  }
+  if (upcoming.windowStart <= todayKey) {
+    return { prediction: upcoming, date: today };
+  }
+  return { prediction: upcoming, date: keyToDate(upcoming.windowStart) };
 }

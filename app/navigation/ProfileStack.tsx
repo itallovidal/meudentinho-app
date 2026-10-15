@@ -23,7 +23,7 @@ export type ProfileRouteParams = {
   Responsible: undefined;
   ChangePassword: undefined;
   Dependents: undefined | CrossTabOrigin;
-  EditDependent: undefined | { kid?: KidResponseDTO };
+  EditDependent: undefined | ({ kid?: KidResponseDTO } & CrossTabOrigin);
 };
 
 export type ProfileNavegationProp =

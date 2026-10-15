@@ -17,6 +17,7 @@ import { parseToothId } from "@/lib/teethLabels";
 import {
   isInEruptionWindow,
   toothState,
+  type ChronologyGender,
   type MapToothState,
 } from "@/lib/toothChronology";
 import { ApiError } from "@/types/domain";
@@ -69,41 +70,49 @@ const FDI_UNIT: Record<ToothType, string> = {
 
 type LegendKey = MapToothState | "eruptionWindow";
 
-export const TOOTH_STYLE: Record<LegendKey, { fill: string; stroke: string }> = {
-  unregistered: { fill: "#E2E8F0", stroke: "#475569" },
-  bornMilk: { fill: "#7DD3FC", stroke: "#0C4A6E" },
-  bornPermanent: { fill: "#34D399", stroke: "#065F46" },
-  fell: { fill: "#FCA5A5", stroke: "#7F1D1D" },
-  eruptionWindow: { fill: "#FDE047", stroke: "#854D0E" },
-};
+export const TOOTH_STYLE: Record<LegendKey, { fill: string; stroke: string }> =
+  {
+    unregistered: { fill: "#E2E8F0", stroke: "#475569" },
+    bornMilk: { fill: "#7DD3FC", stroke: "#0C4A6E" },
+    bornPermanent: { fill: "#34D399", stroke: "#065F46" },
+    fell: { fill: "#FCA5A5", stroke: "#7F1D1D" },
+    eruptionWindow: { fill: "#FDE047", stroke: "#854D0E" },
+  };
 
-export const LEGEND: { key: LegendKey; label: string; description: string }[] = [
-  {
-    key: "unregistered",
-    label: "Sem registro",
-    description: "Ainda não foi informado",
-  },
-  {
-    key: "eruptionWindow",
-    label: "Hora de nascer",
-    description: "Período esperado, ainda sem registro",
-  },
-  {
-    key: "bornMilk",
-    label: "Nasceu (de leite)",
-    description: "Dente de leite que surgiu",
-  },
-  {
-    key: "bornPermanent",
-    label: "Nasceu (definitivo)",
-    description: "Dente permanente que surgiu",
-  },
-  {
-    key: "fell",
-    label: "Caiu",
-    description: "Dente de leite que foi trocado",
-  },
-];
+const MILK_SYMBOL_DASH = "3 2";
+
+function isMilkSymbol(key: LegendKey): boolean {
+  return key === "bornMilk" || key === "fell";
+}
+
+export const LEGEND: { key: LegendKey; label: string; description: string }[] =
+  [
+    {
+      key: "unregistered",
+      label: "Sem registro",
+      description: "Ainda não foi informado",
+    },
+    {
+      key: "eruptionWindow",
+      label: "Hora de nascer",
+      description: "Período esperado, ainda sem registro",
+    },
+    {
+      key: "bornMilk",
+      label: "Nasceu (de leite)",
+      description: "Dente de leite que surgiu",
+    },
+    {
+      key: "bornPermanent",
+      label: "Nasceu (definitivo)",
+      description: "Dente permanente que surgiu",
+    },
+    {
+      key: "fell",
+      label: "Caiu",
+      description: "Dente de leite que foi trocado",
+    },
+  ];
 
 export const LEGEND_TOOTH = FDI_TEETH["11"];
 
@@ -129,6 +138,7 @@ function buildArch(arch: Arch, side: Side): ToothPosition[] {
 type DentalMapProps = {
   kidId: string;
   kidBirthDate: string | null;
+  kidGender: ChronologyGender | null;
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
 };
@@ -136,6 +146,7 @@ type DentalMapProps = {
 export function DentalMap({
   kidId,
   kidBirthDate,
+  kidGender,
   events,
   onRegisterEvent,
 }: DentalMapProps) {
@@ -239,7 +250,13 @@ export function DentalMap({
     : [];
 
   function eruptionWindowOf(position: ToothPosition): boolean {
-    return isInEruptionWindow(position.arch, position.toothType, ageMonths);
+    return isInEruptionWindow(
+      position.arch,
+      position.toothType,
+      ageMonths,
+      position.side,
+      kidGender,
+    );
   }
 
   function stateOf(position: ToothPosition): MapToothState {
@@ -292,7 +309,9 @@ export function DentalMap({
       const state = stateOf(position);
       const highlighted =
         state === "unregistered" && eruptionWindowOf(position);
-      const style = TOOTH_STYLE[highlighted ? "eruptionWindow" : state];
+      const key = highlighted ? "eruptionWindow" : state;
+      const style = TOOTH_STYLE[key];
+      const milk = isMilkSymbol(key);
       return (
         <TouchableOpacity
           key={position.id}
@@ -311,6 +330,7 @@ export function DentalMap({
             details={tooth.details}
             fill={style.fill}
             stroke={style.stroke}
+            strokeDasharray={milk ? MILK_SYMBOL_DASH : undefined}
             width={OPEN_TOOTH_SIZE}
             height={OPEN_TOOTH_SIZE}
           />
@@ -379,7 +399,7 @@ export function DentalMap({
         align="start"
         justify="start"
         gap="gap-4"
-        className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
+        className="w-full rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
       >
         <Text variant="h4" className="text-primary-500">
           Mapa do Sorriso
@@ -410,6 +430,9 @@ export function DentalMap({
                   details={LEGEND_TOOTH.details}
                   fill={TOOTH_STYLE[entry.key].fill}
                   stroke={TOOTH_STYLE[entry.key].stroke}
+                  strokeDasharray={
+                    isMilkSymbol(entry.key) ? MILK_SYMBOL_DASH : undefined
+                  }
                   width={22}
                   height={22}
                 />
@@ -435,6 +458,7 @@ export function DentalMap({
         toothId={selectedTooth}
         kidId={kidId}
         kidBirthDate={kidBirthDate}
+        kidGender={kidGender}
         toothEvents={selectedToothEvents}
         events={events}
         onClose={() => setModalVisible(false)}
