@@ -18,6 +18,8 @@ import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
 import { createKid } from "@/api/kids/createKid";
 
+const HOME_VISIBLE_ARTICLES = 2;
+
 export function Home() {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
@@ -165,7 +167,7 @@ export function Home() {
             className="w-full"
           >
             <ArticleListSection
-              articles={articles}
+              articles={articles.slice(0, HOME_VISIBLE_ARTICLES)}
               latestArticle={latestArticle}
               categories={categories}
               articlesByCategory={articlesByCategory}
