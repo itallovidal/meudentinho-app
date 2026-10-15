@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
 import { CustomCalendar } from "@/components/calendar";
-import { CalendarBlankIcon, CheckIcon, XIcon } from "phosphor-react-native";
+import { CalendarBlankIcon, CheckIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
+import ToothSVG from "@/components/smile/teeth/ToothSVG";
+import {
+  LEGEND_TOOTH,
+  MILK_SYMBOL_DASH,
+  TOOTH_STYLE,
+  isMilkSymbol,
+} from "@/components/smile/teeth/toothStyle";
+import { eventToothState } from "@/components/smile/ToothEventCard";
+import { BottomSheet } from "@/components/ui/bottomSheet";
 import {
   ageInMonths,
   cn,
@@ -196,60 +204,41 @@ export function ToothEventModal({
       milkStepPending !== null &&
       dentition === "permanent");
 
-  return (
-    <>
-      <Modal
-        visible={visible}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={onClose}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Fechar"
-            className="absolute inset-0"
-          />
-          <SafeAreaView
-            edges={["bottom"]}
-            className="w-full rounded-t-3xl bg-base-100"
-          >
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: 24,
-                paddingTop: 12,
-                paddingBottom: 24,
-                gap: 20,
-              }}
-            >
-              <View className="h-1 w-12 self-center rounded-full bg-base-300" />
+  const editingState = editingEvent ? eventToothState(editingEvent) : null;
 
-              <View className="flex-row items-start gap-4">
-                <View className="flex-1">
+  return (
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      header={
+        <View className="flex-1">
                   <Text className="text-xl font-bold text-base-900">
                     {toothIdLabel(toothId)}
                   </Text>
-                  {editingEvent && (
-                    <Text className="text-sm text-base-500">
-                      {`Dentição: ${dentitionLabel(editingEvent.dentition)}`}
-                    </Text>
+                  {editingEvent && editingState && (
+                    <View className="mt-1 flex-row items-center gap-2">
+                      <ToothSVG
+                        viewBox={LEGEND_TOOTH.viewBox}
+                        contour={LEGEND_TOOTH.contour}
+                        details={LEGEND_TOOTH.details}
+                        fill={TOOTH_STYLE[editingState].fill}
+                        stroke={TOOTH_STYLE[editingState].stroke}
+                        strokeDasharray={
+                          isMilkSymbol(editingState)
+                            ? MILK_SYMBOL_DASH
+                            : undefined
+                        }
+                        width={20}
+                        height={20}
+                      />
+                      <Text className="text-sm text-base-500">
+                        {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
+                      </Text>
+                    </View>
                   )}
                 </View>
-                <Pressable
-                  onPress={onClose}
-                  accessibilityRole="button"
-                  accessibilityLabel="Fechar"
-                  hitSlop={8}
-                  className="h-8 w-8 items-end justify-start"
-                >
-                  <XIcon size={24} color={colors.base500} weight="bold" />
-                </Pressable>
-              </View>
-
+      }
+    >
               {!editingEvent && (
                 <>
                   <View className="gap-3">
@@ -378,11 +367,7 @@ export function ToothEventModal({
                   </Text>
                 </Pressable>
               )}
-            </ScrollView>
-          </SafeAreaView>
-        </View>
-      </Modal>
-    </>
+    </BottomSheet>
   );
 }
 
