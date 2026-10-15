@@ -3,6 +3,7 @@ import { createKid } from "@/api/kids/createKid";
 import { deleteKid } from "@/api/kids/deleteKid";
 import { patchKid } from "@/api/kids/patchKid";
 import { updateKid } from "@/api/kids/updateKid";
+import { notifyKidsChanged } from "@/lib/kidsSubject";
 import { KidRequestDTO } from "@/types/dtos/user";
 
 type SaveKidVariables = {
@@ -20,7 +21,14 @@ export function useKidMutations(authToken: string | null | undefined) {
 
   const createKidMutation = useMutation({
     mutationFn: (data: KidRequestDTO) => createKid(data, authToken ?? null),
-    onSuccess: invalidateKids,
+    onSuccess: (response) => {
+      void invalidateKids();
+      notifyKidsChanged({
+        type: "created",
+        kidId: response.data?.id,
+        kid: response.data ?? null,
+      });
+    },
   });
 
   const saveKidMutation = useMutation({
@@ -28,12 +36,22 @@ export function useKidMutations(authToken: string | null | undefined) {
       usePut
         ? updateKid(kidId, authToken ?? null, data)
         : patchKid(kidId, authToken ?? null, data),
-    onSuccess: invalidateKids,
+    onSuccess: (response, variables) => {
+      void invalidateKids();
+      notifyKidsChanged({
+        type: "updated",
+        kidId: variables.kidId,
+        kid: response.data ?? null,
+      });
+    },
   });
 
   const deleteKidMutation = useMutation({
     mutationFn: (kidId: string) => deleteKid(kidId, authToken ?? null),
-    onSuccess: invalidateKids,
+    onSuccess: (_response, kidId) => {
+      void invalidateKids();
+      notifyKidsChanged({ type: "deleted", kidId });
+    },
   });
 
   return { createKidMutation, saveKidMutation, deleteKidMutation };
