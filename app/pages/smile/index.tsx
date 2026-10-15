@@ -20,6 +20,7 @@ import { useKidMutations } from "@/hooks/useKidMutations";
 import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
+import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import PredictionsCard from "@/components/smile/PredictionsCard";
@@ -66,7 +67,7 @@ export function Smile() {
     [kidsList],
   );
 
-  const accountKey = userId ?? authToken ?? "";
+  const accountId = resolveAccountId(userId, authToken);
 
   useEffect(() => {
     if (kids.length === 0) {
@@ -91,7 +92,7 @@ export function Smile() {
       createToothEvent(request, authToken ?? null),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", accountKey, selectedKidId],
+        queryKey: toothEventsQueryKey(accountId, selectedKidId),
       }),
     onError: () =>
       Alert.alert(
