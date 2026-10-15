@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { XIcon } from "phosphor-react-native";
 import Animated, {
   runOnJS,
@@ -23,6 +27,7 @@ type BottomSheetProps = {
   onClose: () => void;
   header: ReactNode;
   children: ReactNode;
+  centerHeader?: boolean;
 };
 
 export function BottomSheet({
@@ -30,6 +35,7 @@ export function BottomSheet({
   onClose,
   header,
   children,
+  centerHeader = false,
 }: BottomSheetProps) {
   const translateY = useSharedValue(OFFSCREEN_OFFSET);
   const backdropOpacity = useSharedValue(0);
@@ -88,58 +94,61 @@ export function BottomSheet({
       onRequestClose={dismiss}
       onShow={handleShow}
     >
-      <View className="flex-1 justify-end">
-        <Animated.View
-          style={backdropStyle}
-          className="absolute inset-0 bg-black/50"
-        >
-          <Pressable
-            onPress={dismiss}
-            accessibilityRole="button"
-            accessibilityLabel="Fechar"
-            className="h-full w-full"
-          />
-        </Animated.View>
-        <Animated.View
-          style={sheetStyle}
-          className="w-full rounded-t-3xl bg-base-100"
-        >
-          <SafeAreaView edges={["bottom"]}>
-            <GestureDetector gesture={pan}>
-              <View
-                accessible
-                accessibilityLabel="Arraste para baixo para fechar"
-                className="items-center px-6 pb-2 pt-3"
-              >
-                <View className="h-1 w-12 rounded-full bg-base-300" />
-              </View>
-            </GestureDetector>
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: 24,
-                paddingTop: 12,
-                paddingBottom: 24,
-                gap: 20,
-              }}
-            >
-              <View className="flex-row items-start gap-4">
-                <View className="flex-1">{header}</View>
-                <Pressable
-                  onPress={dismiss}
-                  accessibilityRole="button"
-                  accessibilityLabel="Fechar"
-                  hitSlop={8}
-                  className="h-8 w-8 items-end justify-start"
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View className="flex-1 justify-end">
+          <Animated.View
+            style={backdropStyle}
+            className="absolute inset-0 bg-black/50"
+          >
+            <Pressable
+              onPress={dismiss}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+              className="h-full w-full"
+            />
+          </Animated.View>
+          <Animated.View
+            style={sheetStyle}
+            className="w-full rounded-t-3xl bg-base-100"
+          >
+            <SafeAreaView edges={["bottom"]}>
+              <GestureDetector gesture={pan}>
+                <View
+                  accessible
+                  accessibilityLabel="Arraste para baixo para fechar"
+                  className="items-center px-6 pb-2 pt-3"
                 >
-                  <XIcon size={24} color={colors.base500} weight="bold" />
-                </Pressable>
-              </View>
-              {children}
-            </ScrollView>
-          </SafeAreaView>
-        </Animated.View>
-      </View>
+                  <View className="h-1 w-12 rounded-full bg-base-300" />
+                </View>
+              </GestureDetector>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{
+                  paddingHorizontal: 24,
+                  paddingTop: 12,
+                  paddingBottom: 24,
+                  gap: 20,
+                }}
+              >
+                <View className="flex-row items-start gap-4">
+                  {centerHeader ? <View className="h-8 w-8" /> : null}
+                  <View className="flex-1">{header}</View>
+                  <Pressable
+                    onPress={dismiss}
+                    accessibilityRole="button"
+                    accessibilityLabel="Fechar"
+                    hitSlop={8}
+                    className="h-8 w-8 items-end justify-start"
+                  >
+                    <XIcon size={24} color={colors.base500} weight="bold" />
+                  </Pressable>
+                </View>
+                {children}
+              </ScrollView>
+            </SafeAreaView>
+          </Animated.View>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
