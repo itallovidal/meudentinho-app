@@ -1,14 +1,8 @@
 import { useRef, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { CaretDownIcon, CheckIcon, XIcon } from "phosphor-react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { CaretDownIcon, CheckIcon } from "phosphor-react-native";
 import { Button } from "../ui/button";
+import { BottomSheet } from "../ui/bottomSheet";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 import { THEME } from "@/lib/theme";
@@ -110,69 +104,35 @@ export function PrematureWeeksSelector({
         </Text>
       ) : null}
 
-      <Modal
+      <BottomSheet
         visible={open}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={closeSheet}
+        onClose={closeSheet}
+        centerHeader
+        header={
+          <>
+            <Text className="text-center text-xl font-bold text-base-900">
+              Semanas de gestação
+            </Text>
+            <Text className="mt-3 text-center text-base leading-6 text-base-500">
+              Selecione com quantas semanas a criança nasceu.
+            </Text>
+          </>
+        }
       >
-        <View className="flex-1 justify-end bg-black/50">
-          <Pressable
-            onPress={closeSheet}
-            accessibilityRole="button"
-            accessibilityLabel="Fechar"
-            className="absolute inset-0"
-          />
-          <SafeAreaView
-            edges={["bottom"]}
-            className="w-full rounded-t-3xl bg-base-100"
-          >
-            <View
-              style={{
-                paddingHorizontal: SHEET_PADDING,
-                paddingTop: 16,
-                paddingBottom: 24,
-              }}
-            >
-              <View className="mb-6 h-1 w-12 self-center rounded-full bg-base-300" />
-
-              <View className="flex-row items-start">
-                <View className="h-10 w-10" />
-                <View className="flex-1 px-2">
-                  <Text className="text-center text-xl font-bold text-base-900">
-                    Semanas de gestação
-                  </Text>
-                  <Text className="mt-3 text-center text-base leading-6 text-base-500">
-                    Selecione com quantas semanas a criança nasceu.
-                  </Text>
-                </View>
-                <Pressable
-                  onPress={closeSheet}
-                  accessibilityRole="button"
-                  accessibilityLabel="Fechar"
-                  hitSlop={8}
-                  className="h-10 w-10 items-end justify-start"
-                >
-                  <XIcon size={24} color={colors.base500} weight="bold" />
-                </Pressable>
-              </View>
-
-              <ScrollView
-                ref={scrollRef}
-                horizontal
-                onContentSizeChange={handleContentSizeChange}
-                snapToOffsets={SNAP_OFFSETS}
-                decelerationRate="fast"
-                showsHorizontalScrollIndicator={false}
-                style={{ marginHorizontal: -SHEET_PADDING, marginVertical: 32 }}
-                contentContainerStyle={{
-                  paddingHorizontal: sidePadding,
-                  paddingVertical: 12,
-                  gap: CARD_GAP,
-                }}
-              >
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          onContentSizeChange={handleContentSizeChange}
+          snapToOffsets={SNAP_OFFSETS}
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          style={{ marginHorizontal: -SHEET_PADDING, marginVertical: 12 }}
+          contentContainerStyle={{
+            paddingHorizontal: sidePadding,
+            paddingVertical: 12,
+            gap: CARD_GAP,
+          }}
+        >
                 {WEEKS_OPTIONS.map((weeks, index) => {
                   const isSelected = weeks === draft;
                   const isLast = index === WEEKS_OPTIONS.length - 1;
@@ -233,10 +193,7 @@ export function PrematureWeeksSelector({
               >
                 <Text>Confirmar</Text>
               </Button>
-            </View>
-          </SafeAreaView>
-        </View>
-      </Modal>
+      </BottomSheet>
     </Wrapper>
   );
 }
