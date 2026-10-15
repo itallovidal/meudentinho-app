@@ -50,14 +50,14 @@ const QUADRANT_TYPES: ToothType[] = [
   "third_molar",
 ];
 
-const FDI_DECADE: Record<Quadrant, string> = {
+export const FDI_DECADE: Record<Quadrant, string> = {
   upper_right: "1",
   upper_left: "2",
   lower_left: "3",
   lower_right: "4",
 };
 
-const FDI_UNIT: Record<ToothType, string> = {
+export const FDI_UNIT: Record<ToothType, string> = {
   central_incisor: "1",
   lateral_incisor: "2",
   canine: "3",
@@ -79,9 +79,9 @@ export const TOOTH_STYLE: Record<LegendKey, { fill: string; stroke: string }> =
     eruptionWindow: { fill: "#FDE047", stroke: "#854D0E" },
   };
 
-const MILK_SYMBOL_DASH = "3 2";
+export const MILK_SYMBOL_DASH = "3 2";
 
-function isMilkSymbol(key: LegendKey): boolean {
+export function isMilkSymbol(key: LegendKey): boolean {
   return key === "bornMilk" || key === "fell";
 }
 
@@ -136,11 +136,12 @@ function buildArch(arch: Arch, side: Side): ToothPosition[] {
 }
 
 type DentalMapProps = {
-  kidId: string;
+  kidId: string | null;
   kidBirthDate: string | null;
   kidGender: ChronologyGender | null;
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
+  onMissingKid?: () => void;
 };
 
 export function DentalMap({
@@ -149,6 +150,7 @@ export function DentalMap({
   kidGender,
   events,
   onRegisterEvent,
+  onMissingKid,
 }: DentalMapProps) {
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -213,10 +215,17 @@ export function DentalMap({
     return counts;
   }, [arches, states, ageMonths]);
 
-  const onToothPress = useCallback((toothId: string) => {
-    setSelectedTooth(toothId);
-    setModalVisible(true);
-  }, []);
+  const onToothPress = useCallback(
+    (toothId: string) => {
+      if (!kidId) {
+        onMissingKid?.();
+        return;
+      }
+      setSelectedTooth(toothId);
+      setModalVisible(true);
+    },
+    [kidId, onMissingKid],
+  );
 
   const handleRegister = useCallback(
     async (payload: ToothEventRequestDTO) => {
@@ -453,17 +462,19 @@ export function DentalMap({
         </Wrapper>
       </Wrapper>
 
-      <ToothEventModal
-        visible={modalVisible}
-        toothId={selectedTooth}
-        kidId={kidId}
-        kidBirthDate={kidBirthDate}
-        kidGender={kidGender}
+      {kidId && (
+        <ToothEventModal
+          visible={modalVisible}
+          toothId={selectedTooth}
+          kidId={kidId}
+          kidBirthDate={kidBirthDate}
+          kidGender={kidGender}
         toothEvents={selectedToothEvents}
         events={events}
         onClose={() => setModalVisible(false)}
         onSubmit={handleRegister}
       />
+      )}
     </Wrapper>
   );
 }

@@ -104,9 +104,16 @@ export function KidSelector({
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="Adicionar dependente"
-            className="h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-base-300 bg-base-100"
+            className={`flex h-12 flex-row ${kids.length === 0 ? "w-auto" : "w-12"} shrink-0 items-center justify-center rounded-xl border border-base-300 bg-base-100`}
           >
-            <PlusIcon size={20} weight="bold" color={colors.base600} />
+            <View className="flex flex-row items-center justify-center gap-2 px-2">
+              <PlusIcon size={20} weight="bold" color={colors.base700} />
+              {kids.length === 0 && (
+                <Text variant="small">
+                  Cadastrar dependente
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
         )}
       </View>

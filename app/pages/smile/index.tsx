@@ -6,6 +6,8 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
+import { useToast } from "@/components/ui/toast";
+import { AddDependentSheet } from "@/components/smile/AddDependentSheet";
 import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
 
@@ -14,6 +16,7 @@ import RecentEventsList from "@/components/smile/RecentEventsList";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { useKidMutations } from "@/hooks/useKidMutations";
 import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
@@ -21,6 +24,7 @@ import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import PredictionsCard from "@/components/smile/PredictionsCard";
 import { ApiError } from "@/types/domain";
+import type { KidRequestDTO } from "@/types/dtos/user";
 import type { ToothEventRequestDTO } from "@/types/teeth";
 import { ageInMonths, birthDateToString } from "@/lib/utils";
 import { buildToothPredictions } from "@/lib/toothPredictions";
@@ -37,6 +41,12 @@ export function Smile() {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
+  const [addDependentVisible, setAddDependentVisible] = useState(false);
+  const [addDependentError, setAddDependentError] = useState<ApiError | null>(
+    null,
+  );
+  const { showToast } = useToast();
+  const { createKidMutation } = useKidMutations(authToken);
 
   const {
     kids: kidsList,
@@ -92,6 +102,34 @@ export function Smile() {
 
   async function handleRegisterEvent(payload: ToothEventRequestDTO) {
     await registerMutation.mutateAsync(payload);
+  }
+
+  async function handleCreateDependent(data: KidRequestDTO) {
+    if (createKidMutation.isPending) {
+      return;
+    }
+    try {
+      await createKidMutation.mutateAsync(data);
+      setAddDependentError(null);
+      setAddDependentVisible(false);
+      showToast("Dependente cadastrado com sucesso.");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setAddDependentError(error);
+        return;
+      }
+      setAddDependentError(
+        new ApiError(
+          "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
+    }
+  }
+
+  function handleCloseDependentSheet() {
+    setAddDependentError(null);
+    setAddDependentVisible(false);
   }
 
   function handleOpenKid(kidId: string) {
@@ -296,51 +334,6 @@ export function Smile() {
     );
   }
 
-  if (kids.length === 0) {
-    return (
-      <Wrapper
-        direction="column"
-        align="center"
-        justify="start"
-        className="flex-1 bg-base-200"
-      >
-        <Header />
-        <Wrapper
-          direction="column"
-          align="center"
-          justify="center"
-          className="w-full flex-1 px-6"
-        >
-          <Wrapper
-            className="w-full items-center rounded-xl bg-base-100 p-5"
-            direction="column"
-            align="center"
-            justify="center"
-            gap="gap-4"
-          >
-            <Text variant="h4" className="text-center text-primary-500">
-              Nenhum dependente ainda
-            </Text>
-            <Text className="text-center text-base-500">
-              Adicione um dependente para começar a registrar os eventos
-              dentários.
-            </Text>
-            <Button
-              onPress={() =>
-                navigation.navigate("Profile", {
-                  screen: "Dependents",
-                  params: { fromTab: "Smile" },
-                })
-              }
-            >
-              <Text>Gerenciar dependentes</Text>
-            </Button>
-          </Wrapper>
-        </Wrapper>
-      </Wrapper>
-    );
-  }
-
   return (
     <Wrapper
       direction="column"
@@ -378,12 +371,11 @@ export function Smile() {
             }
           />
 
-          {!eventsQuery.isError && (eventsInitialLoading || !selectedKidId) && (
+          {!eventsQuery.isError && eventsInitialLoading && (
             <>
               <SkeletonDentalMap />
               <SkeletonDentalTipCard />
               <SkeletonRecentEventsList />
-              <SkeletonTeethExchangeCard />
             </>
           )}
 
@@ -412,7 +404,7 @@ export function Smile() {
             </Wrapper>
           )}
 
-          {!eventsInitialLoading && !eventsQuery.isError && selectedKidId && (
+          {!eventsInitialLoading && !eventsQuery.isError && (
             <>
               <DentalMap
                 kidId={selectedKidId}
@@ -420,11 +412,14 @@ export function Smile() {
                 kidGender={kidGender}
                 events={events}
                 onRegisterEvent={handleRegisterEvent}
+                onMissingKid={() => setAddDependentVisible(true)}
               />
-              <DentalTipCard
-                title={dentalTip.title}
-                description={dentalTip.description}
-              />
+              {kids.length > 0 && (
+                <DentalTipCard
+                  title={dentalTip.title}
+                  description={dentalTip.description}
+                />
+              )}
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}
@@ -440,6 +435,13 @@ export function Smile() {
       </ScrollView>
 
       <ToothEventModal {...editor.modalProps} />
+
+      <AddDependentSheet
+        visible={addDependentVisible}
+        submitError={addDependentError}
+        onClose={handleCloseDependentSheet}
+        onSubmit={handleCreateDependent}
+      />
 
       <ConfirmDialog {...editor.confirmProps} />
     </Wrapper>
