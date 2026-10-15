@@ -19,9 +19,12 @@ import type { ToothEvent } from "@/types/teeth";
 
 type ToothEventCardTone = "light" | "muted";
 
+type ToothEventCardSize = "default" | "small";
+
 type ToothEventCardProps = {
   event: ToothEvent;
   tone?: ToothEventCardTone;
+  size?: ToothEventCardSize;
   onPress?: (event: ToothEvent) => void;
 };
 
@@ -35,6 +38,7 @@ export function eventToothState(event: ToothEvent): MapToothState {
 export function ToothEventCard({
   event,
   tone = "light",
+  size = "default",
   onPress,
 }: ToothEventCardProps) {
   const state = eventToothState(event);
@@ -53,25 +57,39 @@ export function ToothEventCard({
       accessibilityRole="button"
       accessibilityLabel={`Editar ${title}`}
       className={cn(
-        "w-full flex-row items-center gap-4 rounded-2xl p-4 shadow-sm shadow-base-300",
+        "w-full flex-row items-center shadow-sm shadow-base-300",
+        size === "small" ? "gap-3 rounded-xl p-3" : "gap-4 rounded-2xl p-4",
         tone === "muted" ? "bg-base-200" : "bg-base-100",
       )}
     >
       {date && month ? (
         <View
           className={cn(
-            "h-16 w-16 shrink-0 items-center justify-center rounded-2xl",
+            "shrink-0 items-center justify-center",
+            size === "small" ? "h-12 w-12 rounded-xl" : "h-16 w-16 rounded-2xl",
             tone === "muted" ? "bg-base-100" : "bg-base-200",
           )}
         >
-          <Text className="text-2xl font-bold leading-none text-primary-800">
+          <Text
+            className={cn(
+              "font-bold leading-none text-primary-800",
+              size === "small" ? "text-lg" : "text-2xl",
+            )}
+          >
             {String(date.getDate()).padStart(2, "0")}
           </Text>
           <Text className="mt-1 text-xs uppercase text-base-500">{month}</Text>
         </View>
       ) : null}
       <View className="flex-1 gap-1">
-        <Text className="text-base font-bold text-primary-800">{title}</Text>
+        <Text
+          className={cn(
+            "font-bold text-primary-800",
+            size === "small" ? "text-sm" : "text-base",
+          )}
+        >
+          {title}
+        </Text>
         <View className="flex-row items-center gap-2">
           <ToothSVG
             viewBox={LEGEND_TOOTH.viewBox}
@@ -82,10 +100,17 @@ export function ToothEventCard({
             strokeDasharray={
               isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined
             }
-            width={22}
-            height={22}
+            width={size === "small" ? 16 : 22}
+            height={size === "small" ? 16 : 22}
           />
-          <Text className="flex-1 text-sm text-base-500">{subtitle}</Text>
+          <Text
+            className={cn(
+              "flex-1 text-base-500",
+              size === "small" ? "text-xs" : "text-sm",
+            )}
+          >
+            {subtitle}
+          </Text>
         </View>
         {event.note ? (
           <Text className="text-xs text-base-500" numberOfLines={2}>
