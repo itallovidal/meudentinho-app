@@ -23,6 +23,7 @@ export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { updateAppUser, user, hydrated, refreshToken } = useContext(UserContext)!;
+  const year = new Date().getFullYear();
 
   const handleLogout = async () => {
     try {
@@ -53,7 +54,7 @@ export function Index() {
       description: "Administre seus dependentes.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Dependents"),
-      isDisabled: false,
+      isDisabled: user ? false : true,
     },
     {
       icon: <ShieldCheckIcon color={colors.primary400} />,
@@ -157,7 +158,7 @@ export function Index() {
         >
           <Text className="mb-0 text-sm text-muted">v{ENV.APP_VERSION}</Text>
           <Text className="mb-4 mt-0 text-sm text-muted">
-            &copy; 2026 MeuDentinho
+            &copy; {year} MeuDentinho
           </Text>
         </Wrapper>
       </ScrollView>
