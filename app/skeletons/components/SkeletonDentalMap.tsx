@@ -7,7 +7,7 @@ import {
   LEGEND,
   LEGEND_TOOTH,
   TOOTH_STYLE,
-} from "@/components/smile/DentalMap";
+} from "@/components/smile/teeth/toothStyle";
 import { Text } from "@/components/ui/text";
 
 function SkeletonSmileHeader() {

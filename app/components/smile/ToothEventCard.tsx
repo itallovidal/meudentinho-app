@@ -1,14 +1,12 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import ToothSVG from "@/components/smile/teeth/ToothSVG";
-import { FDI_TEETH } from "@/components/smile/teeth/fdiTeeth";
 import {
-  FDI_DECADE,
-  FDI_UNIT,
+  LEGEND_TOOTH,
   MILK_SYMBOL_DASH,
   TOOTH_STYLE,
   isMilkSymbol,
-} from "@/components/smile/DentalMap";
+} from "@/components/smile/teeth/toothStyle";
 import {
   archLabel,
   dentitionLabel,
@@ -27,7 +25,7 @@ type ToothEventCardProps = {
   onPress?: (event: ToothEvent) => void;
 };
 
-function eventToothState(event: ToothEvent): MapToothState {
+export function eventToothState(event: ToothEvent): MapToothState {
   if (event.eventType === "exfoliation") {
     return "fell";
   }
@@ -40,8 +38,6 @@ export function ToothEventCard({
   onPress,
 }: ToothEventCardProps) {
   const state = eventToothState(event);
-  const svg =
-    FDI_TEETH[`${FDI_DECADE[event.quadrant]}${FDI_UNIT[event.toothType]}`];
   const style = TOOTH_STYLE[state];
   const date = parseLocalDate(event.occurrenceDate);
   const month = date
@@ -77,20 +73,18 @@ export function ToothEventCard({
       <View className="flex-1 gap-1">
         <Text className="text-base font-bold text-primary-800">{title}</Text>
         <View className="flex-row items-center gap-2">
-          {svg ? (
-            <ToothSVG
-              viewBox={svg.viewBox}
-              contour={svg.contour}
-              details={svg.details}
-              fill={style.fill}
-              stroke={style.stroke}
-              strokeDasharray={
-                isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined
-              }
-              width={20}
-              height={20}
-            />
-          ) : null}
+          <ToothSVG
+            viewBox={LEGEND_TOOTH.viewBox}
+            contour={LEGEND_TOOTH.contour}
+            details={LEGEND_TOOTH.details}
+            fill={style.fill}
+            stroke={style.stroke}
+            strokeDasharray={
+              isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined
+            }
+            width={22}
+            height={22}
+          />
           <Text className="flex-1 text-sm text-base-500">{subtitle}</Text>
         </View>
         {event.note ? (
