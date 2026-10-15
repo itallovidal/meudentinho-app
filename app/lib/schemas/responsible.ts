@@ -29,3 +29,11 @@ export const updatePasswordSchema = z
   });
 
 export type UpdatePasswordDTO = z.infer<typeof updatePasswordSchema>;
+
+export const deleteAccountSchema = z.object({
+  password: z
+    .string({ message: "Digite sua senha." })
+    .min(6, "A senha deve ter no mínimo 6 caracteres."),
+});
+
+export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>;

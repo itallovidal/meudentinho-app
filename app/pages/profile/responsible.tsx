@@ -1,15 +1,24 @@
+import { login } from "@/api/auth/login";
+import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
+import { DeleteAccountForm } from "@/components/forms/deleteAccountForm";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
+import { BottomSheet } from "@/components/ui/bottomSheet";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { UpdateProfileDTO } from "@/lib/schemas/responsible";
+import { DeleteAccountDTO, UpdateProfileDTO } from "@/lib/schemas/responsible";
+import { THEME } from "@/lib/theme";
 import { getUserIdFromToken } from "@/lib/utils";
-import { useContext, useEffect } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { ApiError } from "@/types/domain";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { TrashIcon } from "phosphor-react-native";
+import { useContext, useEffect, useState } from "react";
+import { Alert, ScrollView, View } from "react-native";
 
 function getInitials(name?: string) {
   const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
@@ -28,6 +37,37 @@ export function Responsible() {
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
+  const colors = THEME.light;
+  const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<ApiError | null>(null);
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const email = user?.email;
+      if (!email) {
+        throw new ApiError(
+          "Sessão expirada. Faça login novamente.",
+          "INVALID_CREDENTIALS",
+        );
+      }
+      const { data } = await login({ email, password });
+      let resolvedUserId: string | null = data.userId ?? contextUserId;
+      if (!resolvedUserId && data.token) {
+        try {
+          resolvedUserId = getUserIdFromToken(data.token) ?? null;
+        } catch {
+          resolvedUserId = null;
+        }
+      }
+      if (!resolvedUserId) {
+        throw new ApiError(
+          "Sessão expirada. Faça login novamente.",
+          "INVALID_CREDENTIALS",
+        );
+      }
+      await deleteUser(resolvedUserId, data.token);
+    },
+  });
 
   useEffect(() => {
     if (hydrated && !authToken) {
@@ -73,6 +113,40 @@ export function Responsible() {
       );
     } catch (error) {
       Alert.alert("Erro", "Não foi possível atualizar os dados.");
+    }
+  }
+
+  function handleOpenDeleteSheet() {
+    setDeleteError(null);
+    setDeleteSheetOpen(true);
+  }
+
+  function handleCloseDeleteSheet() {
+    setDeleteSheetOpen(false);
+    setDeleteError(null);
+  }
+
+  async function handleDeleteAccount({ password }: DeleteAccountDTO) {
+    setDeleteError(null);
+    try {
+      await deleteAccountMutation.mutateAsync(password);
+      setDeleteSheetOpen(false);
+      await updateAppUser(null, null);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Index" }],
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setDeleteError(error);
+        return;
+      }
+      setDeleteError(
+        new ApiError(
+          "Não foi possível excluir sua conta. Tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
     }
   }
 
@@ -122,7 +196,44 @@ export function Responsible() {
           defaultName={user?.name}
           defaultEmail={user?.email}
         />
+
+        <View className="mt-8 w-full rounded-2xl bg-base-200 p-5 shadow-sm shadow-base-300">
+          <Text variant="h4" className="text-destructive">
+            Zona de perigo
+          </Text>
+          <Text className="mt-1 text-sm text-base-500">
+            Excluir sua conta apaga todos os dependentes e o histórico. Esta
+            ação é irreversível.
+          </Text>
+          <Button
+            variant="ghost"
+            onPress={handleOpenDeleteSheet}
+            className="mt-3"
+          >
+            <TrashIcon size={20} color={colors.destructive} />
+            <Text className="font-medium text-destructive">
+              Excluir minha conta
+            </Text>
+          </Button>
+        </View>
       </ScrollView>
+
+      <BottomSheet
+        visible={deleteSheetOpen}
+        onClose={handleCloseDeleteSheet}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Excluir minha conta
+          </Text>
+        }
+      >
+        <DeleteAccountForm
+          key={deleteSheetOpen ? "open" : "closed"}
+          onSubmit={handleDeleteAccount}
+          onCancel={handleCloseDeleteSheet}
+          submitError={deleteError}
+        />
+      </BottomSheet>
     </Wrapper>
   );
 }
