@@ -204,7 +204,7 @@ export function ChangePassword() {
         />
 
         <Text className="mb-8 text-sm text-muted">
-          • Mínimo de 6 caracteres
+          • Mínimo de 8 caracteres
         </Text>
 
         <Button
