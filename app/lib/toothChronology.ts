@@ -213,17 +213,17 @@ export function toothState(
   const mine = events.filter(
     (event) => `${event.quadrant}:${event.toothType}` === key,
   );
-
-  const latest = [...mine].sort(
-    (a, b) =>
-      Date.parse(b.occurrenceDate) - Date.parse(a.occurrenceDate) ||
-      Date.parse(b.createdAt) - Date.parse(a.createdAt),
-  )[0];
-  if (!latest) {
+  if (mine.length === 0) {
     return "unregistered";
   }
-  if (latest.eventType === "exfoliation") {
-    return "fell";
+  const stage = (event: ToothEvent): number =>
+    (event.dentition === "permanent" ? 2 : 0) +
+    (event.eventType === "exfoliation" ? 1 : 0);
+  const highest = mine.reduce((best, event) =>
+    stage(event) > stage(best) ? event : best,
+  );
+  if (highest.dentition === "permanent") {
+    return highest.eventType === "exfoliation" ? "fell" : "bornPermanent";
   }
-  return latest.dentition === "permanent" ? "bornPermanent" : "bornMilk";
+  return highest.eventType === "exfoliation" ? "fell" : "bornMilk";
 }

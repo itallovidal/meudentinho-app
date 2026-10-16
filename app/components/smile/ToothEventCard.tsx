@@ -14,7 +14,7 @@ import {
   toothTypeLabel,
 } from "@/lib/teethLabels";
 import type { MapToothState } from "@/lib/toothChronology";
-import { cn, parseLocalDate } from "@/lib/utils";
+import { cn, eventDateKey, parseLocalDate } from "@/lib/utils";
 import type { ToothEvent } from "@/types/teeth";
 
 type ToothEventCardTone = "light" | "muted";
@@ -43,7 +43,7 @@ export function ToothEventCard({
 }: ToothEventCardProps) {
   const state = eventToothState(event);
   const style = TOOTH_STYLE[state];
-  const date = parseLocalDate(event.occurrenceDate);
+  const date = parseLocalDate(eventDateKey(event.occurrenceDate));
   const month = date
     ?.toLocaleDateString("pt-BR", { month: "short" })
     .replace(".", "");
