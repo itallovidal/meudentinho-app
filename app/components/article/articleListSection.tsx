@@ -1,6 +1,7 @@
 import { ArticlePreviewDTO, ArticleCategory } from "@/types/dtos/article";
 import { ArticleListRender } from "./articleListRender";
 import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
+import { ErrorState } from "../errorState";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
@@ -17,6 +18,7 @@ type ArticleListSectionProps = {
   articlesByCategory?: Record<string, ArticlePreviewDTO[]>;
   isLoading?: boolean;
   isError?: boolean;
+  hideError?: boolean;
   onRetry?: () => void;
   fromTab?: TabName;
 };
@@ -29,32 +31,30 @@ export function ArticleListSection({
   articlesByCategory = {},
   isLoading = false,
   isError = false,
+  hideError = false,
   onRetry,
   fromTab,
 }: ArticleListSectionProps) {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
 
+  if (isError && hideError) {
+    return <SkeletonArticleListRender showBanner={false} />;
+  }
+
   if (isLoading || isError) {
     return (
       <>
-        {isError && (
-          <Wrapper
-            direction="column"
-            align="center"
-            justify="center"
-            gap="gap-4"
-            className="w-full py-8"
-          >
-            <Text className="text-center">
+        {isError &&
+          (onRetry ? (
+            <ErrorState
+              message="Parece que estamos com problemas para carregar os artigos."
+              onRetry={() => onRetry()}
+            />
+          ) : (
+            <Text className="w-full py-8 text-center">
               Parece que estamos com problemas para carregar os artigos.
             </Text>
-            {onRetry && (
-              <Button onPress={onRetry}>
-                <Text>Tentar novamente</Text>
-              </Button>
-            )}
-          </Wrapper>
-        )}
+          ))}
         <SkeletonArticleListRender showBanner={isError ? false : true} />
       </>
     );
