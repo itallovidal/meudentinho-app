@@ -3,14 +3,14 @@ import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import { isApiError } from "@/types/predicates";
 
-export async function deleteKid(
+export async function revokeKidConsent(
   kidId: string,
   token?: string | null,
 ): Promise<ResponsePayload<void>> {
   const response = await authFetch(
-    `${ENV.BASE_API_URL}/users/kids/${kidId}`,
+    `${ENV.BASE_API_URL}/users/kids/${kidId}/consent/revoke`,
     {
-      method: "DELETE",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -26,7 +26,7 @@ export async function deleteKid(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ocorreu durante a exclusão do dependente",
+      "Erro inesperado ocorreu durante a revogação do consentimento",
       "INTERNAL_SERVER_ERROR",
     );
   }

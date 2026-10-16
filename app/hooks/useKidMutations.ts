@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createKid } from "@/api/kids/createKid";
-import { deleteKid } from "@/api/kids/deleteKid";
 import { patchKid } from "@/api/kids/patchKid";
+import { revokeKidConsent } from "@/api/kids/revokeKidConsent";
 import { updateKid } from "@/api/kids/updateKid";
 import { notifyKidsChanged } from "@/lib/kidsSubject";
 import { KidRequestDTO } from "@/types/dtos/user";
@@ -46,13 +46,13 @@ export function useKidMutations(authToken: string | null | undefined) {
     },
   });
 
-  const deleteKidMutation = useMutation({
-    mutationFn: (kidId: string) => deleteKid(kidId, authToken ?? null),
+  const revokeKidMutation = useMutation({
+    mutationFn: (kidId: string) => revokeKidConsent(kidId, authToken ?? null),
     onSuccess: (_response, kidId) => {
       void invalidateKids();
       notifyKidsChanged({ type: "deleted", kidId });
     },
   });
 
-  return { createKidMutation, saveKidMutation, deleteKidMutation };
+  return { createKidMutation, saveKidMutation, revokeKidMutation };
 }

@@ -1,6 +1,6 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import { ScrollView, Text } from "react-native";
+import { ScrollView, Text, Alert } from "react-native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
@@ -17,6 +17,7 @@ import { useContext } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { logout } from "@/api/auth/logout";
 import { ENV } from "@/lib/env";
+import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { THEME } from "@/lib/theme";
 
 export function Index() {
@@ -36,6 +37,13 @@ export function Index() {
         index: 0,
         routes: [{ name: "Index" }],
       });
+    }
+  };
+
+  const handleOpenPolicy = async () => {
+    const opened = await openPrivacyPolicy();
+    if (!opened) {
+      Alert.alert("Erro", "Não foi possível abrir a Política de Privacidade.");
     }
   };
 
@@ -61,13 +69,13 @@ export function Index() {
       title: "Políticas de privacidade",
       description: "Leia e entenda nossa política.",
       variant: "default" as const,
-      handlePress: () => navigation.navigate("Login"),
-      isDisabled: true,
+      handlePress: () => void handleOpenPolicy(),
+      isDisabled: false,
     },
     {
       icon: <StarIcon color={colors.primary400} />,
       title: "Avalie o App",
-      description: "Ajude-nos a melhorar continuamente.",
+      description: "Em breve.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Login"),
       isDisabled: true,
@@ -75,7 +83,7 @@ export function Index() {
     {
       icon: <ShareNetworkIcon color={colors.primary400} />,
       title: "Compartilhe sua experiência",
-      description: "Compartilhe sua experiência.",
+      description: "Em breve.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Login"),
       isDisabled: true,

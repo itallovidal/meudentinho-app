@@ -14,6 +14,8 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { KidRequestDTO } from "@/types/dtos/user";
+import { KidFormValues } from "@/lib/schemas/kid";
+import { buildKidRequest } from "@/lib/privacyPolicy";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
 import { createKid } from "@/api/kids/createKid";
@@ -58,7 +60,7 @@ export function Home() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kids"] }),
   });
 
-  async function onRegisterKid(kidDTO: KidRequestDTO) {
+  async function onRegisterKid(kidDTO: KidFormValues) {
     if (createKidMutation.isPending) {
       return;
     }
@@ -68,7 +70,7 @@ export function Home() {
         return;
       }
 
-      await createKidMutation.mutateAsync(kidDTO);
+      await createKidMutation.mutateAsync(buildKidRequest(kidDTO));
 
       setRegisterKidError(null);
       showToast("Dependente cadastrado com sucesso.");
