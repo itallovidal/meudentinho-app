@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrapper } from "@/components/wrapper";
 import { View } from "react-native";
+import type { ReactNode } from "react";
 import { SkeletonText } from "./skeletonText";
 import ToothSVG from "@/components/smile/teeth/ToothSVG";
 import {
@@ -34,7 +35,7 @@ function SkeletonTeethInfo() {
   );
 }
 
-export function SkeletonDentalMap() {
+export function SkeletonDentalMap({ error }: { error?: ReactNode }) {
   return (
     <Wrapper
       direction="column"
@@ -50,7 +51,7 @@ export function SkeletonDentalMap() {
       <SkeletonSmileHeader />
 
       <View className="w-full flex-row justify-between gap-4">
-        <Skeleton className="h-96 w-full rounded-md" />
+        {error ?? <Skeleton className="h-96 w-full rounded-md" />}
       </View>
 
       <SkeletonSmileHeader />
