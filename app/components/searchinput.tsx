@@ -4,7 +4,6 @@ import { FormInput } from "./formInput";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { searchArticles } from "@/api/article/searchArticles";
-import { Article } from "@/types/domain";
 import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { Wrapper } from "./wrapper";
 
@@ -41,7 +40,7 @@ export function SearchInput({
     try {
       const payload = await searchArticles(query);
       if (payload.status === 200) {
-        onSearchComplete(query, mapToPreviews(payload.data || []));
+        onSearchComplete(query, payload.data || []);
         return;
       }
 
@@ -122,14 +121,4 @@ export function SearchInput({
       </Button>
     </Wrapper>
   );
-}
-
-function mapToPreviews(articles: Article[]): ArticlePreviewDTO[] {
-  return articles.map((article) => ({
-    id: article.id,
-    title: article.title,
-    categories: article.categories ?? [],
-    readingTime: article.readingTime,
-    imageCoverURL: article.imageCoverURL,
-  }));
 }
