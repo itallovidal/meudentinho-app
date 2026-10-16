@@ -3,6 +3,7 @@ import { Alert, RefreshControl, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
+import { ErrorState } from "@/components/errorState";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
@@ -29,10 +30,10 @@ import type { ToothEventRequestDTO } from "@/types/teeth";
 import { ageInMonths, birthDateToString } from "@/lib/utils";
 import { buildToothPredictions } from "@/lib/toothPredictions";
 import { SkeletonDentalMap } from "@/skeletons/components/SkeletonDentalMap";
+import { SkeletonKidSelector } from "@/skeletons/components/skeletonKidSelector";
 import { SkeletonDentalTipCard } from "@/skeletons/components/skeletonDentalTipCard";
 import { SkeletonRecentEventsList } from "@/skeletons/components/skeletonRecentEventsList";
 import { SkeletonSmilePage } from "@/skeletons/pages/skeletonSmilePage";
-import { SkeletonTeethExchangeCard } from "@/skeletons/components/skeletonTeethExchangeCard";
 
 const TOTAL_MILK_TEETH = 20;
 
@@ -283,36 +284,34 @@ export function Smile() {
 
   if (kidsFailure) {
     const isAuth = kidsFailure === "auth";
-    return (
-      <Wrapper
-        direction="column"
-        align="center"
-        justify="start"
-        className="flex-1 bg-base-200"
-      >
-        <Header />
+    if (isAuth) {
+      return (
         <Wrapper
           direction="column"
           align="center"
-          justify="center"
-          className="w-full flex-1 px-6"
+          justify="start"
+          className="flex-1 bg-base-200"
         >
+          <Header />
           <Wrapper
-            className="w-full items-center rounded-xl bg-base-100 p-5"
             direction="column"
             align="center"
             justify="center"
-            gap="gap-4"
+            className="w-full flex-1 px-6"
           >
-            <Text variant="h4" className="text-center text-primary-500">
-              {isAuth ? "Sessão expirada" : "Não foi possível carregar"}
-            </Text>
-            <Text className="text-center text-base-500">
-              {isAuth
-                ? "Faça login novamente para acompanhar o sorriso."
-                : "Verifique sua conexão e tente novamente."}
-            </Text>
-            {isAuth ? (
+            <Wrapper
+              className="w-full items-center rounded-xl bg-base-100 p-5"
+              direction="column"
+              align="center"
+              justify="center"
+              gap="gap-4"
+            >
+              <Text variant="h4" className="text-center text-primary-500">
+                Sessão expirada
+              </Text>
+              <Text className="text-center text-base-500">
+                Faça login novamente para acompanhar o sorriso.
+              </Text>
               <Button
                 onPress={() =>
                   navigation.navigate("Profile", {
@@ -323,13 +322,43 @@ export function Smile() {
               >
                 <Text>Fazer login</Text>
               </Button>
-            ) : (
-              <Button onPress={() => void refetchKids()}>
-                <Text>Tentar novamente</Text>
-              </Button>
-            )}
+            </Wrapper>
           </Wrapper>
         </Wrapper>
+      );
+    }
+    return (
+      <Wrapper
+        direction="column"
+        align="center"
+        justify="start"
+        className="flex-1 bg-base-200"
+      >
+        <Header />
+        <ScrollView
+          className="w-full"
+          refreshControl={
+            <RefreshControl
+              refreshing={kidsRefreshing}
+              onRefresh={() => void handleRefreshKids()}
+            />
+          }
+        >
+          <Wrapper
+            className="mx-6 my-4"
+            direction="column"
+            align="center"
+            justify="start"
+            gap="gap-4"
+          >
+            <SkeletonKidSelector />
+            <SkeletonDentalMap
+              error={<ErrorState onRetry={() => void refetchKids()} />}
+            />
+            <SkeletonDentalTipCard />
+            <SkeletonRecentEventsList />
+          </Wrapper>
+        </ScrollView>
       </Wrapper>
     );
   }
@@ -380,28 +409,27 @@ export function Smile() {
           )}
 
           {eventsQuery.isError && (
-            <Wrapper
-              direction="column"
-              align="center"
-              justify="center"
-              gap="gap-4"
-              className="w-full rounded-xl bg-base-100 p-6"
-            >
-              <Text className="text-center">
-                {kidUnlinked
-                  ? "Este dependente não está mais vinculado à sua conta."
-                  : "Não foi possível carregar os eventos. Verifique sua conexão."}
-              </Text>
-              {kidUnlinked ? (
-                <Button onPress={() => void handleRefreshKids()}>
-                  <Text>Atualizar</Text>
-                </Button>
-              ) : (
-                <Button onPress={() => void eventsQuery.refetch()}>
-                  <Text>Tentar novamente</Text>
-                </Button>
-              )}
-            </Wrapper>
+            <>
+              <SkeletonDentalMap
+                error={
+                  <ErrorState
+                    message={
+                      kidUnlinked
+                        ? "Este dependente não está mais vinculado à sua conta."
+                        : "Não foi possível carregar os eventos. Verifique sua conexão."
+                    }
+                    onRetry={() =>
+                      kidUnlinked
+                        ? void handleRefreshKids()
+                        : void eventsQuery.refetch()
+                    }
+                    retryLabel={kidUnlinked ? "Atualizar" : "Tentar novamente"}
+                  />
+                }
+              />
+              <SkeletonDentalTipCard />
+              <SkeletonRecentEventsList />
+            </>
           )}
 
           {!eventsInitialLoading && !eventsQuery.isError && (

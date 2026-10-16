@@ -1,12 +1,12 @@
 import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { Alert, ScrollView } from "react-native";
-import { Button } from "@/components/ui/button";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArticleListSection } from "@/components/article/articleListSection";
+import { ErrorState } from "@/components/errorState";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
 import { useKids } from "@/hooks/useKids";
@@ -122,30 +122,26 @@ export function Home() {
             />
           )}
 
-          {hydrated && showKidsError && (
+          {hydrated && showKidsError && kidsFailure !== "auth" && !isError && (
+            <ErrorState onRetry={() => void refetchKids()} />
+          )}
+
+          {hydrated && showKidsError && kidsFailure !== "auth" && isError && (
+            <ErrorState onRetry={() => void handleRefresh()} />
+          )}
+
+          {hydrated && showKidsError && kidsFailure === "auth" && (
             <Wrapper
               direction="column"
               gap="gap-2"
               className="mt-4 w-full rounded-xl bg-base-100 p-5"
             >
               <Text variant="h4" className="mb-0">
-                {kidsFailure === "auth"
-                  ? "Sessão expirada"
-                  : "Não foi possível carregar"}
+                Sessão expirada
               </Text>
               <Text className="text-muted">
-                {kidsFailure === "auth"
-                  ? "Faça login novamente para cadastrar o dependente."
-                  : "Verifique sua conexão e tente novamente."}
+                Faça login novamente para cadastrar o dependente.
               </Text>
-              {kidsFailure !== "auth" && (
-                <Button
-                  className="mt-2 w-full"
-                  onPress={() => void refetchKids()}
-                >
-                  <Text>Tentar novamente</Text>
-                </Button>
-              )}
             </Wrapper>
           )}
 
@@ -173,6 +169,9 @@ export function Home() {
               articlesByCategory={articlesByCategory}
               isLoading={isLoading}
               isError={isError}
+              hideError={
+                showKidsError && kidsFailure !== "auth" && isError
+              }
               onRetry={onRefresh}
               fromTab="Home"
             />
