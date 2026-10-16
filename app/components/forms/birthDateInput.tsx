@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ComponentProps } from "react";
 import { View } from "react-native";
 import { CalendarBlankIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
@@ -12,6 +13,8 @@ type BirthDateInputProps = {
   onChange: (isoDate: string) => void;
   error?: string;
   className?: string;
+  label?: string;
+  labelProps?: ComponentProps<typeof Text>;
 };
 
 export function BirthDateInput({
@@ -19,6 +22,8 @@ export function BirthDateInput({
   onChange,
   error,
   className,
+  label = "Data de nascimento",
+  labelProps,
 }: BirthDateInputProps) {
   const colors = THEME.light;
   const [text, setText] = useState(() => (value ? isoToBrDate(value) : ""));
@@ -50,8 +55,11 @@ export function BirthDateInput({
       className={`w-full ${className ?? ""}`}
       gap="gap-2"
     >
-      <Text className="text-xs font-semibold uppercase tracking-wide text-primary-400">
-        Data de nascimento
+      <Text
+        className="text-xs font-semibold uppercase tracking-wide text-primary-400"
+        {...labelProps}
+      >
+        {label}
       </Text>
       <View className="relative w-full">
         <Input
