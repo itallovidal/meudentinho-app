@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   TouchableOpacity,
@@ -113,6 +114,7 @@ export function DentalMap({
 }: DentalMapProps) {
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const queryClient = useQueryClient();
   const { width: screenWidth } = useWindowDimensions();
 
   useFocusEffect(
@@ -192,20 +194,23 @@ export function DentalMap({
         await onRegisterEvent(payload);
         setModalVisible(false);
       } catch (error) {
-        console.log("[smile] falha ao registrar evento", error);
-        const detail =
-          error instanceof ApiError
-            ? `${error.message} (${error.code})`
-            : error instanceof Error
-              ? error.message
-              : String(error);
+        if (
+          error instanceof ApiError &&
+          error.code === "TOOTH_EVENT_DUPLICATE"
+        ) {
+          await queryClient.invalidateQueries({
+            queryKey: ["tooth-events"],
+          });
+          setModalVisible(false);
+          return;
+        }
         Alert.alert(
           "Erro",
-          `Não foi possível registrar o evento.\n\n${detail}`,
+          "Não foi possível registrar o evento. Verifique sua conexão e tente novamente.",
         );
       }
     },
-    [onRegisterEvent],
+    [onRegisterEvent, queryClient],
   );
 
   const selectedParsed = parseToothId(selectedTooth);
