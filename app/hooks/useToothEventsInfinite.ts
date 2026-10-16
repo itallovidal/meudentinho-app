@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getToothEventsByKid } from "@/api/smile/getToothEvents";
+import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 
 export const TOOTH_EVENTS_PAGE_SIZE = 10;
@@ -28,6 +29,7 @@ export function useToothEventsInfinite(
     },
     enabled: !!kidId && !!authToken,
     staleTime: 1000 * 60 * 5,
+    retry: retryQuery,
   });
 
   const events = query.data?.pages.flatMap((page) => page.data) ?? [];
