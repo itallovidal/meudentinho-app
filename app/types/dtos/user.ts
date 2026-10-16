@@ -8,6 +8,11 @@ export interface SignupRequest {
   email: string;
   password: string;
   passwordConfirmation: string;
+  accepted: boolean;
+  acceptedPolicyVersion: string;
+  acceptedAt: string;
+  isLegalGuardian: boolean;
+  guardianBirthDate: string;
 }
 
 export interface UserPatchRequest {
@@ -35,6 +40,9 @@ export interface KidRequestDTO {
   birthDate: string;
   prematureWeeks?: string;
   gender: "male" | "female";
+  acceptedPolicyVersion: string;
+  acceptedAt: string;
+  requestId: string;
 }
 
 export interface KidResponseDTO {
@@ -47,4 +55,7 @@ export interface KidResponseDTO {
   isPremature: boolean;
   createdAt: string;
   updatedAt: string;
+  acceptedPolicyVersion?: string;
+  acceptedAt?: string;
+  consentRequestId?: string;
 }
