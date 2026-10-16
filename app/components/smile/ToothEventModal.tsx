@@ -18,9 +18,11 @@ import { BottomSheet } from "@/components/ui/bottomSheet";
 import {
   ageInMonths,
   cn,
+  eventDateKey,
   formatDatePtBR,
   localDateKeyToISO,
   toLocalDateKey,
+  validateEventDateKey,
 } from "@/lib/utils";
 import {
   expectedDentition,
@@ -151,7 +153,7 @@ export function ToothEventModal({
       setEventType(editingEvent.eventType);
       setDentition(editingEvent.dentition);
       setNote(editingEvent.note ?? "");
-      setDate(toLocalDateKey(new Date(editingEvent.occurrenceDate)));
+      setDate(eventDateKey(editingEvent.occurrenceDate));
     }
   }, [visible, toothId, editingEvent]);
 
@@ -166,8 +168,13 @@ export function ToothEventModal({
     resetForm(nextDentition);
   }
 
+  const dateError = validateEventDateKey(date, kidBirthDate);
+
   async function performSave() {
     if (!parsed || !kidId) {
+      return;
+    }
+    if (dateError) {
       return;
     }
     const occurrenceDate = localDateKeyToISO(date);
@@ -201,6 +208,7 @@ export function ToothEventModal({
   const confirmDisabled =
     !parsed ||
     alreadyRegistered ||
+    !!dateError ||
     (eventType === "eruption" &&
       milkStepPending !== null &&
       dentition === "permanent");
@@ -322,12 +330,18 @@ export function ToothEventModal({
                     />
                   </Pressable>
                 </View>
+                {dateError ? (
+                  <Text className="text-destructive" variant="small">
+                    {dateError}
+                  </Text>
+                ) : null}
                 {showCalendar && (
                   <CustomCalendar
                     onDayPress={(day) => {
                       setDate(day.dateString);
                       setShowCalendar(false);
                     }}
+                    minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
                     markedDates={{
                       [date]: {
                         selected: true,

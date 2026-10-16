@@ -131,13 +131,17 @@ function CustomCalendarHeader({
 export function CustomCalendar({
   onDayPress,
   maxDate: maxDateProp,
+  minDate: minDateProp,
   onMonthChange: onMonthChangeProp,
   allowJump = true,
   ...props
 }: Props & { allowJump?: boolean }) {
-  const todayKey = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const effectiveMaxDate =
     typeof maxDateProp === "string" && maxDateProp ? maxDateProp : todayKey;
+  const effectiveMinDate =
+    typeof minDateProp === "string" && minDateProp ? minDateProp : undefined;
   const parsedYear = Number(effectiveMaxDate.split("-")[0]);
   const maxYear = Number.isNaN(parsedYear)
     ? new Date().getFullYear()
@@ -212,6 +216,7 @@ export function CustomCalendar({
         key={jumpKey ?? undefined}
         current={jumpKey ?? undefined}
         maxDate={effectiveMaxDate}
+        minDate={effectiveMinDate}
         onDayPress={onDayPress}
         onMonthChange={handleMonthChange}
         enableSwipeMonths={true}
