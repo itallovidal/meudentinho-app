@@ -90,15 +90,11 @@ export function Smile() {
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
       createToothEvent(request, authToken ?? null),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
         queryKey: ["tooth-events", accountKey, selectedKidId],
-      }),
-    onError: () =>
-      Alert.alert(
-        "Erro",
-        "Não foi possível registrar o evento. Verifique sua conexão.",
-      ),
+      });
+    },
   });
 
   async function handleRegisterEvent(payload: ToothEventRequestDTO) {
