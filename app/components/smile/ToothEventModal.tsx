@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -74,6 +74,7 @@ export function ToothEventModal({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [showCalendar, setShowCalendar] = useState(false);
+  const deleteRequestedRef = useRef(false);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
@@ -209,7 +210,13 @@ export function ToothEventModal({
   return (
     <BottomSheet
       visible={visible}
-      onClose={onClose}
+      onClose={() => {
+        onClose();
+        if (deleteRequestedRef.current) {
+          deleteRequestedRef.current = false;
+          onDelete?.();
+        }
+      }}
       header={
         <View className="flex-1">
                   <Text className="text-xl font-bold text-base-900">
@@ -239,6 +246,8 @@ export function ToothEventModal({
                 </View>
       }
     >
+      {(dismiss) => (
+        <>
               {!editingEvent && (
                 <>
                   <View className="gap-3">
@@ -358,7 +367,10 @@ export function ToothEventModal({
 
               {editingEvent && onDelete && (
                 <Pressable
-                  onPress={onDelete}
+                  onPress={() => {
+                    deleteRequestedRef.current = true;
+                    dismiss();
+                  }}
                   accessibilityRole="button"
                   className="h-14 w-full items-center justify-center rounded-full active:opacity-70"
                 >
@@ -367,6 +379,8 @@ export function ToothEventModal({
                   </Text>
                 </Pressable>
               )}
+        </>
+      )}
     </BottomSheet>
   );
 }

@@ -26,7 +26,7 @@ type BottomSheetProps = {
   visible: boolean;
   onClose: () => void;
   header: ReactNode;
-  children: ReactNode;
+  children: ReactNode | ((dismiss: () => void) => ReactNode);
   centerHeader?: boolean;
 };
 
@@ -143,7 +143,7 @@ export function BottomSheet({
                     <XIcon size={24} color={colors.base500} weight="bold" />
                   </Pressable>
                 </View>
-                {children}
+                {typeof children === "function" ? children(dismiss) : children}
               </ScrollView>
             </SafeAreaView>
           </Animated.View>
