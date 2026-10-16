@@ -2,8 +2,10 @@ import {
   clearAllLocalStorage,
   getLocalStorageItem,
   setLocalStorageItem,
+  setLocalStorageItems,
 } from "@/lib/asyncStorage";
 import { configureAuthFetch } from "@/lib/authFetch";
+import type { RefreshedSessionInfo } from "@/lib/authFetch";
 import { BasicUser } from "@/types/domain";
 import { createContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -21,6 +23,9 @@ export interface UserContextProps {
     refreshToken?: string | null,
     userId?: string | null,
   ) => Promise<void>;
+  updateUserProfile: (
+    profile: Partial<Pick<BasicUser, "name" | "email">>,
+  ) => Promise<void>;
   clearSessionExpired: () => void;
 }
 
@@ -36,24 +41,64 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const sessionRef = useRef({ user, authToken, refreshToken, userId });
   sessionRef.current = { user, authToken, refreshToken, userId };
+  const sessionGeneration = useRef(0);
+  const persistGate = useRef<Promise<void>>(Promise.resolve());
 
   async function persistRefreshedSession(
     token: string,
     refresh: string | null,
+    info?: RefreshedSessionInfo,
   ) {
-    sessionRef.current = {
-      ...sessionRef.current,
-      authToken: token,
-      refreshToken: refresh ?? sessionRef.current.refreshToken,
-    };
-    setAuthToken(token);
-    if (refresh) {
-      setRefreshToken(refresh);
-    }
-    await setLocalStorageItem("token", JSON.stringify(token));
-    if (refresh) {
-      await setLocalStorageItem("refreshToken", JSON.stringify(refresh));
-    }
+    const task = (async () => {
+      const generation = sessionGeneration.current;
+      const current = sessionRef.current;
+      if (current.authToken == null) {
+        return;
+      }
+      const nextRefreshToken = refresh ?? current.refreshToken;
+      const nextUser =
+        current.user && (info?.name || typeof info?.isAdmin === "boolean")
+          ? {
+              ...current.user,
+              ...(info?.name ? { name: info.name } : null),
+              ...(typeof info?.isAdmin === "boolean"
+                ? { isAdmin: info.isAdmin }
+                : null),
+            }
+          : current.user;
+      const entries: Array<[string, string]> = [
+        ["token", JSON.stringify(token)],
+      ];
+      if (nextRefreshToken) {
+        entries.push(["refreshToken", JSON.stringify(nextRefreshToken)]);
+      }
+      if (nextUser && nextUser !== current.user) {
+        entries.push(["user", JSON.stringify(nextUser)]);
+      }
+      await setLocalStorageItems(entries);
+      if (sessionGeneration.current !== generation) {
+        if (sessionRef.current.authToken == null) {
+          await clearAllLocalStorage();
+        }
+        return;
+      }
+      sessionRef.current = {
+        ...current,
+        user: nextUser,
+        authToken: token,
+        refreshToken: nextRefreshToken,
+      };
+      setAuthToken(token);
+      setRefreshToken(nextRefreshToken);
+      if (nextUser && nextUser !== current.user) {
+        setUser(nextUser);
+      }
+    })();
+    persistGate.current = task.then(
+      () => undefined,
+      () => undefined,
+    );
+    await task;
   }
 
   useEffect(() => {
@@ -62,8 +107,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         authToken: sessionRef.current.authToken,
         refreshToken: sessionRef.current.refreshToken,
       }),
-      onSessionRefreshed: (token, refresh) => {
-        void persistRefreshedSession(token, refresh);
+      onSessionRefreshed: (token, refresh, info) => {
+        void persistRefreshedSession(token, refresh, info);
       },
       onSessionExpired: () => {
         void (async () => {
@@ -143,6 +188,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     userId?: string | null,
   ) {
     try {
+      await persistGate.current;
+      sessionGeneration.current += 1;
       if (user === null || authToken === null) {
         setAuthToken(null);
         setUser(null);
@@ -195,6 +242,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function updateUserProfile(
+    profile: Partial<Pick<BasicUser, "name" | "email">>,
+  ) {
+    try {
+      const current = sessionRef.current.user;
+      if (!current) {
+        return;
+      }
+      const nextUser: BasicUser = {
+        ...current,
+        ...(profile.name !== undefined
+          ? { name: profile.name.trim() }
+          : null),
+        ...(profile.email !== undefined
+          ? { email: profile.email.trim() }
+          : null),
+      };
+      setUser(nextUser);
+      sessionRef.current = { ...sessionRef.current, user: nextUser };
+      await setLocalStorageItem("user", JSON.stringify(nextUser));
+    } catch (err) {
+      console.log("Error updating user profile:", err);
+    }
+  }
+
   function clearSessionExpired() {
     setSessionExpired(false);
   }
@@ -209,6 +281,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         hydrated,
         sessionExpired,
         updateAppUser,
+        updateUserProfile,
         clearSessionExpired,
       }}
     >
