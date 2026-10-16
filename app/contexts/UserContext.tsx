@@ -1,8 +1,13 @@
 import {
   clearAllLocalStorage,
   getLocalStorageItem,
+  removeLocalStorageItem,
   setLocalStorageItem,
 } from "@/lib/asyncStorage";
+import {
+  getSecureItem,
+  setSecureItem,
+} from "@/lib/secureStorage";
 import { configureAuthFetch } from "@/lib/authFetch";
 import { BasicUser } from "@/types/domain";
 import { createContext, useEffect, useRef, useState } from "react";
@@ -37,6 +42,40 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef({ user, authToken, refreshToken, userId });
   sessionRef.current = { user, authToken, refreshToken, userId };
 
+  async function writeToken(
+    key: "token" | "refreshToken",
+    value: string,
+  ): Promise<void> {
+    const raw = JSON.stringify(value);
+    try {
+      await setSecureItem(key, raw);
+    } catch {
+      await setLocalStorageItem(key, raw);
+    }
+  }
+
+  async function readMigratedToken(
+    key: "token" | "refreshToken",
+  ): Promise<string | null> {
+    const secure = safeParse<string>(
+      await getSecureItem(key).catch(() => null),
+    );
+    if (secure) {
+      return secure;
+    }
+    const rawLegacy = await getLocalStorageItem(key);
+    const legacy = safeParse<string>(rawLegacy);
+    if (!legacy) {
+      if (rawLegacy) {
+        await removeLocalStorageItem(key).catch(() => undefined);
+      }
+      return null;
+    }
+    await writeToken(key, legacy);
+    await removeLocalStorageItem(key).catch(() => undefined);
+    return legacy;
+  }
+
   async function persistRefreshedSession(
     token: string,
     refresh: string | null,
@@ -50,9 +89,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (refresh) {
       setRefreshToken(refresh);
     }
-    await setLocalStorageItem("token", JSON.stringify(token));
+    await writeToken("token", token);
     if (refresh) {
-      await setLocalStorageItem("refreshToken", JSON.stringify(refresh));
+      await writeToken("refreshToken", refresh);
     }
   }
 
@@ -89,29 +128,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
   async function loadUserFromStorage() {
     try {
       const storedUser = await getLocalStorageItem("user");
-      const storedToken = await getLocalStorageItem("token");
-      const storedRefreshToken = await getLocalStorageItem("refreshToken");
       const storedUserId = await getLocalStorageItem("userId");
+      const parsedToken = await readMigratedToken("token");
+      const parsedRefresh = await readMigratedToken("refreshToken");
 
-      if (!storedUser || !storedToken) {
-        if (storedUser || storedToken || storedRefreshToken || storedUserId) {
+      if (!storedUser || !parsedToken) {
+        if (storedUser || parsedToken || parsedRefresh || storedUserId) {
           await clearAllLocalStorage();
         }
         return;
       }
 
       const parsedUser = safeParse<BasicUser>(storedUser);
-      const parsedToken = safeParse<string>(storedToken);
-      const parsedRefresh = safeParse<string>(storedRefreshToken);
       const parsedUserId = safeParse<string>(storedUserId);
 
       const storageCorrupted =
-        (storedUser && !parsedUser) ||
-        (storedToken && !parsedToken) ||
-        (storedRefreshToken && !parsedRefresh) ||
-        (storedUserId && !parsedUserId);
+        (storedUser && !parsedUser) || (storedUserId && !parsedUserId);
 
-      if (storageCorrupted || !parsedUser || !parsedToken) {
+      if (storageCorrupted || !parsedUser) {
         await clearAllLocalStorage();
         return;
       }
@@ -180,12 +214,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setSessionExpired(false);
 
       await setLocalStorageItem("user", JSON.stringify(user));
-      await setLocalStorageItem("token", JSON.stringify(authToken));
+      await writeToken("token", authToken);
       if (nextRefreshToken) {
-        await setLocalStorageItem(
-          "refreshToken",
-          JSON.stringify(nextRefreshToken),
-        );
+        await writeToken("refreshToken", nextRefreshToken);
       }
       if (nextUserId) {
         await setLocalStorageItem("userId", JSON.stringify(nextUserId));
