@@ -2,10 +2,12 @@ import { login } from "@/api/auth/login";
 import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
 import { DeleteAccountForm } from "@/components/forms/deleteAccountForm";
+import { FieldShell } from "@/components/forms/fieldShell";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -40,6 +42,7 @@ export function Responsible() {
   const colors = THEME.light;
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<ApiError | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -65,7 +68,7 @@ export function Responsible() {
           "INVALID_CREDENTIALS",
         );
       }
-      await deleteUser(resolvedUserId, data.token);
+      await deleteUser(resolvedUserId, data.token, password);
     },
   });
 
@@ -96,15 +99,25 @@ export function Responsible() {
       const hasProfileChange = nameChanged || emailChanged;
 
       if (hasProfileChange) {
-        await patchUser(userId, authToken, {
-          name: profile.name,
-          email: profile.email,
-        });
+        if (emailChanged && !currentPassword) {
+          Alert.alert("Erro", "Informe sua senha atual para trocar o e-mail.");
+          return;
+        }
+        await patchUser(
+          userId,
+          authToken,
+          {
+            name: profile.name,
+            email: profile.email,
+          },
+          emailChanged ? currentPassword : null,
+        );
 
         await updateAppUser(
           { ...user, name: profile.name, email: profile.email },
           authToken,
         );
+        setCurrentPassword("");
       }
 
       Alert.alert(
@@ -112,7 +125,12 @@ export function Responsible() {
         "As alterações foram salvas com sucesso.",
       );
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível atualizar os dados.");
+      Alert.alert(
+        "Erro",
+        error instanceof ApiError
+          ? error.message
+          : "Não foi possível atualizar os dados.",
+      );
     }
   }
 
@@ -196,6 +214,20 @@ export function Responsible() {
           defaultName={user?.name}
           defaultEmail={user?.email}
         />
+
+        <View className="mt-6 w-full">
+          <FieldShell label="Senha atual">
+            <Input
+              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
+              onChangeText={setCurrentPassword}
+              value={currentPassword}
+              placeholder="Exigida para trocar o e-mail"
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </FieldShell>
+        </View>
 
         <View className="mt-8 w-full rounded-2xl bg-base-200 p-5 shadow-sm shadow-base-300">
           <Text variant="h4" className="text-destructive">
