@@ -15,13 +15,13 @@ export const updatePasswordSchema = z
   .object({
     currentPassword: z
       .string({ message: "A senha atual é obrigatória." })
-      .min(6, "A senha deve ter no mínimo 6 caracteres."),
+      .min(8, "A senha deve ter no mínimo 8 caracteres."),
     newPassword: z
       .string({ message: "A nova senha é obrigatória." })
-      .min(6, "A senha deve ter no mínimo 6 caracteres."),
+      .min(8, "A senha deve ter no mínimo 8 caracteres."),
     passwordConfirmation: z
       .string({ message: "A confirmação de senha é obrigatória." })
-      .min(6, "A confirmação de senha deve ter no mínimo 6 caracteres."),
+      .min(8, "A confirmação de senha deve ter no mínimo 8 caracteres."),
   })
   .refine((data) => data.newPassword === data.passwordConfirmation, {
     message: "As senhas não conferem.",
@@ -33,7 +33,7 @@ export type UpdatePasswordDTO = z.infer<typeof updatePasswordSchema>;
 export const deleteAccountSchema = z.object({
   password: z
     .string({ message: "Digite sua senha." })
-    .min(6, "A senha deve ter no mínimo 6 caracteres."),
+    .min(8, "A senha deve ter no mínimo 8 caracteres."),
 });
 
 export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>;
