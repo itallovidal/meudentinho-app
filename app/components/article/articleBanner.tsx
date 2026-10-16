@@ -17,7 +17,7 @@ const BANNER_GRADIENT_COLORS = [
 interface ArticleBannerProps {
   imageSrc: string;
   title: string;
-  readingTime: string;
+  readingTime: number;
   id: string;
   fromTab?: TabName;
 }
