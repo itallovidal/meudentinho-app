@@ -1,13 +1,14 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
-import { ApiError, ResponsePayload, User } from "@/types/domain";
+import { ApiError, ResponsePayload } from "@/types/domain";
+import { UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function changePassword(
   userId: string,
   token: string,
   passwords: { currentPassword: string; newPassword: string },
-): Promise<ResponsePayload<User>> {
+): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}/password`,
     {
@@ -20,7 +21,7 @@ export async function changePassword(
     token,
   );
 
-  const payload = (await response.json()) as ResponsePayload<User>;
+  const payload = (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
 
   if (payload.status !== 200 && isApiError(payload.error)) {
     throw new ApiError(payload.error.message, payload.error.code);
