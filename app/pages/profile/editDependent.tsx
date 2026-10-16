@@ -1,7 +1,7 @@
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { Header } from "@/components/header";
+import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { Wrapper } from "@/components/wrapper";
@@ -187,15 +187,37 @@ export function EditDependent() {
         </Wrapper>
       </ScrollView>
 
-      <ConfirmDialog
-        open={confirmingDelete}
-        title="Revogar consentimento"
-        message={`Isso apaga ${kid?.name ?? ""} e todo o histórico. Esta ação não pode ser desfeita.`}
-        confirmLabel="Revogar"
-        destructive
-        onConfirm={() => void handleDelete()}
-        onCancel={() => setConfirmingDelete(false)}
-      />
+      <BottomSheet
+        visible={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Revogar consentimento
+          </Text>
+        }
+      >
+        <Text className="text-base text-base-500">
+          {`Isso apaga ${kid?.name ?? ""} e todo o histórico. Esta ação não pode ser desfeita.`}
+        </Text>
+        <Button
+          variant="destructive"
+          onPress={() => void handleDelete()}
+          disabled={revokeKidMutation.isPending}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">
+            {revokeKidMutation.isPending ? "Revogando..." : "Revogar"}
+          </Text>
+        </Button>
+        <Button
+          variant="outline"
+          onPress={() => setConfirmingDelete(false)}
+          disabled={revokeKidMutation.isPending}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Cancelar</Text>
+        </Button>
+      </BottomSheet>
     </Wrapper>
   );
 }
