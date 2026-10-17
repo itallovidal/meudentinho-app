@@ -1,16 +1,17 @@
 import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
-import { DeleteAccountForm } from "@/components/forms/deleteAccountForm";
-import { FieldShell } from "@/components/forms/fieldShell";
+import { PasswordSheetForm } from "@/components/forms/passwordSheetForm";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { DeleteAccountDTO, UpdateProfileDTO } from "@/lib/schemas/responsible";
+import {
+  ConfirmPasswordDTO,
+  UpdateProfileDTO,
+} from "@/lib/schemas/responsible";
 import { THEME } from "@/lib/theme";
 import { getUserIdFromToken } from "@/lib/utils";
 import { ApiError } from "@/types/domain";
@@ -42,7 +43,13 @@ export function Responsible() {
   const colors = THEME.light;
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<ApiError | null>(null);
-  const [currentPassword, setCurrentPassword] = useState("");
+  const [emailChangeSheetOpen, setEmailChangeSheetOpen] = useState(false);
+  const [emailChangeError, setEmailChangeError] = useState<ApiError | null>(
+    null,
+  );
+  const [pendingProfile, setPendingProfile] = useState<UpdateProfileDTO | null>(
+    null,
+  );
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -79,24 +86,75 @@ export function Responsible() {
       return;
     }
 
+    const userId =
+      contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
+    if (!userId) {
+      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      return;
+    }
+    const nameChanged = profile.name.trim() !== user.name;
+    const emailChanged = profile.email.trim() !== user.email;
+
+    if (!nameChanged && !emailChanged) {
+      return;
+    }
+
+    if (!emailChanged) {
+      try {
+        await patchUser(
+          userId,
+          authToken,
+          {
+            name: profile.name.trim(),
+            email: profile.email.trim(),
+          },
+          null,
+        );
+        await updateUserProfile({
+          name: profile.name.trim(),
+          email: profile.email.trim(),
+        });
+        Alert.alert(
+          "Dados atualizados",
+          "As alterações foram salvas com sucesso.",
+        );
+      } catch (error) {
+        Alert.alert(
+          "Erro",
+          error instanceof ApiError
+            ? error.message
+            : "Não foi possível atualizar os dados.",
+        );
+      }
+      return;
+    }
+
+    setEmailChangeError(null);
+    setPendingProfile(profile);
+    setEmailChangeSheetOpen(true);
+  }
+
+  async function handleConfirmEmailChange({ password }: ConfirmPasswordDTO) {
+    setEmailChangeError(null);
+    const profile = pendingProfile;
+    if (!profile) {
+      return;
+    }
+    if (!authToken) {
+      setEmailChangeSheetOpen(false);
+      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    const userId =
+      contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
+    if (!userId) {
+      setEmailChangeSheetOpen(false);
+      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     try {
-      const userId =
-        contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
-      if (!userId) {
-        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
-        return;
-      }
-      const nameChanged = profile.name.trim() !== user.name;
-      const emailChanged = profile.email.trim() !== user.email;
-
-      if (!nameChanged && !emailChanged) {
-        return;
-      }
-
-      if (emailChanged && !currentPassword) {
-        Alert.alert("Erro", "Informe sua senha atual para trocar o e-mail.");
-        return;
-      }
       await patchUser(
         userId,
         authToken,
@@ -104,27 +162,36 @@ export function Responsible() {
           name: profile.name.trim(),
           email: profile.email.trim(),
         },
-        emailChanged ? currentPassword : null,
+        password,
       );
-
       await updateUserProfile({
         name: profile.name.trim(),
         email: profile.email.trim(),
       });
-      setCurrentPassword("");
-
+      setPendingProfile(null);
+      setEmailChangeSheetOpen(false);
       Alert.alert(
         "Dados atualizados",
         "As alterações foram salvas com sucesso.",
       );
     } catch (error) {
-      Alert.alert(
-        "Erro",
-        error instanceof ApiError
-          ? error.message
-          : "Não foi possível atualizar os dados.",
+      if (error instanceof ApiError) {
+        setEmailChangeError(error);
+        return;
+      }
+      setEmailChangeError(
+        new ApiError(
+          "Não foi possível atualizar os dados. Tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
       );
     }
+  }
+
+  function handleCloseEmailChangeSheet() {
+    setEmailChangeSheetOpen(false);
+    setEmailChangeError(null);
+    setPendingProfile(null);
   }
 
   function handleOpenDeleteSheet() {
@@ -137,7 +204,7 @@ export function Responsible() {
     setDeleteError(null);
   }
 
-  async function handleDeleteAccount({ password }: DeleteAccountDTO) {
+  async function handleDeleteAccount({ password }: ConfirmPasswordDTO) {
     setDeleteError(null);
     try {
       await deleteAccountMutation.mutateAsync(password);
@@ -208,20 +275,6 @@ export function Responsible() {
           defaultEmail={user?.email}
         />
 
-        <View className="mt-6 w-full">
-          <FieldShell label="Senha atual">
-            <Input
-              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
-              onChangeText={setCurrentPassword}
-              value={currentPassword}
-              placeholder="Exigida para trocar o e-mail"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </FieldShell>
-        </View>
-
         <View className="mt-8 w-full rounded-2xl bg-base-200 p-5 shadow-sm shadow-base-300">
           <Text variant="h4" className="text-destructive">
             Zona de perigo
@@ -252,11 +305,37 @@ export function Responsible() {
           </Text>
         }
       >
-        <DeleteAccountForm
-          key={deleteSheetOpen ? "open" : "closed"}
+        <PasswordSheetForm
+          description="Todos os dependentes e o histórico serão apagados e esta ação é irreversível. Digite sua senha para confirmar."
+          passwordLabel="Senha"
+          passwordPlaceholder="Digite sua senha"
+          submitLabel="Excluir"
+          submittingLabel="Excluindo..."
+          destructive
           onSubmit={handleDeleteAccount}
           onCancel={handleCloseDeleteSheet}
           submitError={deleteError}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={emailChangeSheetOpen}
+        onClose={handleCloseEmailChangeSheet}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Alterar e-mail
+          </Text>
+        }
+      >
+        <PasswordSheetForm
+          description="Informe sua senha atual para confirmar a alteração do e-mail."
+          passwordLabel="Senha atual"
+          passwordPlaceholder="Digite sua senha atual"
+          submitLabel="Salvar alterações"
+          submittingLabel="Salvando..."
+          onSubmit={handleConfirmEmailChange}
+          onCancel={handleCloseEmailChangeSheet}
+          submitError={emailChangeError}
         />
       </BottomSheet>
     </Wrapper>

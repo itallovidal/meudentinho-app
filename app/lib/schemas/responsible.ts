@@ -30,10 +30,10 @@ export const updatePasswordSchema = z
 
 export type UpdatePasswordDTO = z.infer<typeof updatePasswordSchema>;
 
-export const deleteAccountSchema = z.object({
+export const confirmPasswordSchema = z.object({
   password: z
     .string({ message: "Digite sua senha." })
     .min(8, "A senha deve ter no mínimo 8 caracteres."),
 });
 
-export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>;
+export type ConfirmPasswordDTO = z.infer<typeof confirmPasswordSchema>;
