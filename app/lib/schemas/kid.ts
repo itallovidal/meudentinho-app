@@ -37,4 +37,11 @@ export const kidSchema = z.object({
     .refine(isNotFutureDate, "A data não pode ser futura."),
   gender: z.enum(["male", "female"], { message: "O gênero é obrigatório." }),
   prematureWeeks: z.string().optional().default("0"),
+  accepted: z
+    .boolean({ message: "É necessário aceitar a Política de Privacidade." })
+    .refine((value) => value === true, {
+      message: "É necessário aceitar a Política de Privacidade.",
+    }),
 });
+
+export type KidFormValues = z.input<typeof kidSchema>;

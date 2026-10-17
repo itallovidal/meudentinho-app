@@ -21,11 +21,13 @@ import { useKidMutations } from "@/hooks/useKidMutations";
 import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
+import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import PredictionsCard from "@/components/smile/PredictionsCard";
 import { ApiError } from "@/types/domain";
-import type { KidRequestDTO } from "@/types/dtos/user";
+import { KidFormValues } from "@/lib/schemas/kid";
+import { buildKidRequest } from "@/lib/privacyPolicy";
 import type { ToothEventRequestDTO } from "@/types/teeth";
 import { ageInMonths, birthDateToString } from "@/lib/utils";
 import { buildToothPredictions } from "@/lib/toothPredictions";
@@ -67,7 +69,7 @@ export function Smile() {
     [kidsList],
   );
 
-  const accountKey = userId ?? authToken ?? "";
+  const accountId = resolveAccountId(userId, authToken);
 
   useEffect(() => {
     if (kids.length === 0) {
@@ -92,7 +94,7 @@ export function Smile() {
       createToothEvent(request, authToken ?? null),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", accountKey, selectedKidId],
+        queryKey: toothEventsQueryKey(accountId, selectedKidId),
       }),
     onError: () =>
       Alert.alert(
@@ -105,12 +107,12 @@ export function Smile() {
     await registerMutation.mutateAsync(payload);
   }
 
-  async function handleCreateDependent(data: KidRequestDTO) {
+  async function handleCreateDependent(data: KidFormValues) {
     if (createKidMutation.isPending) {
       return;
     }
     try {
-      await createKidMutation.mutateAsync(data);
+      await createKidMutation.mutateAsync(await buildKidRequest(data));
       setAddDependentError(null);
       setAddDependentVisible(false);
       showToast("Dependente cadastrado com sucesso.");

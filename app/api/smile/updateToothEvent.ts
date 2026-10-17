@@ -9,7 +9,7 @@ export async function updateToothEvent(
   token: string | null | undefined,
   request: ToothEventRequestDTO,
 ): Promise<ResponsePayload<ToothEvent>> {
-  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/${eventId}`, {
+  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/${encodeURIComponent(eventId)}`, {
     method: "PUT",
     body: JSON.stringify(request),
     headers: {

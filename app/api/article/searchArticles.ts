@@ -1,9 +1,10 @@
 import { ENV } from "@/lib/env";
-import { ApiError, Article, ResponsePayload } from "@/types/domain";
+import { ApiError, ResponsePayload } from "@/types/domain";
+import { ArticlePreviewDTO } from "@/types/dtos/article";
 
 export async function searchArticles(
   query: string,
-): Promise<ResponsePayload<Article[]>> {
+): Promise<ResponsePayload<ArticlePreviewDTO[]>> {
   console.log(`Searching articles with query: "${query}"...`);
   const response = await fetch(
     `${ENV.BASE_API_URL}/articles/search?q=${encodeURIComponent(query)}`,
@@ -15,7 +16,9 @@ export async function searchArticles(
     },
   );
 
-  const payload = (await response.json()) as ResponsePayload<Article[]>;
+  const payload = (await response.json()) as ResponsePayload<
+    ArticlePreviewDTO[]
+  >;
 
   if (payload.status !== 200) {
     console.log("Failed to search articles with error:", payload.error);
