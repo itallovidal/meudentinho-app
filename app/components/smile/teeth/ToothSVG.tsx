@@ -1,3 +1,4 @@
+import { View } from "react-native";
 import { SvgXml } from "react-native-svg";
 
 export function ToothSVG({
@@ -40,7 +41,15 @@ export function ToothSVG({
     `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">` +
     `${pathsXml}</svg>`;
 
-  return <SvgXml xml={svg} width={width} height={height} onPress={onPress} />;
+  return (
+    <View
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+    >
+      <SvgXml xml={svg} width={width} height={height} onPress={onPress} />
+    </View>
+  );
 }
 
 export default ToothSVG;

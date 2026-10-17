@@ -3,9 +3,12 @@ import type {
   Dentition,
   Quadrant,
   Side,
+  ToothEvent,
   ToothEventType,
   ToothType,
 } from "@/types/teeth";
+import { eventDateKey, formatDatePtBR } from "@/lib/utils";
+import type { MapToothState } from "@/lib/toothChronology";
 
 const TOOTH_TYPE_LABELS: Record<ToothType, string> = {
   central_incisor: "Incisivo Central",
@@ -149,4 +152,46 @@ export function toothIdLabel(toothId: string | null): string {
     return toothId;
   }
   return `${typeLabel} ${arch}`;
+}
+
+export function toothAccessibilityLabel(params: {
+  toothId: string;
+  state: MapToothState | "eruptionWindow";
+  event?: ToothEvent | null;
+}): string {
+  const name = toothIdLabel(params.toothId);
+  const { state, event } = params;
+
+  if (state === "unregistered") {
+    return `${name}, sem registro`;
+  }
+  if (state === "eruptionWindow") {
+    return `${name}, hora de nascer, ainda sem registro`;
+  }
+
+  const date = event ? formatDatePtBR(eventDateKey(event.occurrenceDate)) : null;
+  const verb = event ? toothEventVerb(event.eventType).toLowerCase() : "";
+  const dentition = event
+    ? event.dentition === "permanent"
+      ? "definitivo"
+      : "de leite"
+    : "";
+  const occurred = date ? ` em ${date}` : "";
+  return [name, dentition, `${verb}${occurred}`].filter(Boolean).join(", ");
+}
+
+export function toothEventName(event: {
+  toothType: string;
+  arch: string;
+  side: string;
+}): string {
+  return `${toothTypeLabel(event.toothType)} ${archLabel(event.arch)} ${sideLabel(event.side)}`;
+}
+
+export function toothEventAccessibilityLabel(event: ToothEvent): string {
+  const name = toothEventName(event);
+  const verb = toothEventVerb(event.eventType).toLowerCase();
+  const dentition = dentitionLabel(event.dentition).toLowerCase();
+  const date = formatDatePtBR(eventDateKey(event.occurrenceDate));
+  return `Editar ${name}, ${verb} (${dentition}), em ${date}`;
 }
