@@ -138,9 +138,9 @@ export function ChangePassword() {
 
       await updateAppUser(
         {
-          name: session.name,
+          name: session.name ?? user?.name ?? "",
           email: user?.email ?? "",
-          isAdmin: session.isAdmin,
+          isAdmin: session.isAdmin ?? user?.isAdmin ?? false,
         },
         session.token,
         session.refreshToken ?? null,
