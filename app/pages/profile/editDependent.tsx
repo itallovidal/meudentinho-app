@@ -58,7 +58,7 @@ export function EditDependent() {
 
   async function handleCreate(data: KidFormValues) {
     try {
-      await createKidMutation.mutateAsync(buildKidRequest(data));
+      await createKidMutation.mutateAsync(await buildKidRequest(data));
       showToast("Dependente cadastrado com sucesso.");
       exitScreen();
     } catch {
@@ -85,7 +85,7 @@ export function EditDependent() {
       );
       await saveKidMutation.mutateAsync({
         kidId: kid.id,
-        data: buildKidRequest(data),
+        data: await buildKidRequest(data),
         usePut,
       });
       showToast("Dependente atualizado com sucesso.");

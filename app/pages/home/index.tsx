@@ -70,7 +70,7 @@ export function Home() {
         return;
       }
 
-      await createKidMutation.mutateAsync(buildKidRequest(kidDTO));
+      await createKidMutation.mutateAsync(await buildKidRequest(kidDTO));
 
       setRegisterKidError(null);
       showToast("Dependente cadastrado com sucesso.");

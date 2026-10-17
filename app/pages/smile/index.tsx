@@ -110,7 +110,7 @@ export function Smile() {
       return;
     }
     try {
-      await createKidMutation.mutateAsync(buildKidRequest(data));
+      await createKidMutation.mutateAsync(await buildKidRequest(data));
       setAddDependentError(null);
       setAddDependentVisible(false);
       showToast("Dependente cadastrado com sucesso.");

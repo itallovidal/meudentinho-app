@@ -1,6 +1,6 @@
 import { Linking } from "react-native";
+import * as Crypto from "expo-crypto";
 import { ENV } from "@/lib/env";
-import { randomUuid } from "@/lib/utils";
 import type { KidFormValues } from "@/lib/schemas/kid";
 import type { KidRequestDTO } from "@/types/dtos/user";
 
@@ -23,12 +23,14 @@ export async function openPrivacyPolicy(): Promise<boolean> {
   }
 }
 
-export function buildKidRequest(data: KidFormValues): KidRequestDTO {
+export async function buildKidRequest(
+  data: KidFormValues,
+): Promise<KidRequestDTO> {
   const { accepted, ...kid } = data;
   return {
     ...kid,
     acceptedPolicyVersion: PRIVACY_POLICY_VERSION,
     acceptedAt: new Date().toISOString(),
-    requestId: randomUuid(),
+    requestId: Crypto.randomUUID(),
   };
 }
