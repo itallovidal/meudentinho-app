@@ -269,3 +269,12 @@ export function isAdultBirthDate(value: string): boolean {
   }
   return age >= 18;
 }
+
+export function shortDisplayName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) {
+    return fullName.trim();
+  }
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${parts[0]} ${lastInitial}.`;
+}
