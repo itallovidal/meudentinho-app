@@ -3,8 +3,8 @@ import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
-import { CustomCalendar } from "@/components/calendar";
 import { CalendarBlankIcon, CheckIcon } from "phosphor-react-native";
+import { DatePickerSheet } from "@/components/smile/datePickerSheet";
 import { THEME } from "@/lib/theme";
 import ToothSVG from "@/components/smile/teeth/ToothSVG";
 import {
@@ -75,7 +75,7 @@ export function ToothEventModal({
   const [dentition, setDentition] = useState<Dentition>("primary");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const deleteRequestedRef = useRef(false);
 
   const parsed = parseToothId(toothId);
@@ -136,7 +136,6 @@ export function ToothEventModal({
     setDentition(fallbackDentition);
     setNote("");
     setDate(toLocalDateKey(new Date()));
-    setShowCalendar(false);
   }
 
   useEffect(() => {
@@ -330,7 +329,7 @@ export function ToothEventModal({
                 className="flex-1"
               />
               <Pressable
-                onPress={() => setShowCalendar((current) => !current)}
+                onPress={() => setPickerOpen(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Abrir calendário"
                 className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
@@ -347,22 +346,6 @@ export function ToothEventModal({
                 {dateError}
               </Text>
             ) : null}
-            {showCalendar && (
-              <CustomCalendar
-                onDayPress={(day) => {
-                  setDate(day.dateString);
-                  setShowCalendar(false);
-                }}
-                minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
-                markedDates={{
-                  [date]: {
-                    selected: true,
-                    selectedColor: colors.primary500,
-                    selectedTextColor: colors.base100,
-                  },
-                }}
-              />
-            )}
           </View>
 
           <View className="gap-3">
@@ -409,6 +392,18 @@ export function ToothEventModal({
               </Text>
             </Pressable>
           )}
+
+          <DatePickerSheet
+            visible={pickerOpen}
+            value={date}
+            minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
+            maxDate={toLocalDateKey(new Date())}
+            onConfirm={(dateKey) => {
+              setDate(dateKey);
+              setPickerOpen(false);
+            }}
+            onCancel={() => setPickerOpen(false)}
+          />
         </>
       )}
     </BottomSheet>
