@@ -2,7 +2,7 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
-import { ScrollView, Text, Alert } from "react-native";
+import { ScrollView, Alert } from "react-native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
@@ -21,6 +21,7 @@ import { logout } from "@/api/auth/logout";
 import { ENV } from "@/lib/env";
 import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { THEME } from "@/lib/theme";
+import { Text } from "@/components/ui/text";
 
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -186,17 +187,18 @@ export function Index() {
           Deseja sair da sua conta neste aparelho?
         </Text>
         <Button
-          onPress={() => setLogoutConfirmOpen(false)}
-          className="h-14 w-full rounded-full"
-        >
-          <Text className="text-base font-bold">Cancelar</Text>
-        </Button>
-        <Button
           variant="destructive"
           onPress={() => void handleConfirmLogout()}
           className="h-14 w-full rounded-full"
         >
           <Text className="text-base font-bold">Sair</Text>
+        </Button>
+        <Button
+          variant="outline"
+          onPress={() => setLogoutConfirmOpen(false)}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Cancelar</Text>
         </Button>
       </BottomSheet>
     </Wrapper>
