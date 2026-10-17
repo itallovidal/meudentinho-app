@@ -31,6 +31,7 @@
     "expo": "^57.0.27",
     "expo-checkbox": "~57.0.0",
     "expo-linear-gradient": "~57.0.2",
+    "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "nativewind": "^4.2.3",
     "phosphor-react-native": "^3.0.6",

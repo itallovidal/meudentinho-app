@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ENV } from "./env";
+import { removeSecureItem } from "./secureStorage";
 
 export async function setLocalStorageItem(
   key: string,
@@ -31,4 +32,11 @@ export async function clearAllLocalStorage(): Promise<void> {
     key.startsWith(`${ENV.LOCAL_STORAGE_KEY_PREFIX}_`),
   );
   await AsyncStorage.multiRemove(filteredKeys);
+  for (const secureKey of ["token", "refreshToken"]) {
+    try {
+      await removeSecureItem(secureKey);
+    } catch {
+      continue;
+    }
+  }
 }
