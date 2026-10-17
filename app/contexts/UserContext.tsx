@@ -199,10 +199,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
 
       const previousUserId = sessionRef.current.userId;
-      const previousToken = sessionRef.current.authToken;
       const isAccountSwitch =
-        !!previousToken &&
-        (previousUserId !== nextUserId || previousToken !== authToken);
+        !!previousUserId && previousUserId !== nextUserId;
       if (isAccountSwitch) {
         await clearSessionCache();
       }
