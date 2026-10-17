@@ -211,13 +211,21 @@ export function ToothEventModal({
     (event) => event.eventType === eventType && event.dentition === dentition,
   );
 
+  const editChanged = editingEvent
+    ? eventType !== editingEvent.eventType ||
+      dentition !== editingEvent.dentition ||
+      date !== eventDateKey(editingEvent.occurrenceDate) ||
+      note.trim() !== (editingEvent.note ?? "").trim()
+    : true;
+
   const confirmDisabled =
     !parsed ||
     alreadyRegistered ||
     !!dateError ||
     (eventType === "eruption" &&
       milkStepPending !== null &&
-      dentition === "permanent");
+      dentition === "permanent") ||
+    (editingEvent !== null && !editChanged);
 
   const editingState = editingEvent ? eventToothState(editingEvent) : null;
 
@@ -233,176 +241,174 @@ export function ToothEventModal({
       }}
       header={
         <View className="flex-1">
-                  <Text className="text-xl font-bold text-base-900">
-                    {toothIdLabel(toothId)}
-                  </Text>
-                  {editingEvent && editingState && (
-                    <View className="mt-1 flex-row items-center gap-2">
-                      <ToothSVG
-                        viewBox={LEGEND_TOOTH.viewBox}
-                        contour={LEGEND_TOOTH.contour}
-                        details={LEGEND_TOOTH.details}
-                        fill={TOOTH_STYLE[editingState].fill}
-                        stroke={TOOTH_STYLE[editingState].stroke}
-                        strokeDasharray={
-                          isMilkSymbol(editingState)
-                            ? MILK_SYMBOL_DASH
-                            : undefined
-                        }
-                        width={20}
-                        height={20}
-                      />
-                      <Text className="text-sm text-base-500">
-                        {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+          <Text className="text-xl font-bold text-base-900">
+            {toothIdLabel(toothId)}
+          </Text>
+          {editingEvent && editingState && (
+            <View className="mt-1 flex-row items-center gap-2">
+              <ToothSVG
+                viewBox={LEGEND_TOOTH.viewBox}
+                contour={LEGEND_TOOTH.contour}
+                details={LEGEND_TOOTH.details}
+                fill={TOOTH_STYLE[editingState].fill}
+                stroke={TOOTH_STYLE[editingState].stroke}
+                strokeDasharray={
+                  isMilkSymbol(editingState) ? MILK_SYMBOL_DASH : undefined
+                }
+                width={20}
+                height={20}
+              />
+              <Text className="text-sm text-base-500">
+                {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
+              </Text>
+            </View>
+          )}
+        </View>
       }
     >
       {(dismiss) => (
         <>
-              {!editingEvent && (
-                <>
-                  <View className="gap-3">
-                    <Text className="text-base text-base-500">
-                      O que aconteceu?
-                    </Text>
-                    <View className="flex-row gap-3">
-                      <Chip
-                        label={toothEventVerb("eruption")}
-                        selected={eventType === "eruption"}
-                        disabled={exfoliationOnlyLeft}
-                        onPress={() => changeEventType("eruption")}
-                      />
-                      <Chip
-                        label={toothEventVerb("exfoliation")}
-                        selected={eventType === "exfoliation"}
-                        disabled={
-                          !(milkEruptionRecorded || permanentErupted) ||
-                          lockedToPermanent
-                        }
-                        onPress={() => changeEventType("exfoliation")}
-                      />
-                    </View>
-                  </View>
-
-                  <View className="gap-3">
-                    <Text className="text-base text-base-500">Dentição</Text>
-                    <View className="flex-row gap-3">
-                      <Chip
-                        label={dentitionLabel("primary")}
-                        selected={dentition === "primary"}
-                        disabled={
-                          !milkAllowed || lockedToPermanent || permanentErupted
-                        }
-                        onPress={() => setDentition("primary")}
-                      />
-                      <Chip
-                        label={dentitionLabel("permanent")}
-                        selected={dentition === "permanent"}
-                        disabled={
-                          eventType === "exfoliation"
-                            ? !permanentErupted
-                            : milkStepPending !== null
-                        }
-                        onPress={() => setDentition("permanent")}
-                      />
-                    </View>
-                  </View>
-                </>
-              )}
-
+          {!editingEvent && (
+            <>
               <View className="gap-3">
                 <Text className="text-base text-base-500">
-                  Data do acontecimento
+                  O que aconteceu?
                 </Text>
-                <View className="flex-row items-center gap-2">
-                  <Input
-                    editable={false}
-                    value={formatDatePtBR(date) ?? date}
-                    className="flex-1"
+                <View className="flex-row gap-3">
+                  <Chip
+                    label={toothEventVerb("eruption")}
+                    selected={eventType === "eruption"}
+                    disabled={exfoliationOnlyLeft}
+                    onPress={() => changeEventType("eruption")}
                   />
-                  <Pressable
-                    onPress={() => setShowCalendar((current) => !current)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Abrir calendário"
-                    className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
-                  >
-                    <CalendarBlankIcon
-                      size={22}
-                      color={colors.base600}
-                      weight="regular"
-                    />
-                  </Pressable>
+                  <Chip
+                    label={toothEventVerb("exfoliation")}
+                    selected={eventType === "exfoliation"}
+                    disabled={
+                      !(milkEruptionRecorded || permanentErupted) ||
+                      lockedToPermanent
+                    }
+                    onPress={() => changeEventType("exfoliation")}
+                  />
                 </View>
-                {dateError ? (
-                  <Text className="text-destructive" variant="small">
-                    {dateError}
-                  </Text>
-                ) : null}
-                {showCalendar && (
-                  <CustomCalendar
-                    onDayPress={(day) => {
-                      setDate(day.dateString);
-                      setShowCalendar(false);
-                    }}
-                    minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
-                    markedDates={{
-                      [date]: {
-                        selected: true,
-                        selectedColor: colors.primary500,
-                        selectedTextColor: colors.base100,
-                      },
-                    }}
-                  />
-                )}
               </View>
 
               <View className="gap-3">
-                <Text className="text-base text-base-500">Observação</Text>
-                <Textarea
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder="Escreva uma observação (opcional)"
-                  maxLength={500}
-                  numberOfLines={3}
-                  className="min-h-28 rounded-2xl bg-base-200/60 px-4 py-3"
-                />
+                <Text className="text-base text-base-500">Dentição</Text>
+                <View className="flex-row gap-3">
+                  <Chip
+                    label={dentitionLabel("primary")}
+                    selected={dentition === "primary"}
+                    disabled={
+                      !milkAllowed || lockedToPermanent || permanentErupted
+                    }
+                    onPress={() => setDentition("primary")}
+                  />
+                  <Chip
+                    label={dentitionLabel("permanent")}
+                    selected={dentition === "permanent"}
+                    disabled={
+                      eventType === "exfoliation"
+                        ? !permanentErupted
+                        : milkStepPending !== null
+                    }
+                    onPress={() => setDentition("permanent")}
+                  />
+                </View>
               </View>
+            </>
+          )}
 
+          <View className="gap-3">
+            <Text className="text-base text-base-500">
+              Data do acontecimento
+            </Text>
+            <View className="flex-row items-center gap-2">
+              <Input
+                editable={false}
+                value={formatDatePtBR(date) ?? date}
+                className="flex-1"
+              />
               <Pressable
-                onPress={handleConfirmPress}
-                disabled={confirmDisabled || isSaving}
+                onPress={() => setShowCalendar((current) => !current)}
                 accessibilityRole="button"
-                className={cn(
-                  "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
-                  (confirmDisabled || isSaving) && "opacity-50",
-                )}
+                accessibilityLabel="Abrir calendário"
+                className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
               >
-                <Text className="text-base font-bold text-base-100">
-                  {isSaving
-                    ? "Salvando..."
-                    : editingEvent
-                      ? "Salvar alterações"
-                      : "Confirmar"}
-                </Text>
+                <CalendarBlankIcon
+                  size={22}
+                  color={colors.base600}
+                  weight="regular"
+                />
               </Pressable>
+            </View>
+            {dateError ? (
+              <Text className="text-destructive" variant="small">
+                {dateError}
+              </Text>
+            ) : null}
+            {showCalendar && (
+              <CustomCalendar
+                onDayPress={(day) => {
+                  setDate(day.dateString);
+                  setShowCalendar(false);
+                }}
+                minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
+                markedDates={{
+                  [date]: {
+                    selected: true,
+                    selectedColor: colors.primary500,
+                    selectedTextColor: colors.base100,
+                  },
+                }}
+              />
+            )}
+          </View>
 
-              {editingEvent && onDelete && (
-                <Pressable
-                  onPress={() => {
-                    deleteRequestedRef.current = true;
-                    dismiss();
-                  }}
-                  accessibilityRole="button"
-                  className="h-14 w-full items-center justify-center rounded-full active:opacity-70"
-                >
-                  <Text className="text-base font-bold text-destructive">
-                    Excluir registro
-                  </Text>
-                </Pressable>
-              )}
+          <View className="gap-3">
+            <Text className="text-base text-base-500">Observação</Text>
+            <Textarea
+              value={note}
+              onChangeText={setNote}
+              placeholder="Escreva uma observação (opcional)"
+              maxLength={500}
+              numberOfLines={3}
+              className="min-h-28 rounded-2xl bg-base-200/60 px-4 py-3"
+            />
+          </View>
+
+          <Pressable
+            onPress={handleConfirmPress}
+            disabled={confirmDisabled || isSaving}
+            accessibilityRole="button"
+            className={cn(
+              "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
+              (confirmDisabled || isSaving) && "opacity-50",
+            )}
+          >
+            <Text className="text-base font-bold text-base-100">
+              {isSaving
+                ? "Salvando..."
+                : editingEvent
+                  ? "Salvar alterações"
+                  : "Confirmar"}
+            </Text>
+          </Pressable>
+
+          {editingEvent && onDelete && (
+            <Pressable
+              onPress={() => {
+                deleteRequestedRef.current = true;
+                dismiss();
+              }}
+              accessibilityRole="button"
+              className="h-14 w-full items-center justify-center rounded-full active:opacity-70"
+            >
+              <Text className="text-base font-bold text-destructive">
+                Excluir registro
+              </Text>
+            </Pressable>
+          )}
         </>
       )}
     </BottomSheet>
