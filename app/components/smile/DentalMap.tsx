@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Wrapper } from "@/components/wrapper";
+import { useToast } from "@/components/ui/toast";
 import ToothSVG from "./teeth/ToothSVG";
 import { FDI_TEETH } from "./teeth/fdiTeeth";
 import {
@@ -115,6 +116,7 @@ export function DentalMap({
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const { width: screenWidth } = useWindowDimensions();
 
   useFocusEffect(
@@ -202,6 +204,7 @@ export function DentalMap({
             queryKey: ["tooth-events"],
           });
           setModalVisible(false);
+          showToast("Este evento já estava registrado.");
           return;
         }
         Alert.alert(
@@ -210,7 +213,7 @@ export function DentalMap({
         );
       }
     },
-    [onRegisterEvent, queryClient],
+    [onRegisterEvent, queryClient, showToast],
   );
 
   const selectedParsed = parseToothId(selectedTooth);
