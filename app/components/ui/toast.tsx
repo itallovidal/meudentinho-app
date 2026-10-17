@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { AccessibilityInfo, Platform, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import {
   useAnimatedStyle,
@@ -41,6 +41,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setMessage(text);
       opacity.value = withTiming(1, { duration: 150 });
       translateY.value = withTiming(0, { duration: 150 });
+      if (Platform.OS === "ios") {
+        AccessibilityInfo.announceForAccessibility(text);
+      }
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
@@ -81,7 +84,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ]}
       >
         {message !== null && (
-          <View className="rounded-full bg-base-900 px-6 py-3 shadow-lg shadow-black/20">
+          <View
+            accessibilityLiveRegion="polite"
+            className="rounded-full bg-base-900 px-6 py-3 shadow-lg shadow-black/20"
+          >
             <Text className="text-white">{message}</Text>
           </View>
         )}
