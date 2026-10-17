@@ -10,6 +10,8 @@ import {
 import {
   archLabel,
   dentitionLabel,
+  sideLabel,
+  toothEventAccessibilityLabel,
   toothEventVerb,
   toothTypeLabel,
 } from "@/lib/teethLabels";
@@ -47,7 +49,8 @@ export function ToothEventCard({
   const month = date
     ?.toLocaleDateString("pt-BR", { month: "short" })
     .replace(".", "");
-  const title = `${toothTypeLabel(event.toothType)} ${archLabel(event.arch)}`;
+  const title = toothTypeLabel(event.toothType);
+  const position = `${archLabel(event.arch)} • ${sideLabel(event.side)}`;
   const subtitle = `${toothEventVerb(event.eventType)} (${dentitionLabel(event.dentition).toLowerCase()})`;
 
   return (
@@ -55,7 +58,7 @@ export function ToothEventCard({
       onPress={() => onPress?.(event)}
       disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Editar ${title}`}
+      accessibilityLabel={toothEventAccessibilityLabel(event)}
       className={cn(
         "w-full flex-row items-center shadow-sm shadow-base-300",
         size === "small" ? "gap-3 rounded-xl p-3" : "gap-4 rounded-2xl p-4",
@@ -90,6 +93,7 @@ export function ToothEventCard({
         >
           {title}
         </Text>
+        <Text className="text-xs text-base-500">{position}</Text>
         <View className="flex-row items-center gap-2">
           <ToothSVG
             viewBox={LEGEND_TOOTH.viewBox}
