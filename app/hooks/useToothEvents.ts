@@ -23,8 +23,8 @@ export function useToothEvents(
     const data = accountId ? (query.data ?? []) : [];
     return [...data].sort(
       (a, b) =>
-        Date.parse(b.occurrenceDate) - Date.parse(a.occurrenceDate) ||
-        Date.parse(b.createdAt) - Date.parse(a.createdAt),
+        (b.occurrenceDate ?? "").localeCompare(a.occurrenceDate ?? "") ||
+        (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
     );
   }, [query.data, accountId]);
 

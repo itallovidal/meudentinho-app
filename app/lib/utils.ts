@@ -54,10 +54,53 @@ export function parseLocalDate(value: string): Date | null {
     return null;
   }
   const date = new Date(year, month - 1, day);
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
     return null;
   }
   return date;
+}
+
+export function eventDateKey(value: string): string {
+  if (!value) {
+    return "";
+  }
+  const key = value.split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+    return "";
+  }
+  return parseLocalDate(key) ? key : "";
+}
+
+export function validateEventDateKey(
+  dateKey: string,
+  birthIso: string | null,
+): string | null {
+  const date = parseLocalDate(dateKey);
+  if (!date) {
+    return "Digite uma data válida.";
+  }
+  if (birthIso) {
+    const birthKey = eventDateKey(birthIso);
+    const birth = birthKey ? parseLocalDate(birthKey) : null;
+    if (birth && date.getTime() < birth.getTime()) {
+      return "A data não pode ser anterior ao nascimento.";
+    }
+  }
+  const today = new Date();
+  const startOfTomorrow = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() + 1,
+  );
+  if (date.getTime() >= startOfTomorrow.getTime()) {
+    return "A data não pode ser futura.";
+  }
+  return null;
 }
 
 export function formatDatePtBR(value: string): string | null {
@@ -123,8 +166,7 @@ export function localDateKeyToISO(value: string): string | null {
     return null;
   }
   date.setHours(12, 0, 0, 0);
-  const now = new Date();
-  return (date > now ? now : date).toISOString();
+  return date.toISOString();
 }
 
 export function ageInMonths(birthDate: string): number | null {

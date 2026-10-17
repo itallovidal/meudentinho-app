@@ -1,6 +1,11 @@
 import { getChronology, type ChronologyGender } from "@/lib/toothChronology";
 import { archLabel, toothTypeLabel } from "@/lib/teethLabels";
-import { ageInMonths, parseLocalDate, toLocalDateKey } from "@/lib/utils";
+import {
+  ageInMonths,
+  eventDateKey,
+  parseLocalDate,
+  toLocalDateKey,
+} from "@/lib/utils";
 import type {
   Arch,
   Dentition,
@@ -230,7 +235,7 @@ export function buildPredictionCalendarMarks(
   }
 
   for (const event of events) {
-    markFor(toLocalDateKey(new Date(event.occurrenceDate))).registered = true;
+    markFor(eventDateKey(event.occurrenceDate)).registered = true;
   }
 
   return marks;
@@ -251,7 +256,7 @@ export function getPredictionFocusKey(
     ) {
       continue;
     }
-    const key = toLocalDateKey(new Date(event.occurrenceDate));
+    const key = eventDateKey(event.occurrenceDate);
     if (!latest || key > latest) {
       latest = key;
     }
