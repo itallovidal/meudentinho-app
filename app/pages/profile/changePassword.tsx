@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { ApiError } from "@/types/domain";
 import {
   updatePasswordSchema,
   UpdatePasswordDTO,
@@ -19,8 +20,10 @@ import { useForm } from "react-hook-form";
 
 export function ChangePassword() {
   const {
+    user,
     authToken,
     hydrated,
+    updateAppUser,
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -63,15 +66,42 @@ export function ChangePassword() {
         return;
       }
 
-      await changePassword(userId, authToken, {
+      const { data: session } = await changePassword(userId, authToken, {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
+
+      if (!session?.token) {
+        await updateAppUser(null, null);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+        return;
+      }
+
+      await updateAppUser(
+        {
+          name: session.name ?? user?.name ?? "",
+          email: user?.email ?? "",
+          isAdmin: session.isAdmin ?? user?.isAdmin ?? false,
+        },
+        session.token,
+        session.refreshToken ?? null,
+        session.userId ?? null,
+      );
 
       Alert.alert("Senha atualizada", "Sua senha foi alterada com sucesso.", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.code as string) === "CURRENT_PASSWORD_INVALID"
+      ) {
+        Alert.alert("Erro", "Senha atual incorreta. Tente novamente.");
+        return;
+      }
       Alert.alert("Erro", "Não foi possível alterar a senha.");
     }
   }
