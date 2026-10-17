@@ -44,13 +44,19 @@ export function ConfirmDialog({
         </DialogHeader>
 
         <Wrapper className="flex-row gap-2">
-          <Button className="flex-1" onPress={onCancel}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onPress={onCancel}
+          >
             <Text>Cancelar</Text>
           </Button>
-          <Button variant="outline" className="flex-1" onPress={onConfirm}>
-            <Text className={destructive ? "text-destructive" : ""}>
-              {confirmLabel}
-            </Text>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            className="flex-1"
+            onPress={onConfirm}
+          >
+            <Text>{confirmLabel}</Text>
           </Button>
         </Wrapper>
       </DialogContent>
