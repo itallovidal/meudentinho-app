@@ -1,4 +1,4 @@
-import { TouchableNativeFeedback, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { CaretLeftIcon } from "phosphor-react-native";
@@ -37,9 +37,15 @@ export function Header({ hasBackButton }: HeaderProps) {
       justify="between"
     >
       {hasBackButton && (
-        <TouchableNativeFeedback onPress={handleBack}>
+        <Pressable
+          onPress={handleBack}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+        >
           <CaretLeftIcon weight="regular" color={colors.primary500} />
-        </TouchableNativeFeedback>
+        </Pressable>
       )}
 
       <Text className="font-bold text-primary-500">Meu Dentinho</Text>
