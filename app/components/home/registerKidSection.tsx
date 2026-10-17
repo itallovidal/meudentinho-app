@@ -2,11 +2,11 @@ import { View } from "react-native";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 import { RegisterKidForm } from "../forms/registerKidForm";
-import { KidRequestDTO } from "@/types/dtos/user";
+import { KidFormValues } from "@/lib/schemas/kid";
 import { ApiError } from "@/types/domain";
 
 type RegisterKidSectionProps = {
-  onRegisterKid: (kidDTO: KidRequestDTO) => Promise<void>;
+  onRegisterKid: (kidDTO: KidFormValues) => Promise<void>;
   registerKidError: ApiError | null;
   isPending?: boolean;
 };
@@ -16,7 +16,7 @@ export function RegisterKidSection({
   registerKidError,
   isPending = false,
 }: RegisterKidSectionProps) {
-  async function handleSubmit(kidDTO: KidRequestDTO) {
+  async function handleSubmit(kidDTO: KidFormValues) {
     if (isPending) {
       return;
     }

@@ -1,14 +1,14 @@
 import { Text } from "@/components/ui/text";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
+import { KidFormValues } from "@/lib/schemas/kid";
 import { ApiError } from "@/types/domain";
-import { KidRequestDTO } from "@/types/dtos/user";
 
 type AddDependentSheetProps = {
   visible: boolean;
   submitError: ApiError | null;
   onClose: () => void;
-  onSubmit: (data: KidRequestDTO) => void | Promise<void>;
+  onSubmit: (data: KidFormValues) => void | Promise<void>;
 };
 
 export function AddDependentSheet({

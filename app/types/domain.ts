@@ -2,9 +2,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   isAdmin: boolean;
   kids: Kid[];
 }
@@ -16,13 +15,12 @@ export type BasicUser = Pick<User, "name" | "email" | "isAdmin"> & {
 export interface Kid {
   id: string;
   name: string;
-  birthDate: Date;
+  birthDate: string;
   gender: "male" | "female";
-  isPremature: boolean;
-  prematureWeeks?: number;
+  prematureWeeks?: string;
   parentId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const API_ERROR_CODES = {
@@ -82,7 +80,7 @@ export interface Article {
   content: string;
   categories: string[];
   imageCoverURL: string;
-  createdAt: Date;
-  updatedAt: Date;
-  readingTime: string;
+  createdAt: string;
+  updatedAt: string;
+  readingTime: number;
 }
