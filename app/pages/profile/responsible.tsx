@@ -24,7 +24,7 @@ export function Responsible() {
     user,
     authToken,
     hydrated,
-    updateAppUser,
+    updateUserProfile,
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -51,21 +51,22 @@ export function Responsible() {
         Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
         return;
       }
-      const nameChanged = profile.name !== user.name;
-      const emailChanged = profile.email !== user.email;
-      const hasProfileChange = nameChanged || emailChanged;
+      const nameChanged = profile.name.trim() !== user.name;
+      const emailChanged = profile.email.trim() !== user.email;
 
-      if (hasProfileChange) {
-        await patchUser(userId, authToken, {
-          name: profile.name,
-          email: profile.email,
-        });
-
-        await updateAppUser(
-          { ...user, name: profile.name, email: profile.email },
-          authToken,
-        );
+      if (!nameChanged && !emailChanged) {
+        return;
       }
+
+      await patchUser(userId, authToken, {
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+      });
+
+      await updateUserProfile({
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+      });
 
       Alert.alert(
         "Dados atualizados",

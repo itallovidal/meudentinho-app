@@ -9,7 +9,10 @@ import {
   setSecureItem,
 } from "@/lib/secureStorage";
 import { configureAuthFetch } from "@/lib/authFetch";
+import type { RefreshedSessionInfo } from "@/lib/authFetch";
+import { getUserIdFromToken } from "@/lib/utils";
 import { BasicUser } from "@/types/domain";
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -26,12 +29,16 @@ export interface UserContextProps {
     refreshToken?: string | null,
     userId?: string | null,
   ) => Promise<void>;
+  updateUserProfile: (
+    profile: Partial<Pick<BasicUser, "name" | "email">>,
+  ) => Promise<void>;
   clearSessionExpired: () => void;
 }
 
 export const UserContext = createContext<UserContextProps | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<BasicUser | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -41,6 +48,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const sessionRef = useRef({ user, authToken, refreshToken, userId });
   sessionRef.current = { user, authToken, refreshToken, userId };
+  const sessionGeneration = useRef(0);
+  const persistGate = useRef<Promise<void>>(Promise.resolve());
 
   async function writeToken(
     key: "token" | "refreshToken",
@@ -79,20 +88,55 @@ export function UserProvider({ children }: { children: ReactNode }) {
   async function persistRefreshedSession(
     token: string,
     refresh: string | null,
+    info?: RefreshedSessionInfo,
   ) {
-    sessionRef.current = {
-      ...sessionRef.current,
-      authToken: token,
-      refreshToken: refresh ?? sessionRef.current.refreshToken,
-    };
-    setAuthToken(token);
-    if (refresh) {
-      setRefreshToken(refresh);
-    }
-    await writeToken("token", token);
-    if (refresh) {
-      await writeToken("refreshToken", refresh);
-    }
+    const task = (async () => {
+      const generation = sessionGeneration.current;
+      const current = sessionRef.current;
+      if (current.authToken == null) {
+        return;
+      }
+      const nextRefreshToken = refresh ?? current.refreshToken;
+      const nextUser =
+        current.user && (info?.name || typeof info?.isAdmin === "boolean")
+          ? {
+              ...current.user,
+              ...(info?.name ? { name: info.name } : null),
+              ...(typeof info?.isAdmin === "boolean"
+                ? { isAdmin: info.isAdmin }
+                : null),
+            }
+          : current.user;
+      await writeToken("token", token);
+      if (nextRefreshToken) {
+        await writeToken("refreshToken", nextRefreshToken);
+      }
+      if (nextUser && nextUser !== current.user) {
+        await setLocalStorageItem("user", JSON.stringify(nextUser));
+      }
+      if (sessionGeneration.current !== generation) {
+        if (sessionRef.current.authToken == null) {
+          await clearAllLocalStorage();
+        }
+        return;
+      }
+      sessionRef.current = {
+        ...current,
+        user: nextUser,
+        authToken: token,
+        refreshToken: nextRefreshToken,
+      };
+      setAuthToken(token);
+      setRefreshToken(nextRefreshToken);
+      if (nextUser && nextUser !== current.user) {
+        setUser(nextUser);
+      }
+    })();
+    persistGate.current = task.then(
+      () => undefined,
+      () => undefined,
+    );
+    await task;
   }
 
   useEffect(() => {
@@ -101,8 +145,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         authToken: sessionRef.current.authToken,
         refreshToken: sessionRef.current.refreshToken,
       }),
-      onSessionRefreshed: (token, refresh) => {
-        void persistRefreshedSession(token, refresh);
+      onSessionRefreshed: (token, refresh, info) => {
+        void persistRefreshedSession(token, refresh, info);
       },
       onSessionExpired: () => {
         void (async () => {
@@ -123,6 +167,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } catch {
       return null;
     }
+  }
+
+  async function clearSessionCache() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
   }
 
   async function loadUserFromStorage() {
@@ -155,8 +204,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (parsedRefresh) {
         setRefreshToken(parsedRefresh);
       }
-      if (parsedUserId) {
-        setUserId(parsedUserId);
+      let resolvedUserId = parsedUserId;
+      if (!resolvedUserId && parsedToken) {
+        try {
+          const decoded = getUserIdFromToken(parsedToken);
+          if (decoded) {
+            resolvedUserId = decoded;
+            await setLocalStorageItem("userId", JSON.stringify(decoded));
+          }
+        } catch {
+          resolvedUserId = null;
+        }
+      }
+      if (resolvedUserId) {
+        setUserId(resolvedUserId);
       }
     } catch (err) {
       console.log("Error loading user from storage:", err);
@@ -177,7 +238,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     userId?: string | null,
   ) {
     try {
+      await persistGate.current;
+      sessionGeneration.current += 1;
       if (user === null || authToken === null) {
+        await clearSessionCache();
         setAuthToken(null);
         setUser(null);
         setRefreshToken(null);
@@ -198,8 +262,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
         refreshToken === undefined
           ? sessionRef.current.refreshToken
           : refreshToken;
-      const nextUserId =
+      let nextUserId =
         userId === undefined ? sessionRef.current.userId : userId;
+      if (!nextUserId) {
+        try {
+          const decoded = getUserIdFromToken(authToken);
+          if (decoded) {
+            nextUserId = decoded;
+          }
+        } catch {
+          nextUserId = null;
+        }
+      }
+
+      const previousUserId = sessionRef.current.userId;
+      const isAccountSwitch =
+        !!previousUserId && previousUserId !== nextUserId;
+      if (isAccountSwitch) {
+        await clearSessionCache();
+      }
 
       setUser(user);
       setAuthToken(authToken);
@@ -226,6 +307,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function updateUserProfile(
+    profile: Partial<Pick<BasicUser, "name" | "email">>,
+  ) {
+    try {
+      const current = sessionRef.current.user;
+      if (!current) {
+        return;
+      }
+      const nextUser: BasicUser = {
+        ...current,
+        ...(profile.name !== undefined
+          ? { name: profile.name.trim() }
+          : null),
+        ...(profile.email !== undefined
+          ? { email: profile.email.trim() }
+          : null),
+      };
+      setUser(nextUser);
+      sessionRef.current = { ...sessionRef.current, user: nextUser };
+      await setLocalStorageItem("user", JSON.stringify(nextUser));
+    } catch (err) {
+      console.log("Error updating user profile:", err);
+    }
+  }
+
   function clearSessionExpired() {
     setSessionExpired(false);
   }
@@ -240,6 +346,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         hydrated,
         sessionExpired,
         updateAppUser,
+        updateUserProfile,
         clearSessionExpired,
       }}
     >

@@ -6,9 +6,19 @@ type SessionSnapshot = {
   refreshToken: string | null;
 };
 
+export type RefreshedSessionInfo = {
+  name?: string;
+  isAdmin?: boolean;
+  userId?: string;
+};
+
 type AuthFetchHandlers = {
   getSession: () => SessionSnapshot;
-  onSessionRefreshed: (authToken: string, refreshToken: string | null) => void;
+  onSessionRefreshed: (
+    authToken: string,
+    refreshToken: string | null,
+    info?: RefreshedSessionInfo,
+  ) => void | Promise<void>;
   onSessionExpired: () => void;
 };
 
@@ -65,10 +75,11 @@ async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
         if (!data?.token) {
           return { refreshed: false, expired: false };
         }
-        handlers?.onSessionRefreshed(
-          data.token,
-          data.refreshToken ?? null,
-        );
+        await handlers?.onSessionRefreshed(data.token, data.refreshToken ?? null, {
+          name: data.name,
+          isAdmin: data.isAdmin,
+          userId: data.userId,
+        });
         logSessionRefresh(data.token);
         return { refreshed: true };
       } catch (err) {

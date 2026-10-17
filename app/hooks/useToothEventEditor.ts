@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
+import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { UserContext } from "@/contexts/UserContext";
 import type { ChronologyGender } from "@/lib/toothChronology";
 import { ApiError } from "@/types/domain";
@@ -46,7 +47,7 @@ export function useToothEventEditor({
 }) {
   const queryClient = useQueryClient();
   const { userId } = useContext(UserContext)!;
-  const accountKey = userId ?? authToken ?? "";
+  const accountId = resolveAccountId(userId, authToken);
   const [editingEvent, setEditingEvent] = useState<ToothEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<ToothEvent | null>(null);
 
@@ -60,7 +61,7 @@ export function useToothEventEditor({
     }) => updateToothEvent(id, authToken ?? "", payload),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", accountKey, kidId],
+        queryKey: toothEventsQueryKey(accountId, kidId),
       }),
   });
 
@@ -68,7 +69,7 @@ export function useToothEventEditor({
     mutationFn: (id: string) => deleteToothEvent(id, authToken ?? ""),
     onSettled: () =>
       queryClient.invalidateQueries({
-        queryKey: ["tooth-events", accountKey, kidId],
+        queryKey: toothEventsQueryKey(accountId, kidId),
       }),
   });
 

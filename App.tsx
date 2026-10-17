@@ -3,7 +3,8 @@ import { createStaticNavigation } from "@react-navigation/native";
 import { enableScreens } from "react-native-screens";
 import { PortalHost } from "@rn-primitives/portal";
 import { TabNavigator } from "./app/navigation/TabNavigator";
-import { UserProvider } from "./app/contexts/UserContext";
+import { UserContext, UserProvider } from "./app/contexts/UserContext";
+import { useContext } from "react";
 import { ErrorBoundary } from "./app/components/ErrorBoundary";
 import { ToastProvider } from "./app/components/ui/toast";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -26,6 +27,11 @@ const queryClient = new QueryClient({
   },
 });
 
+function SessionNavigation() {
+  const { userId } = useContext(UserContext)!;
+  return <Navigation key={userId ?? "anon"} />;
+}
+
 export default function App() {
   colorScheme.set("light");
   const colors = THEME.light;
@@ -44,7 +50,7 @@ export default function App() {
               >
                 <ToastProvider>
                   <ErrorBoundary>
-                    <Navigation />
+                    <SessionNavigation />
                   </ErrorBoundary>
                 </ToastProvider>
               </SafeAreaView>
