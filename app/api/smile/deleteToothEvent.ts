@@ -7,7 +7,7 @@ export async function deleteToothEvent(
   eventId: string,
   token: string,
 ): Promise<ResponsePayload<{ message: string }>> {
-  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/${eventId}`, {
+  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/${encodeURIComponent(eventId)}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",

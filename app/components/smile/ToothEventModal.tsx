@@ -169,9 +169,10 @@ export function ToothEventModal({
   }
 
   const dateError = validateEventDateKey(date, kidBirthDate);
+  const [isSaving, setIsSaving] = useState(false);
 
   async function performSave() {
-    if (!parsed || !kidId) {
+    if (!parsed || !kidId || isSaving) {
       return;
     }
     if (dateError) {
@@ -181,17 +182,22 @@ export function ToothEventModal({
     if (!occurrenceDate) {
       return;
     }
-    await onSubmit({
-      kidId,
-      occurrenceDate,
-      dentition,
-      arch: parsed.arch,
-      side: parsed.side,
-      toothType: parsed.toothType,
-      eventType,
-      quadrant: parsed.quadrant,
-      note: note.trim() ? note.trim() : undefined,
-    });
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        kidId,
+        occurrenceDate,
+        dentition,
+        arch: parsed.arch,
+        side: parsed.side,
+        toothType: parsed.toothType,
+        eventType,
+        quadrant: parsed.quadrant,
+        note: note.trim() ? note.trim() : undefined,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handleConfirmPress() {
@@ -367,15 +373,19 @@ export function ToothEventModal({
 
               <Pressable
                 onPress={handleConfirmPress}
-                disabled={confirmDisabled}
+                disabled={confirmDisabled || isSaving}
                 accessibilityRole="button"
                 className={cn(
                   "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
-                  confirmDisabled && "opacity-50",
+                  (confirmDisabled || isSaving) && "opacity-50",
                 )}
               >
                 <Text className="text-base font-bold text-base-100">
-                  {editingEvent ? "Salvar alterações" : "Confirmar"}
+                  {isSaving
+                    ? "Salvando..."
+                    : editingEvent
+                      ? "Salvar alterações"
+                      : "Confirmar"}
                 </Text>
               </Pressable>
 

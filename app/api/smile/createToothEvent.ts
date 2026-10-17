@@ -8,7 +8,7 @@ export async function createToothEvent(
   request: ToothEventRequestDTO,
   token?: string | null,
 ): Promise<ResponsePayload<ToothEvent>> {
-  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events/`, {
+  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events`, {
     method: "POST",
     body: JSON.stringify(request),
     headers: {

@@ -22,7 +22,8 @@ export function getUserIdFromToken(token: string): string {
     throw new Error("Invalid token format");
   }
   const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-  const payload = JSON.parse(atob(base64));
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const payload = JSON.parse(atob(padded));
   return payload.userId;
 }
 
@@ -247,4 +248,24 @@ export function brDateToIsoKey(br: string): string | null {
 
 export function isoToBrDate(iso: string): string {
   return formatDatePtBR(iso) ?? "";
+}
+
+export function isAdultBirthDate(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+  const date = parseLocalDate(value.split("T")[0]);
+  if (!date) {
+    return false;
+  }
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const hadBirthdayThisYear =
+    today.getMonth() > date.getMonth() ||
+    (today.getMonth() === date.getMonth() &&
+      today.getDate() >= date.getDate());
+  if (!hadBirthdayThisYear) {
+    age -= 1;
+  }
+  return age >= 18;
 }

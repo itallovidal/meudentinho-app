@@ -2,7 +2,7 @@ export interface ArticlePreviewDTO {
   imageCoverURL: string;
   title: string;
   categories: string[];
-  readingTime: string;
+  readingTime: number;
   id: string;
   className?: string;
 }

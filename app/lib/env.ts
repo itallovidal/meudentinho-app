@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   BASE_API_URL: z.url(),
+  PRIVACY_POLICY_URL: z.url(),
   ENVIRONMENT: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -11,6 +12,7 @@ const envSchema = z.object({
 
 const parsedEnv = envSchema.safeParse({
   BASE_API_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  PRIVACY_POLICY_URL: process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL,
   ENVIRONMENT:
     process.env.EXPO_PUBLIC_ENVIRONMENT ?? process.env.EXPO_ENVIRONMENT,
   LOCAL_STORAGE_KEY_PREFIX: process.env.EXPO_PUBLIC_LOCAL_STORAGE_KEY,

@@ -1,18 +1,16 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
-
-export async function getKidById(
+export async function revokeKidConsent(
   kidId: string,
   token?: string | null,
-): Promise<ResponsePayload<KidResponseDTO>> {
+): Promise<ResponsePayload<void>> {
   const response = await authFetch(
-    `${ENV.BASE_API_URL}/users/kids/${kidId}`,
+    `${ENV.BASE_API_URL}/users/kids/${kidId}/consent/revoke`,
     {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -20,7 +18,7 @@ export async function getKidById(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
+  const payload = (await response.json()) as ResponsePayload<void>;
 
   if (payload.status !== 200 && isApiError(payload.error)) {
     throw new ApiError(payload.error.message, payload.error.code);
@@ -28,7 +26,7 @@ export async function getKidById(
 
   if (payload.status !== 200) {
     throw new ApiError(
-      "Erro inesperado ao buscar dados do dependente",
+      "Erro inesperado ocorreu durante a revogação do consentimento",
       "INTERNAL_SERVER_ERROR",
     );
   }

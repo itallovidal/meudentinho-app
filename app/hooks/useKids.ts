@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllKids } from "@/api/kids/getAllKids";
 import { kidsSubject } from "@/lib/kidsSubject";
+import { kidsQueryKey, resolveAccountId } from "@/lib/queryKeys";
 import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
@@ -12,11 +13,12 @@ export type KidsLoadFailure = "auth" | "network";
 export function useKids(authToken: string | null | undefined) {
   const queryClient = useQueryClient();
   const { userId } = useContext(UserContext)!;
-  const accountKey = userId ?? authToken ?? "";
+  const accountId = resolveAccountId(userId, authToken);
+  const kidsKey = kidsQueryKey(accountId);
   const query = useQuery({
-    queryKey: ["kids", accountKey],
+    queryKey: kidsKey,
     queryFn: () => getAllKids(authToken!).then((res) => res.data ?? []),
-    enabled: !!authToken,
+    enabled: !!authToken && !!accountId,
     staleTime: 1000 * 60 * 5,
     retry: retryQuery,
   });
@@ -24,7 +26,6 @@ export function useKids(authToken: string | null | undefined) {
   useEffect(() => {
     const unsubscribe = kidsSubject.subscribe((event) => {
       const changedKid = event.kid;
-      const kidsKey = ["kids", accountKey];
       queryClient.setQueryData<KidResponseDTO[]>(kidsKey, (previous) => {
         if (!previous) {
           return previous;
@@ -52,13 +53,7 @@ export function useKids(authToken: string | null | undefined) {
       void queryClient.invalidateQueries({ queryKey: kidsKey });
     });
     return unsubscribe;
-  }, [queryClient, accountKey]);
-
-  useEffect(() => {
-    if (!authToken) {
-      queryClient.removeQueries({ queryKey: ["kids"] });
-    }
-  }, [authToken, queryClient]);
+  }, [queryClient, accountId]);
 
   let failure: KidsLoadFailure | null = null;
   if (query.isError) {
@@ -77,7 +72,7 @@ export function useKids(authToken: string | null | undefined) {
   }
 
   return {
-    kids: query.data ?? [],
+    kids: accountId ? (query.data ?? []) : [],
     isLoading: query.isPending && query.fetchStatus !== "idle",
     isRefreshing: query.isRefetching,
     isFetching: query.isFetching,

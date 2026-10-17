@@ -1,82 +1,29 @@
 import { changePassword } from "@/api/user/changePassword";
-import { FieldShell } from "@/components/forms/fieldShell";
 import { Header } from "@/components/header";
+import { PasswordField } from "@/components/forms/passwordField";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
+import { ApiError } from "@/types/domain";
 import {
   updatePasswordSchema,
   UpdatePasswordDTO,
 } from "@/lib/schemas/responsible";
-import { THEME } from "@/lib/theme";
 import { getUserIdFromToken } from "@/lib/utils";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
-import { EyeIcon, EyeSlashIcon } from "phosphor-react-native";
-import { useContext, useEffect, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, View } from "react-native";
-import { Control, Controller, useForm, useWatch } from "react-hook-form";
-
-interface PasswordFieldProps {
-  control: Control<UpdatePasswordDTO>;
-  name: keyof UpdatePasswordDTO;
-  label: string;
-  placeholder: string;
-  error?: string;
-  revealOnInput?: boolean;
-}
-
-function PasswordField({
-  control,
-  name,
-  label,
-  placeholder,
-  error,
-  revealOnInput = false,
-}: PasswordFieldProps) {
-  const colors = THEME.light;
-  const [isVisible, setIsVisible] = useState(false);
-  const currentValue = useWatch({ control, name });
-  const showToggle = !revealOnInput || (currentValue ?? "").length > 0;
-
-  return (
-    <FieldShell label={label} error={error}>
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { onBlur, onChange, value } }) => (
-          <Input
-            className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            placeholder={placeholder}
-            secureTextEntry={!isVisible}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        )}
-      />
-      {showToggle && (
-        <Pressable onPress={() => setIsVisible((v) => !v)} hitSlop={8}>
-          {isVisible ? (
-            <EyeIcon color={colors.primary500} weight="regular"/>
-          ) : (
-            <EyeSlashIcon color={colors.primary500} weight="regular" />
-          )}
-        </Pressable>
-      )}
-    </FieldShell>
-  );
-}
+import { useContext, useEffect } from "react";
+import { Alert, Image, ScrollView, View } from "react-native";
+import { useForm } from "react-hook-form";
 
 export function ChangePassword() {
   const {
+    user,
     authToken,
     hydrated,
+    updateAppUser,
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -119,15 +66,42 @@ export function ChangePassword() {
         return;
       }
 
-      await changePassword(userId, authToken, {
+      const { data: session } = await changePassword(userId, authToken, {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
+
+      if (!session?.token) {
+        await updateAppUser(null, null);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+        return;
+      }
+
+      await updateAppUser(
+        {
+          name: session.name ?? user?.name ?? "",
+          email: user?.email ?? "",
+          isAdmin: session.isAdmin ?? user?.isAdmin ?? false,
+        },
+        session.token,
+        session.refreshToken ?? null,
+        session.userId ?? null,
+      );
 
       Alert.alert("Senha atualizada", "Sua senha foi alterada com sucesso.", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.code as string) === "CURRENT_PASSWORD_INVALID"
+      ) {
+        Alert.alert("Erro", "Senha atual incorreta. Tente novamente.");
+        return;
+      }
       Alert.alert("Erro", "Não foi possível alterar a senha.");
     }
   }
