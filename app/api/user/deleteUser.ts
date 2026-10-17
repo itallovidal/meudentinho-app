@@ -6,11 +6,13 @@ import { isApiError } from "@/types/predicates";
 export async function deleteUser(
   userId: string,
   token: string,
+  currentPassword: string,
 ): Promise<ResponsePayload<void>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}`,
     {
       method: "DELETE",
+      body: JSON.stringify({ currentPassword }),
       headers: {
         "Content-Type": "application/json",
       },

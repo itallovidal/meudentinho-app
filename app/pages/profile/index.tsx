@@ -1,5 +1,7 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
+import { BottomSheet } from "@/components/ui/bottomSheet";
+import { Button } from "@/components/ui/button";
 import { ScrollView, Text, Alert } from "react-native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
@@ -13,7 +15,7 @@ import {
   SignOutIcon,
   ListPlusIcon,
 } from "phosphor-react-native";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { logout } from "@/api/auth/logout";
 import { ENV } from "@/lib/env";
@@ -24,21 +26,21 @@ export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { updateAppUser, user, hydrated, refreshToken } = useContext(UserContext)!;
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const year = new Date().getFullYear();
 
-  const handleLogout = async () => {
-    try {
-      if (refreshToken) {
-        await logout(refreshToken);
-      }
-    } finally {
-      await updateAppUser(null, null);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Index" }],
-      });
+  async function handleConfirmLogout() {
+    setLogoutConfirmOpen(false);
+    const staleRefreshToken = refreshToken;
+    await updateAppUser(null, null);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Index" }],
+    });
+    if (staleRefreshToken) {
+      void logout(staleRefreshToken);
     }
-  };
+  }
 
   const handleOpenPolicy = async () => {
     const opened = await openPrivacyPolicy();
@@ -93,7 +95,7 @@ export function Index() {
       title: "Sair da conta",
       description: "Faça logout da sua conta.",
       variant: "destructive" as const,
-      handlePress: handleLogout,
+      handlePress: () => setLogoutConfirmOpen(true),
       isDisabled: false,
     },
   ];
@@ -170,6 +172,33 @@ export function Index() {
           </Text>
         </Wrapper>
       </ScrollView>
+
+      <BottomSheet
+        visible={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Sair da conta
+          </Text>
+        }
+      >
+        <Text className="text-base text-base-500">
+          Deseja sair da sua conta neste aparelho?
+        </Text>
+        <Button
+          onPress={() => setLogoutConfirmOpen(false)}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Cancelar</Text>
+        </Button>
+        <Button
+          variant="destructive"
+          onPress={() => void handleConfirmLogout()}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Sair</Text>
+        </Button>
+      </BottomSheet>
     </Wrapper>
   );
 }

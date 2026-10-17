@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
+import { SkeletonKidCard } from "@/skeletons/components/skeletonKidCard";
 import { KidsLoadFailure } from "@/hooks/useKids";
 import { THEME } from "@/lib/theme";
 import { UsersThreeIcon } from "phosphor-react-native";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 
 interface Props {
   loading: boolean;
@@ -24,9 +26,10 @@ export function KidsListStatus({
 
   if (loading) {
     return (
-      <View className="flex-row items-center justify-center gap-2 rounded-xl bg-base-100 p-4">
-        <ActivityIndicator size="small" color={colors.primary400} />
-        <Text>Carregando dependentes...</Text>
+      <View className="w-full gap-4">
+        <SkeletonKidCard />
+        <SkeletonKidCard />
+        <SkeletonKidCard />
       </View>
     );
   }
@@ -49,16 +52,11 @@ export function KidsListStatus({
 
   if (failure === "network") {
     return (
-      <View className="items-center rounded-xl bg-base-100 px-5 py-6">
-        <Text className="mb-2 text-center text-lg font-bold">
-          Não foi possível carregar
-        </Text>
-        <Text className="mb-5 text-center text-base-500">
-          Verifique sua conexão e tente novamente.
-        </Text>
-        <Button onPress={onRetry} className="h-12">
-          <Text>Tentar novamente</Text>
-        </Button>
+      <View className="w-full gap-4">
+        <ErrorState onRetry={() => void onRetry()} />
+        <SkeletonKidCard />
+        <SkeletonKidCard />
+        <SkeletonKidCard />
       </View>
     );
   }

@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { CaretDownIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
+import { ErrorState } from "@/components/errorState";
 import DentalProgressChart from "@/components/smile/DentalProgressChart";
 import { PredictionCalendar } from "@/components/smile/PredictionCalendar";
 import { Button } from "@/components/ui/button";
@@ -176,20 +177,11 @@ export function SmilePredictions() {
           )}
 
           {hasError && !isLoading && (
-            <Wrapper
-              direction="column"
-              align="center"
-              justify="center"
-              gap="gap-4"
-              className="w-full rounded-xl bg-base-100 p-6"
-            >
-              <Text className="text-center">
-                Não foi possível carregar as previsões. Verifique sua conexão.
-              </Text>
-              <Button onPress={handleRefresh}>
-                <Text>Tentar novamente</Text>
-              </Button>
-            </Wrapper>
+            <ErrorState
+              title="Não foi possível carregar as previsões"
+              message="Verifique sua conexão e tente novamente."
+              onRetry={handleRefresh}
+            />
           )}
 
           {kidMissing && !isLoading && (

@@ -22,7 +22,8 @@ export function getUserIdFromToken(token: string): string {
     throw new Error("Invalid token format");
   }
   const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-  const payload = JSON.parse(atob(base64));
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const payload = JSON.parse(atob(padded));
   return payload.userId;
 }
 
