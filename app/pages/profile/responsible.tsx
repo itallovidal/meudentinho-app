@@ -112,7 +112,6 @@ export function Responsible() {
         email: profile.email.trim(),
       });
       setCurrentPassword("");
-      });
 
       Alert.alert(
         "Dados atualizados",
