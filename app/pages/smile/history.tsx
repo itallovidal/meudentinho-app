@@ -9,6 +9,7 @@ import {
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { SkeletonToothEventCard } from "@/skeletons/components/skeletonToothEventCard";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
@@ -35,7 +36,9 @@ export function SmileHistory() {
     events,
     total,
     isPending,
-    isError,
+    isLoadingError,
+    isRefetchError,
+    isFetchNextPageError,
     isRefetching,
     isFetchingNextPage,
     hasNextPage,
@@ -77,6 +80,21 @@ export function SmileHistory() {
   }
 
   function renderFooter() {
+    if (isFetchNextPageError) {
+      return (
+        <View className="w-full items-center py-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => void fetchNextPage()}
+          >
+            <Text className="text-sm font-bold text-primary-500">
+              Tentar novamente
+            </Text>
+          </Button>
+        </View>
+      );
+    }
     if (isFetchingNextPage) {
       return (
         <Text className="py-2 text-center text-sm text-base-500">
@@ -130,7 +148,7 @@ export function SmileHistory() {
             <Text variant="h3" className="text-primary-500">
               Histórico de registros
             </Text>
-            {!isPending && !isError && (
+            {!isPending && !isLoadingError && (
               <Text className="text-sm text-base-500">
                 {total === 1 ? "1 registro" : `${total} registros`}
               </Text>
@@ -145,7 +163,7 @@ export function SmileHistory() {
             </View>
           )}
 
-          {isError && (
+          {isLoadingError && (
             <View className="w-full gap-3">
               <ErrorState
                 title="Não foi possível carregar os registros"
@@ -158,7 +176,7 @@ export function SmileHistory() {
             </View>
           )}
 
-          {!isPending && !isError && events.length === 0 && (
+          {!isPending && !isLoadingError && events.length === 0 && (
             <Wrapper
               className="w-full rounded-xl bg-base-100 p-6"
               direction="column"
@@ -172,8 +190,14 @@ export function SmileHistory() {
             </Wrapper>
           )}
 
-          {!isPending && !isError && events.length > 0 && (
+          {!isPending && !isLoadingError && events.length > 0 && (
             <View className="w-full gap-3">
+              {isRefetchError && (
+                <QueryWarningBanner
+                  message="Não foi possível atualizar os registros. Mostrando o histórico carregado anteriormente."
+                  onRetry={() => void refetch()}
+                />
+              )}
               {events.map((event) => (
                 <ToothEventCard
                   key={event.id}
@@ -184,7 +208,7 @@ export function SmileHistory() {
             </View>
           )}
 
-          {!isPending && !isError && renderFooter()}
+          {!isPending && !isLoadingError && renderFooter()}
         </Wrapper>
       </ScrollView>
 

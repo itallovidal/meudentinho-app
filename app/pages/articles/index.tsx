@@ -18,6 +18,7 @@ export function Index() {
     articlesByCategory,
     isLoading,
     isError,
+    refetchError,
   } = useArticles({ withCategories: true });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,6 +108,7 @@ export function Index() {
               articlesByCategory={articlesByCategory}
               isLoading={isLoading}
               isError={isError}
+              refetchError={refetchError}
               onRetry={onRefresh}
             />
           )}

@@ -7,6 +7,7 @@ import { UserContext } from "@/contexts/UserContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { ErrorState } from "@/components/errorState";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
 import { useKids } from "@/hooks/useKids";
@@ -40,9 +41,10 @@ export function Home() {
     articlesByCategory,
     isLoading,
     isError,
+    refetchError: articlesRefetchError,
   } = useArticles({ withCategories: false });
 
-  const { kids, isLoading: kidsPending, failure: kidsFailure, refetch: refetchKids, isRefreshing: kidsRefreshing } =
+  const { kids, isLoading: kidsPending, failure: kidsFailure, refetch: refetchKids, isRefreshing: kidsRefreshing, refetchError: kidsRefetchError } =
     useKids(authToken);
 
   const showOnboarding =
@@ -147,6 +149,13 @@ export function Home() {
             </Wrapper>
           )}
 
+          {hydrated && kidsRefetchError && (
+            <QueryWarningBanner
+              message="Não foi possível atualizar os dependentes. Mostrando a lista carregada anteriormente."
+              onRetry={() => void refetchKids()}
+            />
+          )}
+
           {hydrated && !authToken && (
             <Wrapper direction="column" gap="gap-1" className="mb-2 mt-4">
               <Text variant="h2" className="mb-0">
@@ -171,6 +180,7 @@ export function Home() {
               articlesByCategory={articlesByCategory}
               isLoading={isLoading}
               isError={isError}
+              refetchError={articlesRefetchError}
               hideError={
                 showKidsError && kidsFailure !== "auth" && isError
               }
