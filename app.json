@@ -20,12 +20,16 @@
         "foregroundImage": "./assets/new-adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "allowBackup": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.meudentinhoapp"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

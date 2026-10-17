@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { Header } from "@/components/header";
+import { ErrorState } from "@/components/errorState";
+import { SkeletonToothEventCard } from "@/skeletons/components/skeletonToothEventCard";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
@@ -136,24 +138,24 @@ export function SmileHistory() {
           </Wrapper>
 
           {isPending && (
-            <Text className="text-base-500">Carregando registros...</Text>
+            <View className="w-full gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <SkeletonToothEventCard key={index} />
+              ))}
+            </View>
           )}
 
           {isError && (
-            <Wrapper
-              direction="column"
-              align="center"
-              justify="center"
-              gap="gap-4"
-              className="w-full rounded-xl bg-base-100 p-6"
-            >
-              <Text className="text-center">
-                Não foi possível carregar os registros. Verifique sua conexão.
-              </Text>
-              <Button onPress={() => void refetch()}>
-                <Text>Tentar novamente</Text>
-              </Button>
-            </Wrapper>
+            <View className="w-full gap-3">
+              <ErrorState
+                title="Não foi possível carregar os registros"
+                message="Verifique sua conexão e tente novamente."
+                onRetry={() => void refetch()}
+              />
+              {Array.from({ length: 3 }).map((_, index) => (
+                <SkeletonToothEventCard key={index} />
+              ))}
+            </View>
           )}
 
           {!isPending && !isError && events.length === 0 && (

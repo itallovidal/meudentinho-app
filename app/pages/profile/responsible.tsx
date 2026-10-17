@@ -35,6 +35,7 @@ export function Responsible() {
     authToken,
     hydrated,
     updateAppUser,
+    updateUserProfile,
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
@@ -85,31 +86,33 @@ export function Responsible() {
         Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
         return;
       }
-      const nameChanged = profile.name !== user.name;
-      const emailChanged = profile.email !== user.email;
-      const hasProfileChange = nameChanged || emailChanged;
+      const nameChanged = profile.name.trim() !== user.name;
+      const emailChanged = profile.email.trim() !== user.email;
 
-      if (hasProfileChange) {
-        if (emailChanged && !currentPassword) {
-          Alert.alert("Erro", "Informe sua senha atual para trocar o e-mail.");
-          return;
-        }
-        await patchUser(
-          userId,
-          authToken,
-          {
-            name: profile.name,
-            email: profile.email,
-          },
-          emailChanged ? currentPassword : null,
-        );
-
-        await updateAppUser(
-          { ...user, name: profile.name, email: profile.email },
-          authToken,
-        );
-        setCurrentPassword("");
+      if (!nameChanged && !emailChanged) {
+        return;
       }
+
+      if (emailChanged && !currentPassword) {
+        Alert.alert("Erro", "Informe sua senha atual para trocar o e-mail.");
+        return;
+      }
+      await patchUser(
+        userId,
+        authToken,
+        {
+          name: profile.name.trim(),
+          email: profile.email.trim(),
+        },
+        emailChanged ? currentPassword : null,
+      );
+
+      await updateUserProfile({
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+      });
+      setCurrentPassword("");
+      });
 
       Alert.alert(
         "Dados atualizados",
