@@ -1,7 +1,7 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
+import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
 import { getArticleById } from "@/api/article/getArticleById";
 import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { ArticlesStackParamList } from "@/navigation/ArticlesStack";
@@ -74,12 +74,11 @@ export function Article() {
           justify="center"
           gap="gap-4"
         >
-          <Text className="text-center">
-            Não foi possível carregar o artigo. Verifique sua conexão.
-          </Text>
-          <Button onPress={handleRetry}>
-            <Text>Tentar novamente</Text>
-          </Button>
+          <ErrorState
+            title="Não foi possível carregar o artigo"
+            message="Verifique sua conexão e tente novamente."
+            onRetry={handleRetry}
+          />
         </Wrapper>
       </Wrapper>
     );

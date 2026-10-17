@@ -7,12 +7,17 @@ export async function patchUser(
   userId: string,
   token: string,
   userPatch: Partial<{ name: string; email: string; password: string }>,
+  currentPassword?: string | null,
 ): Promise<ResponsePayload<User>> {
   const response = await authFetch(
     `${ENV.BASE_API_URL}/users/${userId}`,
     {
       method: "PATCH",
-      body: JSON.stringify(userPatch),
+      body: JSON.stringify(
+        currentPassword
+          ? { ...userPatch, currentPassword }
+          : userPatch,
+      ),
       headers: {
         "Content-Type": "application/json",
       },

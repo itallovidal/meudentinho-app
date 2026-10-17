@@ -1,6 +1,8 @@
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import { ScrollView, Text } from "react-native";
+import { BottomSheet } from "@/components/ui/bottomSheet";
+import { Button } from "@/components/ui/button";
+import { ScrollView, Text, Alert } from "react-native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
@@ -13,29 +15,37 @@ import {
   SignOutIcon,
   ListPlusIcon,
 } from "phosphor-react-native";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { logout } from "@/api/auth/logout";
 import { ENV } from "@/lib/env";
+import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { THEME } from "@/lib/theme";
 
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { updateAppUser, user, hydrated, refreshToken } = useContext(UserContext)!;
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const year = new Date().getFullYear();
 
-  const handleLogout = async () => {
-    try {
-      if (refreshToken) {
-        await logout(refreshToken);
-      }
-    } finally {
-      await updateAppUser(null, null);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Index" }],
-      });
+  async function handleConfirmLogout() {
+    setLogoutConfirmOpen(false);
+    const staleRefreshToken = refreshToken;
+    await updateAppUser(null, null);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Index" }],
+    });
+    if (staleRefreshToken) {
+      void logout(staleRefreshToken);
+    }
+  }
+
+  const handleOpenPolicy = async () => {
+    const opened = await openPrivacyPolicy();
+    if (!opened) {
+      Alert.alert("Erro", "Não foi possível abrir a Política de Privacidade.");
     }
   };
 
@@ -61,13 +71,13 @@ export function Index() {
       title: "Políticas de privacidade",
       description: "Leia e entenda nossa política.",
       variant: "default" as const,
-      handlePress: () => navigation.navigate("Login"),
-      isDisabled: true,
+      handlePress: () => void handleOpenPolicy(),
+      isDisabled: false,
     },
     {
       icon: <StarIcon color={colors.primary400} />,
       title: "Avalie o App",
-      description: "Ajude-nos a melhorar continuamente.",
+      description: "Em breve.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Login"),
       isDisabled: true,
@@ -75,7 +85,7 @@ export function Index() {
     {
       icon: <ShareNetworkIcon color={colors.primary400} />,
       title: "Compartilhe sua experiência",
-      description: "Compartilhe sua experiência.",
+      description: "Em breve.",
       variant: "default" as const,
       handlePress: () => navigation.navigate("Login"),
       isDisabled: true,
@@ -85,7 +95,7 @@ export function Index() {
       title: "Sair da conta",
       description: "Faça logout da sua conta.",
       variant: "destructive" as const,
-      handlePress: handleLogout,
+      handlePress: () => setLogoutConfirmOpen(true),
       isDisabled: false,
     },
   ];
@@ -162,6 +172,33 @@ export function Index() {
           </Text>
         </Wrapper>
       </ScrollView>
+
+      <BottomSheet
+        visible={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Sair da conta
+          </Text>
+        }
+      >
+        <Text className="text-base text-base-500">
+          Deseja sair da sua conta neste aparelho?
+        </Text>
+        <Button
+          onPress={() => setLogoutConfirmOpen(false)}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Cancelar</Text>
+        </Button>
+        <Button
+          variant="destructive"
+          onPress={() => void handleConfirmLogout()}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Sair</Text>
+        </Button>
+      </BottomSheet>
     </Wrapper>
   );
 }
