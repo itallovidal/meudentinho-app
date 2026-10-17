@@ -56,7 +56,7 @@ export function useKids(authToken: string | null | undefined) {
   }, [queryClient, accountId]);
 
   let failure: KidsLoadFailure | null = null;
-  if (query.isError) {
+  if (query.isLoadingError) {
     const error = query.error;
     if (error instanceof ApiError) {
       const message = error.message ?? "";
@@ -77,6 +77,7 @@ export function useKids(authToken: string | null | undefined) {
     isRefreshing: query.isRefetching,
     isFetching: query.isFetching,
     failure,
+    refetchError: query.isRefetchError,
     refetch: query.refetch,
   };
 }

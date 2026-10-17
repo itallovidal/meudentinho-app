@@ -62,9 +62,15 @@ export function useArticles(options: UseArticlesOptions = {}) {
 
   const latestArticle = articles.at(0);
   const isLoading =
-    articlesQuery.isPending || (withCategories && categoriesQuery.isPending);
-  const isError =
-    articlesQuery.isError || (withCategories && categoriesQuery.isError);
+    articlesQuery.isLoading || (withCategories && categoriesQuery.isLoading);
+
+  const articlesLoadError = articlesQuery.isLoadingError;
+  const categoriesLoadError = withCategories && categoriesQuery.isLoadingError;
+  const isError = articlesLoadError || categoriesLoadError;
+
+  const refetchError =
+    articlesQuery.isRefetchError ||
+    (withCategories && categoriesQuery.isRefetchError);
 
   const isRefreshing =
     articlesQuery.isRefetching ||
@@ -90,6 +96,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
     isLoading,
     isRefreshing,
     isError,
+    refetchError,
     onRefresh,
   };
 }
