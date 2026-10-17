@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PortalHost } from "@rn-primitives/portal";
 import {
   Gesture,
   GestureDetector,
@@ -29,6 +30,7 @@ type BottomSheetProps = {
   header: ReactNode;
   children: ReactNode | ((dismiss: () => void) => ReactNode);
   centerHeader?: boolean;
+  portalHostName?: string;
 };
 
 export function BottomSheet({
@@ -37,6 +39,7 @@ export function BottomSheet({
   header,
   children,
   centerHeader = false,
+  portalHostName,
 }: BottomSheetProps) {
   const translateY = useSharedValue(OFFSCREEN_OFFSET);
   const backdropOpacity = useSharedValue(0);
@@ -183,6 +186,11 @@ export function BottomSheet({
               </ScrollView>
             </SafeAreaView>
           </Animated.View>
+          {portalHostName && (
+            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+              <PortalHost name={portalHostName} />
+            </View>
+          )}
         </View>
       </GestureHandlerRootView>
     </Modal>
