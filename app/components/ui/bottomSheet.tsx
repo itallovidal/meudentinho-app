@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -39,19 +40,50 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const translateY = useSharedValue(OFFSCREEN_OFFSET);
   const backdropOpacity = useSharedValue(0);
+  const [mounted, setMounted] = useState(false);
+  const mountedRef = useRef(false);
 
-  function dismiss() {
+  function animateOut(onHidden: () => void) {
     translateY.value = withTiming(
       OFFSCREEN_OFFSET,
       { duration: 200 },
       (finished) => {
         if (finished) {
-          runOnJS(onClose)();
+          translateY.value = OFFSCREEN_OFFSET;
+          backdropOpacity.value = 0;
+          runOnJS(onHidden)();
         }
       },
     );
     backdropOpacity.value = withTiming(0, { duration: 200 });
   }
+
+  function unmountSheet() {
+    mountedRef.current = false;
+    setMounted(false);
+  }
+
+  function dismiss() {
+    animateOut(() => {
+      unmountSheet();
+      onClose();
+    });
+  }
+
+  useEffect(() => {
+    if (visible) {
+      if (mountedRef.current) {
+        handleShow();
+      } else {
+        mountedRef.current = true;
+        setMounted(true);
+      }
+      return;
+    }
+    if (mountedRef.current) {
+      animateOut(unmountSheet);
+    }
+  }, [visible]);
 
   const pan = Gesture.Pan()
     .activeOffsetY(10)
@@ -84,9 +116,13 @@ export function BottomSheet({
     backdropOpacity.value = withTiming(1, { duration: 250 });
   }
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible
       transparent
       animationType="none"
       statusBarTranslucent
