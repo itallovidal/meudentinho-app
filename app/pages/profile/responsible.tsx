@@ -1,4 +1,3 @@
-import { login } from "@/api/auth/login";
 import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
 import { DeleteAccountForm } from "@/components/forms/deleteAccountForm";
@@ -46,29 +45,21 @@ export function Responsible() {
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
-      const email = user?.email;
-      if (!email) {
-        throw new ApiError(
-          "Sessão expirada. Faça login novamente.",
-          "INVALID_CREDENTIALS",
-        );
-      }
-      const { data } = await login({ email, password });
-      let resolvedUserId: string | null = data.userId ?? contextUserId;
-      if (!resolvedUserId && data.token) {
+      let resolvedUserId: string | null = contextUserId ?? null;
+      if (!resolvedUserId && authToken) {
         try {
-          resolvedUserId = getUserIdFromToken(data.token) ?? null;
+          resolvedUserId = getUserIdFromToken(authToken) ?? null;
         } catch {
           resolvedUserId = null;
         }
       }
-      if (!resolvedUserId) {
+      if (!resolvedUserId || !authToken) {
         throw new ApiError(
           "Sessão expirada. Faça login novamente.",
           "INVALID_CREDENTIALS",
         );
       }
-      await deleteUser(resolvedUserId, data.token, password);
+      await deleteUser(resolvedUserId, authToken, password);
     },
   });
 
