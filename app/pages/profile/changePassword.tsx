@@ -31,7 +31,7 @@ export function ChangePassword() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<UpdatePasswordDTO>({
     resolver: zodResolver(updatePasswordSchema),
     mode: "onSubmit",
@@ -183,7 +183,7 @@ export function ChangePassword() {
 
         <Button
           onPress={() => handleSubmit(onSubmit)()}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isDirty}
           className="w-full"
         >
           <Text>{isSubmitting ? "Atualizando..." : "Atualizar Senha"}</Text>

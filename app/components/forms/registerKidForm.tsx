@@ -53,7 +53,7 @@ export function RegisterKidForm({
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<KidFormValues>({
     resolver: zodResolver(kidSchema),
     mode: "onSubmit",
@@ -86,7 +86,7 @@ export function RegisterKidForm({
 
   useEffect(() => {
     if (!isPremature) {
-      setValue("prematureWeeks", undefined);
+      setValue("prematureWeeks", undefined, { shouldDirty: true });
     }
   }, [isPremature, setValue]);
 
@@ -258,8 +258,8 @@ export function RegisterKidForm({
 
       <Button
         onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-        className="h-14 w-full rounded-full mt-6"
+        disabled={isSubmitting || !isDirty}
+        className="mt-6 h-14 w-full rounded-full"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>

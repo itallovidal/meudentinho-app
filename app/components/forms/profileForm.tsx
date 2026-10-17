@@ -30,7 +30,7 @@ export function ProfileForm({
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     mode: "onSubmit",
@@ -160,7 +160,7 @@ export function ProfileForm({
 
       <Button
         onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isDirty}
         className="mb-4 w-full"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>

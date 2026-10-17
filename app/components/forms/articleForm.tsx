@@ -36,7 +36,7 @@ export function ArticleForm({
     getValues,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<ArticleRequestDTO>({
     resolver: zodResolver(articleSchema),
     mode: "onSubmit",
@@ -88,13 +88,15 @@ export function ArticleForm({
         (name) => name !== category.name,
       );
 
-      setValue("categories", filtered);
+      setValue("categories", filtered, { shouldDirty: true });
     } else {
       if (currentCategories.length >= MAX_CATEGORIES) {
         return;
       }
 
-      setValue("categories", [...currentCategories, category.name]);
+      setValue("categories", [...currentCategories, category.name], {
+        shouldDirty: true,
+      });
     }
   }
 
@@ -130,9 +132,7 @@ export function ArticleForm({
           }}
         />
 
-        <Text className="w-full font-bold">
-          Categoria
-        </Text>
+        <Text className="w-full font-bold">Categoria</Text>
 
         <PropsBadge
           props={categories}
@@ -189,7 +189,7 @@ export function ArticleForm({
 
         <Button
           onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isDirty}
           className="mb-4 w-full"
         >
           <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>

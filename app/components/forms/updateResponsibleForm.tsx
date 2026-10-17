@@ -14,6 +14,7 @@ import {
   LockIcon,
   UserIcon,
 } from "phosphor-react-native";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, View } from "react-native";
 
@@ -34,7 +35,8 @@ export function UpdateResponsibleForm({
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    reset,
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<UpdateProfileDTO>({
     resolver: zodResolver(updateProfileSchema),
     mode: "onSubmit",
@@ -44,6 +46,10 @@ export function UpdateResponsibleForm({
       email: defaultEmail || "",
     },
   });
+
+  useEffect(() => {
+    reset({ name: defaultName || "", email: defaultEmail || "" });
+  }, [defaultName, defaultEmail, reset]);
 
   return (
     <View className="w-full">
@@ -91,7 +97,7 @@ export function UpdateResponsibleForm({
         className="mt-2 flex-row items-center rounded-xl bg-base-100 p-3 shadow-sm"
       >
         <View className="h-12 w-12 items-center justify-center rounded-lg bg-base-200">
-          <LockIcon color={colors.primary500} weight="bold"/>
+          <LockIcon color={colors.primary500} weight="bold" />
         </View>
         <Text className="ml-3 flex-1 text-base font-medium">Alterar Senha</Text>
         <CaretRightIcon color={colors.primary500} weight="regular" />
@@ -99,7 +105,7 @@ export function UpdateResponsibleForm({
 
       <Button
         onPress={() => handleSubmit(onSubmit)()}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isDirty}
         className="mt-10 w-full"
       >
         <Text>{isSubmitting ? "Salvando..." : "Salvar Alterações"}</Text>

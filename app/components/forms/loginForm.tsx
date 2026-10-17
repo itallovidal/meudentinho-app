@@ -18,7 +18,7 @@ export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
@@ -65,7 +65,7 @@ export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
 
       <Button
         onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isDirty}
         className="mb-4 w-full"
       >
         <Text>{isSubmitting ? "Entrando..." : "Entrar"}</Text>
