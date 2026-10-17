@@ -8,15 +8,17 @@ import { Card } from "@/components/card";
 import {
   ArrowsClockwiseIcon,
   BookOpenIcon,
-  MailboxIcon,
+  ToothIcon,
 } from "phosphor-react-native";
 import { useContext, useCallback, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
 import { SignupRequest } from "@/types/dtos/user";
+import { SignupFormValues } from "@/lib/schemas/profile";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
+import { PRIVACY_POLICY_VERSION } from "@/lib/privacyPolicy";
 import { signup } from "@/api/auth/signup";
 
 export function Signup() {
@@ -40,13 +42,20 @@ export function Signup() {
     }, [hydrated, user, authToken, navigation]),
   );
 
-  async function onSubmit(SignupRequest: SignupRequest) {
+  async function onSubmit({ accepted, ...profile }: SignupFormValues) {
     setError(null);
     try {
-      const { data } = await signup(SignupRequest);
+      const request: SignupRequest = {
+        ...profile,
+        accepted: true,
+        acceptedPolicyVersion: PRIVACY_POLICY_VERSION,
+        acceptedAt: new Date().toISOString(),
+        isLegalGuardian: true,
+      };
+      const { data } = await signup(request);
 
       const responseEmail =
-        (data as unknown as { email?: string }).email ?? SignupRequest.email;
+        (data as unknown as { email?: string }).email ?? profile.email;
       const basicUser = {
         name: data.name,
         email: responseEmail,
@@ -113,17 +122,16 @@ export function Signup() {
           </Text>
           <Wrapper direction="column" className="w-full" gap={"gap-6"}>
             <Card
+              icon={<ToothIcon color={colors.primary400} />}
+              title="Previsões dentárias"
+            >
+              Acompanhe quando cada dentinho deve nascer.
+            </Card>
+            <Card
               icon={<ArrowsClockwiseIcon color={colors.primary400} />}
               title="Sincronize seus dados"
             >
               Acesse o histórico dental em qualquer dispositivo.
-            </Card>
-            <Card
-              icon={<MailboxIcon color={colors.primary400} />}
-              title="Atualizações por e-mail"
-            >
-              Receba relatórios de seus filhos diretamente na sua caixa de
-              entrada.
             </Card>
             <Card
               icon={<BookOpenIcon color={colors.primary400} />}

@@ -1,12 +1,13 @@
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
 import { Header } from "@/components/header";
+import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKidMutations } from "@/hooks/useKidMutations";
+import { buildKidRequest } from "@/lib/privacyPolicy";
 import { shouldUsePut } from "@/lib/utils";
 import { THEME } from "@/lib/theme";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
@@ -14,7 +15,8 @@ import {
   goBackToOriginTab,
   type LooseNavigation,
 } from "@/navigation/crossTabBack";
-import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
+import { KidResponseDTO } from "@/types/dtos/user";
+import { KidFormValues } from "@/lib/schemas/kid";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { TrashIcon } from "phosphor-react-native";
 import { useContext, useEffect, useState } from "react";
@@ -31,7 +33,7 @@ export function EditDependent() {
   const kid = params?.kid;
   const isEditing = kid !== undefined;
   const { showToast } = useToast();
-  const { createKidMutation, saveKidMutation, deleteKidMutation } =
+  const { createKidMutation, saveKidMutation, revokeKidMutation } =
     useKidMutations(authToken);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -54,9 +56,9 @@ export function EditDependent() {
     }
   }, [hydrated, authToken, navigation]);
 
-  async function handleCreate(data: KidRequestDTO) {
+  async function handleCreate(data: KidFormValues) {
     try {
-      await createKidMutation.mutateAsync(data);
+      await createKidMutation.mutateAsync(await buildKidRequest(data));
       showToast("Dependente cadastrado com sucesso.");
       exitScreen();
     } catch {
@@ -64,7 +66,7 @@ export function EditDependent() {
     }
   }
 
-  async function handleUpdate(kid: KidResponseDTO, data: KidRequestDTO) {
+  async function handleUpdate(kid: KidResponseDTO, data: KidFormValues) {
     try {
       const usePut = shouldUsePut(
         {
@@ -81,7 +83,11 @@ export function EditDependent() {
         },
         [...PUT_FIELDS],
       );
-      await saveKidMutation.mutateAsync({ kidId: kid.id, data, usePut });
+      await saveKidMutation.mutateAsync({
+        kidId: kid.id,
+        data: await buildKidRequest(data),
+        usePut,
+      });
       showToast("Dependente atualizado com sucesso.");
       exitScreen();
     } catch {
@@ -95,11 +101,11 @@ export function EditDependent() {
       return;
     }
     try {
-      await deleteKidMutation.mutateAsync(kid.id);
-      showToast("Dependente excluído com sucesso.");
+      await revokeKidMutation.mutateAsync(kid.id);
+      showToast("Consentimento revogado com sucesso.");
       exitScreen();
     } catch {
-      Alert.alert("Erro", "Não foi possível excluir o dependente.");
+      Alert.alert("Erro", "Não foi possível revogar o consentimento.");
     }
   }
 
@@ -169,27 +175,49 @@ export function EditDependent() {
             <Button
               variant="ghost"
               onPress={() => setConfirmingDelete(true)}
-              disabled={deleteKidMutation.isPending}
+              disabled={revokeKidMutation.isPending}
               className="self-center"
             >
               <TrashIcon size={20} color={colors.destructive} />
               <Text className="font-medium text-destructive">
-                {`Remover dependente`}
+                {`Revogar consentimento`}
               </Text>
             </Button>
           )}
         </Wrapper>
       </ScrollView>
 
-      <ConfirmDialog
-        open={confirmingDelete}
-        title="Excluir dependente"
-        message={`Deseja excluir ${kid?.name ?? ""}? Esta ação não pode ser desfeita.`}
-        confirmLabel="Excluir"
-        destructive
-        onConfirm={() => void handleDelete()}
-        onCancel={() => setConfirmingDelete(false)}
-      />
+      <BottomSheet
+        visible={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Revogar consentimento
+          </Text>
+        }
+      >
+        <Text className="text-base text-base-500">
+          {`Isso apaga ${kid?.name ?? ""} e todo o histórico. Esta ação não pode ser desfeita.`}
+        </Text>
+        <Button
+          variant="destructive"
+          onPress={() => void handleDelete()}
+          disabled={revokeKidMutation.isPending}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">
+            {revokeKidMutation.isPending ? "Revogando..." : "Revogar"}
+          </Text>
+        </Button>
+        <Button
+          variant="outline"
+          onPress={() => setConfirmingDelete(false)}
+          disabled={revokeKidMutation.isPending}
+          className="h-14 w-full rounded-full"
+        >
+          <Text className="text-base font-bold">Cancelar</Text>
+        </Button>
+      </BottomSheet>
     </Wrapper>
   );
 }

@@ -207,3 +207,23 @@ export function brDateToIsoKey(br: string): string | null {
 export function isoToBrDate(iso: string): string {
   return formatDatePtBR(iso) ?? "";
 }
+
+export function isAdultBirthDate(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+  const date = parseLocalDate(value.split("T")[0]);
+  if (!date) {
+    return false;
+  }
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const hadBirthdayThisYear =
+    today.getMonth() > date.getMonth() ||
+    (today.getMonth() === date.getMonth() &&
+      today.getDate() >= date.getDate());
+  if (!hadBirthdayThisYear) {
+    age -= 1;
+  }
+  return age >= 18;
+}
