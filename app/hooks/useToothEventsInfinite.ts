@@ -5,6 +5,7 @@ import {
   resolveAccountId,
   toothEventsInfiniteQueryKey,
 } from "@/lib/queryKeys";
+import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 
 export const TOOTH_EVENTS_PAGE_SIZE = 10;
@@ -27,6 +28,7 @@ export function useToothEventsInfinite(
     },
     enabled: !!kidId && !!authToken && !!accountId,
     staleTime: 1000 * 60 * 5,
+    retry: retryQuery,
   });
 
   const events = accountId

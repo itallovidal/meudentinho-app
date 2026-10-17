@@ -2,6 +2,7 @@ import { useContext, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllToothEventsByKid } from "@/api/smile/getToothEvents";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
+import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 
 export function useToothEvents(
@@ -15,6 +16,7 @@ export function useToothEvents(
     queryFn: () => getAllToothEventsByKid(kidId!, authToken!),
     enabled: !!kidId && !!authToken && !!accountId,
     staleTime: 1000 * 60 * 5,
+    retry: retryQuery,
   });
 
   const events = useMemo(() => {

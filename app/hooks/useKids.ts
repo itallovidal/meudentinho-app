@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllKids } from "@/api/kids/getAllKids";
 import { kidsSubject } from "@/lib/kidsSubject";
 import { kidsQueryKey, resolveAccountId } from "@/lib/queryKeys";
+import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
 import { KidResponseDTO } from "@/types/dtos/user";
@@ -19,7 +20,7 @@ export function useKids(authToken: string | null | undefined) {
     queryFn: () => getAllKids(authToken!).then((res) => res.data ?? []),
     enabled: !!authToken && !!accountId,
     staleTime: 1000 * 60 * 5,
-    retry: false,
+    retry: retryQuery,
   });
 
   useEffect(() => {

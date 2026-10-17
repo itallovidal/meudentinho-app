@@ -30,41 +30,45 @@ export function DeleteEventSheet({
         <Text className="text-xl font-bold text-base-900">{title}</Text>
       }
     >
-      {dependents.length > 0 ? (
+      {(dismiss) => (
         <>
-          <Text className="text-base text-base-500">
-            Excluir esse registro, também removerá os registros:
-          </Text>
-          <View className="gap-2">
-            {dependents.map((dependent) => (
-              <ToothEventCard
-                key={dependent.id}
-                event={dependent}
-                size="small"
-                tone="muted"
-              />
-            ))}
-          </View>
+          {dependents.length > 0 ? (
+            <>
+              <Text className="text-base text-base-500">
+                Excluir esse registro, também removerá os registros:
+              </Text>
+              <View className="gap-2">
+                {dependents.map((dependent) => (
+                  <ToothEventCard
+                    key={dependent.id}
+                    event={dependent}
+                    size="small"
+                    tone="muted"
+                  />
+                ))}
+              </View>
+            </>
+          ) : (
+            <Text className="text-base text-base-500">
+              O registro será removido do histórico.
+            </Text>
+          )}
+          <Button
+            variant="destructive"
+            onPress={onConfirm}
+            className="h-14 w-full rounded-full"
+          >
+            <Text className="text-base font-bold">{confirmLabel}</Text>
+          </Button>
+          <Button
+            variant="outline"
+            onPress={dismiss}
+            className="h-14 w-full rounded-full"
+          >
+            <Text className="text-base font-bold">Cancelar</Text>
+          </Button>
         </>
-      ) : (
-        <Text className="text-base text-base-500">
-          O registro será removido do histórico.
-        </Text>
       )}
-      <Button
-        variant="destructive"
-        onPress={onConfirm}
-        className="h-14 w-full rounded-full"
-      >
-        <Text className="text-base font-bold">{confirmLabel}</Text>
-      </Button>
-      <Button
-        variant="outline"
-        onPress={onCancel}
-        className="h-14 w-full rounded-full"
-      >
-        <Text className="text-base font-bold">Cancelar</Text>
-      </Button>
     </BottomSheet>
   );
 }
