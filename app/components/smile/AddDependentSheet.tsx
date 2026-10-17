@@ -11,6 +11,8 @@ type AddDependentSheetProps = {
   onSubmit: (data: KidFormValues) => void | Promise<void>;
 };
 
+const ADD_DEPENDENT_PORTAL_HOST = "add-dependent-sheet";
+
 export function AddDependentSheet({
   visible,
   submitError,
@@ -20,6 +22,7 @@ export function AddDependentSheet({
   return (
     <BottomSheet
       visible={visible}
+      portalHostName={ADD_DEPENDENT_PORTAL_HOST}
       onClose={onClose}
       header={
         <Text className="text-xl font-bold text-base-900">
@@ -31,6 +34,7 @@ export function AddDependentSheet({
         onSubmit={onSubmit}
         submitError={submitError}
         submittingLabel="Adicionando..."
+        popoverHost={ADD_DEPENDENT_PORTAL_HOST}
       />
     </BottomSheet>
   );
