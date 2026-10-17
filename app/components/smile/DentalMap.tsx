@@ -3,6 +3,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
+  Pressable,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -18,11 +19,15 @@ import {
   MILK_SYMBOL_DASH,
   TOOTH_STYLE,
   isMilkSymbol,
+  type ToothMapStateKey,
 } from "./teeth/toothStyle";
 import { Text } from "@/components/ui/text";
 import { ToothEventModal } from "./ToothEventModal";
 import { ageInMonths } from "@/lib/utils";
-import { parseToothId } from "@/lib/teethLabels";
+import {
+  parseToothId,
+  toothAccessibilityLabel,
+} from "@/lib/teethLabels";
 import {
   isInEruptionWindow,
   toothState,
@@ -83,6 +88,19 @@ const OPEN_TOOTH_SIZE = 28;
 const OPEN_ARCH_HEIGHT = 190;
 const GUM_COLOR = "#F4A3A6";
 const GUM_EDGE_COLOR = "#C2555F";
+
+function nearestPosition(
+  points: { id: string; x: number; y: number }[],
+  px: number,
+  py: number,
+) {
+  return points.reduce((best, point) =>
+    Math.hypot(point.x - px, point.y - py) <
+    Math.hypot(best.x - px, best.y - py)
+      ? point
+      : best,
+  );
+}
 
 function buildArch(arch: Arch, side: Side): ToothPosition[] {
   const quadrant = `${arch}_${side}` as Quadrant;
@@ -152,6 +170,21 @@ export function DentalMap({
     }
     return map;
   }, [arches, events]);
+
+  const latestEventByTooth = useMemo(() => {
+    const map = new Map<string, ToothEvent>();
+    for (const event of events) {
+      const key = `${event.quadrant}:${event.toothType}`;
+      const current = map.get(key);
+      if (
+        !current ||
+        (event.occurrenceDate ?? "").localeCompare(current.occurrenceDate) > 0
+      ) {
+        map.set(key, event);
+      }
+    }
+    return map;
+  }, [events]);
 
   const archWidth = Math.max(300, screenWidth - 100);
 
@@ -241,6 +274,18 @@ export function DentalMap({
     );
   }
 
+  function eventOf(position: ToothPosition): ToothEvent | undefined {
+    return latestEventByTooth.get(`${position.quadrant}:${position.toothType}`);
+  }
+
+  function stateKeyOf(position: ToothPosition): ToothMapStateKey {
+    const state = stateOf(position);
+    if (state === "unregistered" && eruptionWindowOf(position)) {
+      return "eruptionWindow";
+    }
+    return state;
+  }
+
   function renderOpenArch(
     right: ToothPosition[],
     left: ToothPosition[],
@@ -282,17 +327,23 @@ export function DentalMap({
         return null;
       }
       const { x, y, rotation } = place(sign, curveIndex);
-      const state = stateOf(position);
-      const highlighted =
-        state === "unregistered" && eruptionWindowOf(position);
-      const key = highlighted ? "eruptionWindow" : state;
+      const key = stateKeyOf(position);
       const style = TOOTH_STYLE[key];
       const milk = isMilkSymbol(key);
+      const event = eventOf(position);
+      const isSelected = selectedTooth === position.id;
       return (
         <TouchableOpacity
           key={position.id}
           onPress={() => onToothPress(position.id)}
-          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={toothAccessibilityLabel({
+            toothId: position.id,
+            state: key,
+            event,
+          })}
+          accessibilityHint="Abre o registro deste dente"
+          accessibilityState={{ selected: isSelected }}
           style={{
             position: "absolute",
             left: x - OPEN_TOOTH_SIZE / 2,
@@ -343,6 +394,35 @@ export function DentalMap({
         </Svg>
         {right.map((position, index) => renderPlaced(position, -1, 7 - index))}
         {left.map((position, index) => renderPlaced(position, 1, index))}
+        <Pressable
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: archWidth,
+            height: OPEN_ARCH_HEIGHT,
+          }}
+          onPress={(event) => {
+            const { locationX, locationY } = event.nativeEvent;
+            const points = [
+              ...right.map((position, index) => ({
+                id: position.id,
+                ...place(-1, 7 - index),
+              })),
+              ...left.map((position, index) => ({
+                id: position.id,
+                ...place(1, index),
+              })),
+            ];
+            const nearest = nearestPosition(points, locationX, locationY);
+            if (nearest) {
+              onToothPress(nearest.id);
+            }
+          }}
+        />
       </View>
     );
   }
