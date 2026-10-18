@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
-import { LoginRequest } from "@/types/dtos/user";
+import type { LoginRequest } from "@/types/dtos/user";
 
 interface LoginFormProps {
   onSubmit: (data: LoginRequest) => void | Promise<void>;

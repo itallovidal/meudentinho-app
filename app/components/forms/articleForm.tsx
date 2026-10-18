@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
 import { articleSchema } from "@/lib/schemas/article";
-import { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
+import type { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useMemo } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { ScrollView } from "react-native";

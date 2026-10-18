@@ -15,7 +15,7 @@ import {
   goBackToOriginTab,
   type LooseNavigation,
 } from "@/navigation/crossTabBack";
-import { KidResponseDTO } from "@/types/dtos/user";
+import type { KidResponseDTO } from "@/types/dtos/user";
 import { KidFormValues } from "@/lib/schemas/kid";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { TrashIcon } from "phosphor-react-native";

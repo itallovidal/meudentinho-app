@@ -6,7 +6,7 @@ import { kidsQueryKey, resolveAccountId } from "@/lib/queryKeys";
 import { retryQuery } from "@/lib/queryRetry";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
-import { KidResponseDTO } from "@/types/dtos/user";
+import type { KidResponseDTO } from "@/types/dtos/user";
 
 export type KidsLoadFailure = "auth" | "network";
 

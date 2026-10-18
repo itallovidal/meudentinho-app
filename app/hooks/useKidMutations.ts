@@ -4,7 +4,7 @@ import { patchKid } from "@/api/kids/patchKid";
 import { revokeKidConsent } from "@/api/kids/revokeKidConsent";
 import { updateKid } from "@/api/kids/updateKid";
 import { notifyKidsChanged } from "@/lib/kidsSubject";
-import { KidRequestDTO } from "@/types/dtos/user";
+import type { KidRequestDTO } from "@/types/dtos/user";
 
 type SaveKidVariables = {
   kidId: string;

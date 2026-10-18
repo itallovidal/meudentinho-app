@@ -5,7 +5,7 @@ import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
-import { ArticleRequestDTO } from "@/types/dtos/article";
+import type { ArticleRequestDTO } from "@/types/dtos/article";
 import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

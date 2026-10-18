@@ -1,4 +1,4 @@
-import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
+import type { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleBanner } from "./articleBanner";
 import { ArticleCard } from "./articleCard";
 import { Wrapper } from "../wrapper";

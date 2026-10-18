@@ -14,7 +14,7 @@ import { useKids } from "@/hooks/useKids";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import { KidRequestDTO } from "@/types/dtos/user";
+import type { KidRequestDTO } from "@/types/dtos/user";
 import { KidFormValues } from "@/lib/schemas/kid";
 import { buildKidRequest } from "@/lib/privacyPolicy";
 import { RegisterKidSection } from "@/components/home/registerKidSection";

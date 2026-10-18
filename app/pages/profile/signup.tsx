@@ -12,7 +12,7 @@ import {
 } from "phosphor-react-native";
 import { useContext, useCallback, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
-import { SignupRequest } from "@/types/dtos/user";
+import type { SignupRequest } from "@/types/dtos/user";
 import { SignupFormValues } from "@/lib/schemas/profile";
 import { UserContext } from "@/contexts/UserContext";
 import { ApiError } from "@/types/domain";
