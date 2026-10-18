@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { KidResponseDTO } from "@/types/dtos/user";
+import type { KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function getAllKids(
@@ -21,7 +21,6 @@ export async function getAllKids(
   const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;
 
   if (payload.status !== 200 && isApiError(payload.error)) {
-    console.log("Get kids failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
   
@@ -32,7 +31,6 @@ export async function getAllKids(
     );
   }
   
-  console.log("Get kids response status:", response.status);
 
   return payload;
 }

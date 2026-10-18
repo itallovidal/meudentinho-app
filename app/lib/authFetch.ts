@@ -51,6 +51,9 @@ function withToken(
 }
 
 function logSessionRefresh(token: string) {
+  if (!__DEV__) {
+    return;
+  }
   const now = new Date().toLocaleTimeString("pt-BR");
   try {
     const segment = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");

@@ -1,14 +1,13 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { ArticleRequestDTO } from "@/types/dtos/article";
+import type { ArticleRequestDTO } from "@/types/dtos/article";
 import { isApiError } from "@/types/predicates";
 
 export async function createNewArticle(
   articleRequestDTO: ArticleRequestDTO,
   authToken: string,
 ) {
-  console.log("Creating new article...");
   const response = await authFetch(`${ENV.BASE_API_URL}/articles`, {
     method: "POST",
     headers: {
@@ -20,7 +19,6 @@ export async function createNewArticle(
   const payload = (await response.json()) as ResponsePayload<{}>;
 
   if (payload.status !== 201 && isApiError(payload.error)) {
-    console.log("Article creation failed with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
 

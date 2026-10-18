@@ -1,6 +1,6 @@
 import { ENV } from "@/lib/env";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { LoginRequest, UserAuthResponseDTO } from "@/types/dtos/user";
+import type { LoginRequest, UserAuthResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function login(

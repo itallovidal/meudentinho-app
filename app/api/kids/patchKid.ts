@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
+import type { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
 import { isApiError } from "@/types/predicates";
 
 export async function patchKid(
