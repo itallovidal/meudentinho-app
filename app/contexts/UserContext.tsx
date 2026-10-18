@@ -11,9 +11,9 @@ import {
 import { configureAuthFetch } from "@/lib/authFetch";
 import type { RefreshedSessionInfo } from "@/lib/authFetch";
 import { getUserIdFromToken } from "@/lib/utils";
-import { BasicUser } from "@/types/domain";
+import type { BasicUser } from "@/types/domain";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 export interface UserContextProps {
@@ -220,7 +220,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUserId(resolvedUserId);
       }
     } catch (err) {
-      console.log("Error loading user from storage:", err);
+      if (__DEV__) {
+        console.log("Error loading user from storage:", err);
+      }
       await clearAllLocalStorage();
     } finally {
       setHydrated(true);
@@ -231,12 +233,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     void loadUserFromStorage();
   }, []);
 
-  async function updateAppUser(
-    user: BasicUser | null,
-    authToken: string | null = null,
-    refreshToken?: string | null,
-    userId?: string | null,
-  ) {
+  const updateAppUser = useCallback(
+    async (
+      user: BasicUser | null,
+      authToken: string | null = null,
+      refreshToken?: string | null,
+      userId?: string | null,
+    ) => {
     try {
       await persistGate.current;
       sessionGeneration.current += 1;
@@ -303,13 +306,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
         await setLocalStorageItem("userId", JSON.stringify(nextUserId));
       }
     } catch (err) {
-      console.log("Error updating user:", err);
+      if (__DEV__) {
+        console.log("Error updating user:", err);
+      }
     }
-  }
+  },
+  [],
+);
 
-  async function updateUserProfile(
-    profile: Partial<Pick<BasicUser, "name" | "email">>,
-  ) {
+  const updateUserProfile = useCallback(
+    async (profile: Partial<Pick<BasicUser, "name" | "email">>) => {
     try {
       const current = sessionRef.current.user;
       if (!current) {
@@ -328,28 +334,45 @@ export function UserProvider({ children }: { children: ReactNode }) {
       sessionRef.current = { ...sessionRef.current, user: nextUser };
       await setLocalStorageItem("user", JSON.stringify(nextUser));
     } catch (err) {
-      console.log("Error updating user profile:", err);
+      if (__DEV__) {
+        console.log("Error updating user profile:", err);
+      }
     }
-  }
+  },
+  [],
+);
 
-  function clearSessionExpired() {
+  const clearSessionExpired = useCallback(() => {
     setSessionExpired(false);
-  }
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      user,
+      authToken,
+      refreshToken,
+      userId,
+      hydrated,
+      sessionExpired,
+      updateAppUser,
+      updateUserProfile,
+      clearSessionExpired,
+    }),
+    [
+      user,
+      authToken,
+      refreshToken,
+      userId,
+      hydrated,
+      sessionExpired,
+      updateAppUser,
+      updateUserProfile,
+      clearSessionExpired,
+    ],
+  );
 
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        authToken,
-        refreshToken,
-        userId,
-        hydrated,
-        sessionExpired,
-        updateAppUser,
-        updateUserProfile,
-        clearSessionExpired,
-      }}
-    >
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );
