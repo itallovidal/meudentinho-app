@@ -1,6 +1,6 @@
 import { Component } from "react";
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { ErrorScreen } from "./errorScreen";
 import { ErrorState } from "./errorState";
 
 interface ErrorBoundaryProps {
@@ -24,13 +24,13 @@ export class ErrorBoundary extends Component<
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <View className="flex-1 items-center justify-center bg-base-100 px-6">
+        <ErrorScreen>
           <ErrorState
             title="Algo deu errado"
             message="Ocorreu um erro inesperado. Tente novamente."
             onRetry={() => this.setState({ hasError: false })}
           />
-        </View>
+        </ErrorScreen>
       );
     }
 

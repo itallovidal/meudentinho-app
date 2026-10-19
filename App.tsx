@@ -11,6 +11,8 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
+import { envIssues } from "@/lib/env";
+import { InvalidEnvScreen } from "@/components/invalidEnvScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -34,6 +36,11 @@ function SessionNavigation() {
 
 export default function App() {
   colorScheme.set("light");
+
+  if (envIssues.length > 0) {
+    return <InvalidEnvScreen issues={envIssues} />;
+  }
+
   const colors = THEME.light;
 
   return (
