@@ -5,7 +5,7 @@ import { ArrowsClockwiseIcon } from "phosphor-react-native";
 import { Image, View } from "react-native";
 
 interface ErrorStateProps {
-  onRetry: () => void;
+  onRetry?: () => void;
   title?: string;
   message?: string;
   retryLabel?: string;
@@ -33,10 +33,12 @@ export function ErrorState({
       <Text className="mb-4 text-center text-base text-base-500">
         {message}
       </Text>
-      <Button onPress={onRetry} className="h-14 w-full rounded-full bg-primary-800">
-        <Text className="text-base font-bold">{retryLabel}</Text>
-        <ArrowsClockwiseIcon size={20} color={colors.base100} weight="bold" />
-      </Button>
+      {onRetry && (
+        <Button onPress={onRetry} className="h-14 w-full rounded-full bg-primary-800">
+          <Text className="text-base font-bold">{retryLabel}</Text>
+          <ArrowsClockwiseIcon size={20} color={colors.base100} weight="bold" />
+        </Button>
+      )}
     </View>
   );
 }
