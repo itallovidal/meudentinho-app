@@ -7,7 +7,7 @@ import { LoginForm } from "@/components/forms/loginForm";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
 import { useCallback, useContext, useState } from "react";
-import { LoginRequest } from "@/types/dtos/user";
+import type { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 import { login } from "@/api/auth/login";
 

@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { formatAgeFromBirthDate, formatDatePtBR } from "@/lib/utils";
 import { THEME } from "@/lib/theme";
-import { KidResponseDTO } from "@/types/dtos/user";
+import type { KidResponseDTO } from "@/types/dtos/user";
 import { CaretRightIcon } from "phosphor-react-native";
 import { TouchableOpacity, View } from "react-native";
 

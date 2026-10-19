@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
-import { ToothPrediction } from "@/types/teeth";
+import type { ToothPrediction } from "@/types/teeth";
 import {
   formatPredictionWindow,
   PREDICTION_STATUS_LABEL,

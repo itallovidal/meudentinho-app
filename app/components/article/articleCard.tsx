@@ -3,7 +3,7 @@ import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 import { useNavigation } from "@react-navigation/native";
 import { ClockIcon } from "phosphor-react-native";
-import { ArticlePreviewDTO } from "@/types/dtos/article";
+import type { ArticlePreviewDTO } from "@/types/dtos/article";
 import { THEME } from "@/lib/theme";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import type { TabName } from "@/navigation/types";

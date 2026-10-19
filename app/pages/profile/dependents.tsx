@@ -7,7 +7,7 @@ import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKids } from "@/hooks/useKids";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
-import { KidResponseDTO } from "@/types/dtos/user";
+import type { KidResponseDTO } from "@/types/dtos/user";
 import { useNavigation } from "@react-navigation/native";
 import { PlusIcon } from "phosphor-react-native";
 import { useContext, useEffect } from "react";

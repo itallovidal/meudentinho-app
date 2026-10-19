@@ -1,4 +1,4 @@
-import { ArticlePreviewDTO, ArticleCategory } from "@/types/dtos/article";
+import type { ArticlePreviewDTO, ArticleCategory } from "@/types/dtos/article";
 import { ArticleListRender } from "./articleListRender";
 import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
 import { ErrorState } from "../errorState";

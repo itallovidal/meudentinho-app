@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, MetaApiPayload, ResponsePayload } from "@/types/domain";
-import { ToothEvent } from "@/types/teeth";
+import type { ToothEvent } from "@/types/teeth";
 import { isApiError } from "@/types/predicates";
 
 export interface ToothEventsPageParams {

@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
+import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
 import { isApiError } from "@/types/predicates";
 
 export async function updateToothEvent(

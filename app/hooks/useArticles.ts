@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
+import type { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getAllArticles";
 import { retryQuery } from "@/lib/queryRetry";

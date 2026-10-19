@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
-import { ToothEvent } from "@/types/teeth";
+import type { ToothEvent } from "@/types/teeth";
 import { ClockCounterClockwiseIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
 import { ToothEventCard } from "@/components/smile/ToothEventCard";

@@ -5,7 +5,6 @@ import { ENV } from "@/lib/env";
 export async function getAllCategories(): Promise<
   ResponsePayload<[{ name: string; id: string }]>
 > {
-  console.log("Fetching /articles/categories...");
 
   const response = await fetch(`${ENV.BASE_API_URL}/articles/categories`, {
     method: "GET",
@@ -19,7 +18,6 @@ export async function getAllCategories(): Promise<
   >;
 
   if (payload.status !== 200 && isApiError(payload.error)) {
-    console.log("Failed to fetch categories with error:", payload.error);
     throw new ApiError(payload.error.message, payload.error.code);
   }
 
