@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/new-icon.png",
     "userInterfaceStyle": "light",
-    "androidNavigationBar": {
-      "visible": true,
-      "barStyle": "dark-content",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.meudentinhoapp"

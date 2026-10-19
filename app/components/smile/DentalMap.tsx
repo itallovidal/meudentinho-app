@@ -12,7 +12,7 @@ import Svg, { Path } from "react-native-svg";
 import { Wrapper } from "@/components/wrapper";
 import { useToast } from "@/components/ui/toast";
 import ToothSVG from "./teeth/ToothSVG";
-import { FDI_TEETH } from "./teeth/fdiTeeth";
+import { FDI_TEETH, type FdiNumber } from "./teeth/fdiTeeth";
 import {
   LEGEND,
   LEGEND_TOOTH,
@@ -50,7 +50,7 @@ type ToothPosition = {
   arch: Arch;
   side: Side;
   quadrant: Quadrant;
-  fdi: string;
+  fdi: FdiNumber;
 };
 
 const QUADRANT_TYPES: ToothType[] = [
@@ -110,7 +110,7 @@ function buildArch(arch: Arch, side: Side): ToothPosition[] {
     arch,
     side,
     quadrant,
-    fdi: `${FDI_DECADE[quadrant]}${FDI_UNIT[toothType]}`,
+    fdi: `${FDI_DECADE[quadrant]}${FDI_UNIT[toothType]}` as FdiNumber,
   }));
 }
 
@@ -323,9 +323,6 @@ export function DentalMap({
       curveIndex: number,
     ) {
       const tooth = FDI_TEETH[position.fdi];
-      if (!tooth) {
-        return null;
-      }
       const { x, y, rotation } = place(sign, curveIndex);
       const key = stateKeyOf(position);
       const style = TOOTH_STYLE[key];

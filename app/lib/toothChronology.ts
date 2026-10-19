@@ -12,7 +12,11 @@ export interface ToothChronology {
   permanent: { from: number; to: number; limit: number };
 }
 
-const CHRONOLOGY: Record<string, ToothChronology> = {
+type ChronologyKey = `${Arch}:${ToothType}`;
+
+type WomenPermanentKey = `${Quadrant}:${ToothType}`;
+
+const CHRONOLOGY: Record<ChronologyKey, ToothChronology> = {
   "upper:central_incisor": {
     deciduous: { at: 10, limit: 16.2 },
     permanent: { from: 84, to: 96, limit: 102 },
@@ -81,7 +85,7 @@ const CHRONOLOGY: Record<string, ToothChronology> = {
 
 export type ChronologyGender = "male" | "female";
 
-const WOMEN_PERMANENT: Record<string, ToothChronology["permanent"]> = {
+const WOMEN_PERMANENT: Record<WomenPermanentKey, ToothChronology["permanent"]> = {
   "upper_right:central_incisor": { from: 84, to: 96, limit: 102 },
   "upper_right:lateral_incisor": { from: 96, to: 108, limit: 114 },
   "upper_right:canine": { from: 132, to: 144, limit: 147 },
