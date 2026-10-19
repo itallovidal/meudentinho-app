@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, RefreshControl, ActivityIndicator } from "react-native";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
+import { useArticleSearch } from "@/hooks/useArticleSearch";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { SearchInput } from "@/components/searchinput";
+import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
-import { ArticlePreviewDTO } from "@/types/dtos/article";
+import { isApiError } from "@/types/predicates";
 
 export function Index() {
   const {
@@ -22,30 +24,21 @@ export function Index() {
   } = useArticles({ withCategories: true });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    ArticlePreviewDTO[] | null
-  >(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const {
+    results: searchResults,
+    isFetching: isSearching,
+    error: searchError,
+    refetch: retrySearch,
+    isSearchActive,
+  } = useArticleSearch(searchQuery);
 
-  function handleSearchStart(query: string) {
-    setSearchQuery(query);
-    setSearchResults(null);
-    setIsSearching(true);
-  }
+  const handleSearchTermChange = useCallback((term: string) => {
+    setSearchQuery(term);
+  }, []);
 
-  function handleSearchComplete(query: string, results: ArticlePreviewDTO[]) {
-    setSearchQuery(query);
-    setSearchResults(results);
-    setIsSearching(false);
-  }
-
-  function handleSearchReset() {
-    setSearchQuery("");
-    setSearchResults(null);
-    setIsSearching(false);
-  }
-
-  const isSearchActive = searchQuery.trim() !== "";
+  const searchErrorMessage = isApiError(searchError)
+    ? searchError.message
+    : "Verifique sua conexão e tente novamente.";
 
   return (
     <Wrapper
@@ -71,11 +64,7 @@ export function Index() {
           justify="start"
           gap="gap-4"
         >
-          <SearchInput
-            onSearchStart={handleSearchStart}
-            onSearchComplete={handleSearchComplete}
-            onSearchReset={handleSearchReset}
-          />
+          <SearchInput onSearchTermChange={handleSearchTermChange} />
 
           {isSearching && (
             <Wrapper className="w-full items-center justify-center py-8">
@@ -84,7 +73,15 @@ export function Index() {
             </Wrapper>
           )}
 
-          {!isSearching && searchResults !== null && isSearchActive && (
+          {!isSearching && isSearchActive && !!searchError && (
+            <ErrorState
+              title="Não foi possível buscar os artigos"
+              message={searchErrorMessage}
+              onRetry={() => void retrySearch()}
+            />
+          )}
+
+          {!isSearching && isSearchActive && !searchError && (
             <>
               {searchResults.length === 0 ? (
                 <Text className="py-8 text-center">

@@ -3,8 +3,6 @@ import { Button } from "./ui/button";
 import { FormInput } from "./formInput";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { searchArticles } from "@/api/article/searchArticles";
-import { ArticlePreviewDTO } from "@/types/dtos/article";
 import { Wrapper } from "./wrapper";
 
 type SearchFormData = {
@@ -12,20 +10,16 @@ type SearchFormData = {
 };
 
 interface SearchInputProps {
-  onSearchStart?: (query: string) => void;
-  onSearchComplete: (query: string, articles: ArticlePreviewDTO[]) => void;
-  onSearchReset?: () => void;
+  onSearchTermChange: (term: string) => void;
 }
 
-export function SearchInput({
-  onSearchStart,
-  onSearchComplete,
-  onSearchReset,
-}: SearchInputProps) {
+const DEBOUNCE_MS = 400;
+
+export function SearchInput({ onSearchTermChange }: SearchInputProps) {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
     watch,
     reset,
   } = useForm<SearchFormData>({
@@ -36,58 +30,32 @@ export function SearchInput({
     },
   });
 
-  async function fetchSearchResults(query: string) {
-    try {
-      const payload = await searchArticles(query);
-      if (payload.status === 200) {
-        onSearchComplete(query, payload.data || []);
-        return;
-      }
-
-      onSearchComplete(query, []);
-    } catch (error) {
-      onSearchComplete(query, []);
-    }
-  }
-
   const query = watch("query");
-  const lastSearched = useRef("");
+  const termChangeRef = useRef(onSearchTermChange);
+
+  useEffect(() => {
+    termChangeRef.current = onSearchTermChange;
+  }, [onSearchTermChange]);
 
   useEffect(() => {
     const trimmed = query.trim();
-    if (!trimmed || trimmed === lastSearched.current) {
-      return;
-    }
     const timer = setTimeout(() => {
-      lastSearched.current = trimmed;
-      onSearchStart?.(trimmed);
-      void fetchSearchResults(trimmed);
-    }, 400);
+      termChangeRef.current(trimmed);
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [query]);
 
-  async function handleSearchSubmit(data: SearchFormData) {
-    const query = data.query.trim();
-
-    if (!query) {
-      onSearchReset?.();
-      return;
-    }
-
-    lastSearched.current = query;
-    onSearchStart?.(query);
-    await fetchSearchResults(query);
+  function publishNow(term: string) {
+    termChangeRef.current(term);
   }
 
-  function onPress() {
-    if (watch("query")) {
+  function handleActionPress() {
+    if (query.trim()) {
       reset();
-      lastSearched.current = "";
-      onSearchReset?.();
+      publishNow("");
       return;
     }
-
-    handleSubmit(handleSearchSubmit)();
+    publishNow("");
   }
 
   return (
@@ -98,24 +66,26 @@ export function SearchInput({
     >
       <FormInput
         control={control}
-        errors={errors}
+        errors={{}}
         name="query"
         inputProps={{
           accessibilityLabel: "Buscar artigos e guias",
           placeholder: "Buscar artigos e guias",
           returnKeyType: "search",
-          onSubmitEditing: handleSubmit(handleSearchSubmit),
+          onSubmitEditing: handleSubmit((data) =>
+            publishNow(data.query.trim()),
+          ),
           className: "bg-base-100 rounded-lg pl-4 pr-10",
         }}
       />
       <Button
         variant="ghost"
-        onPress={onPress}
+        onPress={handleActionPress}
         disabled={isSubmitting}
         accessibilityLabel={query ? "Limpar busca" : "Buscar artigos"}
         className="absolute right-0 h-full"
       >
-        {watch("query") ? (
+        {query ? (
           <XIcon size={16} color="gray" weight="regular" />
         ) : (
           <MagnifyingGlassIcon size={16} color="gray" weight="regular" />
