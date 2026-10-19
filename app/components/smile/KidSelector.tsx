@@ -2,7 +2,7 @@ import { ScrollView, TouchableOpacity, View } from "react-native";
 import { PlusIcon } from "phosphor-react-native";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
-import { cn, formatAgeFromBirthDate } from "@/lib/utils";
+import { cn, formatAgeFromBirthDate, shortDisplayName } from "@/lib/utils";
 
 export type KidOption = {
   id: string;
@@ -81,7 +81,7 @@ export function KidSelector({
                     isSelected ? "text-base-100" : "text-primary-500",
                   )}
                 >
-                  {kid.name.split(" ")[0]}
+                  {shortDisplayName(kid.name)}
                 </Text>
                 {age ? (
                   <Text

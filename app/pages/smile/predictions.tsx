@@ -6,7 +6,7 @@ import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import DentalProgressChart from "@/components/smile/DentalProgressChart";
-import { PredictionCalendar } from "@/components/smile/PredictionCalendar";
+import { DentalCalendar } from "@/components/smile/DentalCalendar";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
@@ -234,7 +234,7 @@ export function SmilePredictions() {
                     align="center"
                     justify="start"
                   >
-                    <PredictionCalendar
+                    <DentalCalendar
                       key={kid.id}
                       marks={marks}
                       initialDate={defaultFocus?.date ?? new Date()}

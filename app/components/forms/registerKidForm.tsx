@@ -29,6 +29,7 @@ interface Props {
   submitLabel?: string;
   submittingLabel?: string;
   footer?: ReactNode;
+  popoverHost?: string;
 }
 
 const SECTION_MAX_HEIGHT = 300;
@@ -40,6 +41,7 @@ export function RegisterKidForm({
   submittingLabel = "Salvando...",
   submitError,
   footer,
+  popoverHost,
 }: Props) {
   const colors = THEME.light;
   const [isPremature, setIsPremature] = useState(
@@ -186,6 +188,7 @@ export function RegisterKidForm({
             side="top"
             align="end"
             sideOffset={8}
+            portalHost={popoverHost}
             className="w-64 border-0 bg-transparent p-0 shadow-none"
           >
             <View className="rounded-2xl bg-base-400 px-4 py-3 shadow-lg">
