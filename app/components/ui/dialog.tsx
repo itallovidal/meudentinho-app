@@ -3,7 +3,7 @@ import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
-import { Platform, StyleSheet, Text, View, type ViewProps } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { FadeIn, FadeOut } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 
@@ -17,6 +17,8 @@ const DialogClose = DialogPrimitive.Close;
 
 const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
+const DialogWindow = Platform.OS === 'android' ? Modal : React.Fragment;
+
 function DialogOverlay({
   className,
   children,
@@ -24,23 +26,32 @@ function DialogOverlay({
 }: Omit<React.ComponentProps<typeof DialogPrimitive.Overlay>, 'asChild'> & {
   children?: React.ReactNode;
 }) {
+  const { onOpenChange } = DialogPrimitive.useRootContext();
+
   return (
     <FullWindowOverlay>
-      <DialogPrimitive.Overlay
-        className={cn(
-          'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
-          Platform.select({
-            web: 'animate-in fade-in-0 fixed cursor-default [&>*]:cursor-auto',
-          }),
-          className
-        )}
-        style={Platform.select({ native: StyleSheet.absoluteFill })}
-        {...props}
-        asChild={Platform.OS !== 'web'}>
-        <NativeOnlyAnimatedView entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
-          <>{children}</>
-        </NativeOnlyAnimatedView>
-      </DialogPrimitive.Overlay>
+      <DialogWindow
+        transparent
+        visible
+        onRequestClose={() => onOpenChange(false)}
+      >
+        <DialogPrimitive.Overlay
+          accessibilityViewIsModal
+          className={cn(
+            'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
+            Platform.select({
+              web: 'animate-in fade-in-0 fixed cursor-default [&>*]:cursor-auto',
+            }),
+            className
+          )}
+          style={Platform.select({ native: StyleSheet.absoluteFill })}
+          {...props}
+          asChild={Platform.OS !== 'web'}>
+          <NativeOnlyAnimatedView entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+            <>{children}</>
+          </NativeOnlyAnimatedView>
+        </DialogPrimitive.Overlay>
+      </DialogWindow>
     </FullWindowOverlay>
   );
 }

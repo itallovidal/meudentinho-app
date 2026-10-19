@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { AccessibilityInfo, Platform } from "react-native";
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,20 @@ export function FormInput<TFieldValues extends FieldValues>({
     fieldError && typeof fieldError.message === "string"
       ? fieldError.message
       : undefined;
+  const accessibleName = inputProps?.accessibilityLabel ?? label;
+  const announcedErrorRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios" || !errorMessage) {
+      announcedErrorRef.current = errorMessage;
+      return;
+    }
+    if (announcedErrorRef.current === errorMessage) {
+      return;
+    }
+    announcedErrorRef.current = errorMessage;
+    AccessibilityInfo.announceForAccessibility(errorMessage);
+  }, [errorMessage]);
 
   return (
     <Wrapper direction="column" className="w-full ">
@@ -53,6 +69,8 @@ export function FormInput<TFieldValues extends FieldValues>({
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
+                accessibilityLabel={accessibleName}
+                aria-invalid={!!errorMessage}
                 {...inputProps}
               />
             );
@@ -63,13 +81,19 @@ export function FormInput<TFieldValues extends FieldValues>({
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              accessibilityLabel={accessibleName}
+              aria-invalid={!!errorMessage}
               {...inputProps}
             />
           );
         }}
       />
       {errorMessage ? (
-        <Text className="mt-1 text-destructive" variant="small">
+        <Text
+          accessibilityLiveRegion="polite"
+          className="mt-1 text-destructive"
+          variant="small"
+        >
           {errorMessage}
         </Text>
       ) : null}

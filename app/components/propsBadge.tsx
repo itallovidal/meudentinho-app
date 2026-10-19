@@ -67,6 +67,8 @@ export function PropsBadge({
               variant={prop.isSelected ? "default" : "outline"}
               key={prop.id}
               onPress={() => onPress(prop)}
+              accessibilityState={{ selected: prop.isSelected }}
+              accessibilityLabel={`${prop.name}${prop.isSelected ? ", selecionado" : ""}`}
             >
               <Text>{prop.name}</Text>
             </Button>

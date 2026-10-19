@@ -101,6 +101,7 @@ export function SearchInput({
         errors={errors}
         name="query"
         inputProps={{
+          accessibilityLabel: "Buscar artigos e guias",
           placeholder: "Buscar artigos e guias",
           returnKeyType: "search",
           onSubmitEditing: handleSubmit(handleSearchSubmit),
@@ -111,6 +112,7 @@ export function SearchInput({
         variant="ghost"
         onPress={onPress}
         disabled={isSubmitting}
+        accessibilityLabel={query ? "Limpar busca" : "Buscar artigos"}
         className="absolute right-0 h-full"
       >
         {watch("query") ? (

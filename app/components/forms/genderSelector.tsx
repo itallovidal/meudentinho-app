@@ -16,8 +16,8 @@ type GenderSelectionProps = {
 };
 
 const OPTIONS = [
-  { value: "male", label: "M" },
-  { value: "female", label: "F" },
+  { value: "male", label: "M", a11yLabel: "Masculino" },
+  { value: "female", label: "F", a11yLabel: "Feminino" },
 ] as const;
 
 export function GenderSelector({
@@ -48,6 +48,8 @@ export function GenderSelector({
       </Text>
 
       <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Sexo"
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
         className="relative flex-row rounded-lg bg-base-200 p-1"
       >
@@ -60,6 +62,9 @@ export function GenderSelector({
           <TouchableOpacity
             key={option.value}
             onPress={() => onChange(option.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: gender === option.value }}
+            accessibilityLabel={option.a11yLabel}
             className="flex-1 items-center py-2"
           >
             <Text

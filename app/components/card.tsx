@@ -1,15 +1,11 @@
-import {
-  TouchableHighlight,
-  TouchableNativeFeedback,
-  TouchableOpacity,
-} from "react-native";
+import { Pressable, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const cardVariants = cva(
-  "w-full bg-base-100 rounded-lg p-4 border shadow-sm shadow-base-300 shadow-base-300 shadow-base-300 shadow-base-300 shadow-base-300 flex flex-row items-center gap-4",
+  "w-full bg-base-100 rounded-lg border p-4 shadow-sm shadow-base-300 flex flex-row items-center gap-4",
   {
     variants: {
       variant: {
@@ -48,7 +44,7 @@ const iconVariants = cva("rounded-lg p-2", {
 });
 
 type CardProps = VariantProps<typeof cardVariants> &
-  React.ComponentPropsWithoutRef<typeof TouchableNativeFeedback> & {
+  React.ComponentPropsWithoutRef<typeof View> & {
     icon?: React.ReactNode;
     title: string;
     children: React.ReactNode;
@@ -66,14 +62,15 @@ export function Card({
   variant = "default",
   handlePress,
   isDisabled = false,
+  ...rest
 }: CardProps) {
   const hasLowOpacity = isDisabled ? "opacity-50" : "";
   const onPress = isDisabled ? undefined : handlePress;
 
   const classes = cn(cardVariants({ variant }), className, hasLowOpacity);
 
-  return (
-    <TouchableOpacity onPress={onPress} className={classes}>
+  const content = (
+    <>
       {icon && (
         <Wrapper
           className={iconVariants({ variant })}
@@ -94,6 +91,26 @@ export function Card({
         </Text>
         <Text>{children}</Text>
       </Wrapper>
-    </TouchableOpacity>
+    </>
+  );
+
+  if (!onPress) {
+    return (
+      <View className={classes} {...rest}>
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
+      className={classes}
+      {...rest}
+    >
+      {content}
+    </Pressable>
   );
 }
