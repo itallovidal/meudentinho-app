@@ -2,6 +2,7 @@ import { ArticlePreviewDTO, ArticleCategory } from "@/types/dtos/article";
 import { ArticleListRender } from "./articleListRender";
 import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
 import { ErrorState } from "../errorState";
+import { QueryWarningBanner } from "../queryWarningBanner";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
@@ -18,6 +19,7 @@ type ArticleListSectionProps = {
   articlesByCategory?: Record<string, ArticlePreviewDTO[]>;
   isLoading?: boolean;
   isError?: boolean;
+  refetchError?: boolean;
   hideError?: boolean;
   onRetry?: () => void;
   fromTab?: TabName;
@@ -31,6 +33,7 @@ export function ArticleListSection({
   articlesByCategory = {},
   isLoading = false,
   isError = false,
+  refetchError = false,
   hideError = false,
   onRetry,
   fromTab,
@@ -62,6 +65,12 @@ export function ArticleListSection({
 
   return (
     <View className="w-full gap-4">
+      {refetchError && onRetry && (
+        <QueryWarningBanner
+          message="Não foi possível atualizar os artigos. Mostrando a lista carregada anteriormente."
+          onRetry={() => onRetry()}
+        />
+      )}
       {fromTab === "Home" && (
         <Text variant={"h4"} className="mb-4">
           Dicas e Artigos

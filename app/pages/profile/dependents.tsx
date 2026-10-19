@@ -1,6 +1,7 @@
 import { KidCard } from "@/components/dependents/kidCard";
 import { KidsListStatus } from "@/components/dependents/kidsListStatus";
 import { Header } from "@/components/header";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -21,7 +22,7 @@ export function Dependents() {
   const { authToken, hydrated } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
 
-  const { kids, isLoading, isRefreshing, failure, refetch } =
+  const { kids, isLoading, isRefreshing, failure, refetchError, refetch } =
     useKids(authToken);
 
   const isEmptyState = !isLoading && !failure && kids.length === 0;
@@ -102,6 +103,13 @@ export function Dependents() {
                     : "Toque em um dependente para editar os dados."}
                 </Text>
               </Wrapper>
+
+              {refetchError && (
+                <QueryWarningBanner
+                  message="Não foi possível atualizar os dependentes. Mostrando a lista carregada anteriormente."
+                  onRetry={() => void refetch()}
+                />
+              )}
 
               <KidsListStatus
                 loading={isLoading}

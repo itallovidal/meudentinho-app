@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getAllArticles";
+import { retryQuery } from "@/lib/queryRetry";
 
 type UseArticlesOptions = {
   withCategories?: boolean;
@@ -16,6 +17,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
     queryKey: ["articles-preview"],
     queryFn: () => getAllArticlePreview().then((res) => res.data),
     staleTime: 1000 * 60 * 5,
+    retry: retryQuery,
   });
 
   const categoriesQuery = useQuery({
@@ -23,6 +25,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
     queryFn: () => getAllCategories().then((res) => res.data),
     enabled: withCategories,
     staleTime: 1000 * 60 * 5,
+    retry: retryQuery,
   });
 
   const articlesData = articlesQuery.data;
@@ -62,9 +65,15 @@ export function useArticles(options: UseArticlesOptions = {}) {
 
   const latestArticle = articles.at(0);
   const isLoading =
-    articlesQuery.isPending || (withCategories && categoriesQuery.isPending);
-  const isError =
-    articlesQuery.isError || (withCategories && categoriesQuery.isError);
+    articlesQuery.isLoading || (withCategories && categoriesQuery.isLoading);
+
+  const articlesLoadError = articlesQuery.isLoadingError;
+  const categoriesLoadError = withCategories && categoriesQuery.isLoadingError;
+  const isError = articlesLoadError || categoriesLoadError;
+
+  const refetchError =
+    articlesQuery.isRefetchError ||
+    (withCategories && categoriesQuery.isRefetchError);
 
   const isRefreshing =
     articlesQuery.isRefetching ||
@@ -90,6 +99,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
     isLoading,
     isRefreshing,
     isError,
+    refetchError,
     onRefresh,
   };
 }

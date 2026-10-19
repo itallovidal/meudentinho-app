@@ -4,6 +4,7 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import { CaretDownIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import DentalProgressChart from "@/components/smile/DentalProgressChart";
 import { PredictionCalendar } from "@/components/smile/PredictionCalendar";
 import { Button } from "@/components/ui/button";
@@ -64,12 +65,17 @@ export function SmilePredictions() {
     isLoading: kidsPending,
     isFetching: kidsFetching,
     failure: kidsFailure,
+    refetchError: kidsRefetchError,
     refetch: refetchKids,
   } = useKids(authToken);
-  const { events, isPending, isError, isFetching, refetch } = useToothEvents(
-    params.kidId,
-    authToken,
-  );
+  const {
+    events,
+    isPending,
+    isLoadingError: eventsLoadingError,
+    isRefetchError: eventsRefetchError,
+    isFetching,
+    refetch,
+  } = useToothEvents(params.kidId, authToken);
 
   const scrollRef = useRef<ScrollView>(null);
   const kid = kids.find((item) => item.id === params.kidId);
@@ -138,7 +144,8 @@ export function SmilePredictions() {
   }, [events]);
 
   const isLoading = kidsPending || isPending;
-  const hasError = !!kidsFailure || isError;
+  const hasError = !!kidsFailure || eventsLoadingError;
+  const refetchError = kidsRefetchError || eventsRefetchError;
   const kidMissing = !kidsPending && !kidsFailure && !kid;
   const kidName = kid?.name || "Seu filho(a)";
 
@@ -180,6 +187,13 @@ export function SmilePredictions() {
             <ErrorState
               title="Não foi possível carregar as previsões"
               message="Verifique sua conexão e tente novamente."
+              onRetry={handleRefresh}
+            />
+          )}
+
+          {refetchError && !isLoading && (
+            <QueryWarningBanner
+              message="Não foi possível atualizar os dados. Mostrando as previsões calculadas anteriormente."
               onRetry={handleRefresh}
             />
           )}

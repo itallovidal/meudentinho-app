@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
@@ -56,6 +57,7 @@ export function Smile() {
     isLoading: kidsInitialLoading,
     isRefreshing: kidsRefreshing,
     failure: kidsFailure,
+    refetchError: kidsRefetchError,
     refetch: refetchKids,
   } = useKids(authToken);
 
@@ -88,6 +90,8 @@ export function Smile() {
 
   const eventsInitialLoading = eventsQuery.isLoading;
   const eventsRefreshing = eventsQuery.isRefetching;
+  const eventsFirstLoadError = eventsQuery.isLoadingError;
+  const eventsRefetchError = eventsQuery.isRefetchError;
 
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
@@ -398,7 +402,7 @@ export function Smile() {
             }
           />
 
-          {!eventsQuery.isError && eventsInitialLoading && (
+          {eventsInitialLoading && (
             <>
               <SkeletonDentalMap />
               <SkeletonDentalTipCard />
@@ -406,7 +410,7 @@ export function Smile() {
             </>
           )}
 
-          {eventsQuery.isError && (
+          {eventsFirstLoadError && (
             <>
               <SkeletonDentalMap
                 error={
@@ -430,8 +434,18 @@ export function Smile() {
             </>
           )}
 
-          {!eventsInitialLoading && !eventsQuery.isError && (
+          {!eventsInitialLoading && !eventsFirstLoadError && (
             <>
+              {(eventsRefetchError || kidsRefetchError) && (
+                <QueryWarningBanner
+                  message={
+                    kidUnlinked
+                      ? "Este dependente não está mais vinculado à sua conta."
+                      : "Não foi possível atualizar os dados. Mostrando as últimas informações carregadas."
+                  }
+                  onRetry={() => void handleRefreshKids()}
+                />
+              )}
               <DentalMap
                 kidId={selectedKidId}
                 kidBirthDate={kidBirthDate}
