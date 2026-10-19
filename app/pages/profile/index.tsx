@@ -3,6 +3,7 @@ import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
 import { ScrollView, Alert } from "react-native";
+import Constants from "expo-constants";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
 import { Card } from "@/components/card";
@@ -18,7 +19,6 @@ import {
 import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { logout } from "@/api/auth/logout";
-import { ENV } from "@/lib/env";
 import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { THEME } from "@/lib/theme";
 import { Text } from "@/components/ui/text";
@@ -167,7 +167,9 @@ export function Index() {
           align="center"
           justify="center"
         >
-          <Text className="mb-0 text-sm text-muted">v{ENV.APP_VERSION}</Text>
+          <Text className="mb-0 text-sm text-muted">
+            v{Constants.expoConfig?.version ?? "0.0.0"}
+          </Text>
           <Text className="mb-4 mt-0 text-sm text-muted">
             &copy; {year} MeuDentinho
           </Text>
