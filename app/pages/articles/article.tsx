@@ -44,7 +44,7 @@ export function Article() {
   const categories = article?.categories.join(", ") ?? "";
 
   const articleNotFound =
-    isApiError(error) && (error.code as string) === "ARTICLES_NOT_FOUND";
+    isApiError(error) && error.code === "ARTICLES_NOT_FOUND";
 
   function handleRefresh(): void {
     void refetch();

@@ -16,6 +16,7 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import type { KidRequestDTO } from "@/types/dtos/user";
 import { KidFormValues } from "@/lib/schemas/kid";
+import { errorMessage } from "@/lib/errorMessage";
 import { buildKidRequest } from "@/lib/privacyPolicy";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
@@ -83,8 +84,11 @@ export function Home() {
       }
       setRegisterKidError(
         new ApiError(
-          "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
-          "INTERNAL_SERVER_ERROR",
+          errorMessage(
+            error,
+            "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
         ),
       );
     }

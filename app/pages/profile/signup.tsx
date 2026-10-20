@@ -15,6 +15,7 @@ import { ProfileForm } from "@/components/forms/profileForm";
 import type { SignupRequest } from "@/types/dtos/user";
 import { SignupFormValues } from "@/lib/schemas/profile";
 import { UserContext } from "@/contexts/UserContext";
+import { errorMessage } from "@/lib/errorMessage";
 import { ApiError } from "@/types/domain";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
@@ -80,8 +81,11 @@ export function Signup() {
       }
       setError(
         new ApiError(
-          "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
-          "INTERNAL_SERVER_ERROR",
+          errorMessage(
+            err,
+            "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
         ),
       );
     }

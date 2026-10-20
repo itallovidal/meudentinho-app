@@ -9,6 +9,7 @@ import { ApiError } from "@/types/domain";
 import { useCallback, useContext, useState } from "react";
 import type { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
+import { errorMessage } from "@/lib/errorMessage";
 import { login } from "@/api/auth/login";
 
 export function Login() {
@@ -59,8 +60,11 @@ export function Login() {
       }
       setError(
         new ApiError(
-          "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
-          "INTERNAL_SERVER_ERROR",
+          errorMessage(
+            err,
+            "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
         ),
       );
     }
