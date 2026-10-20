@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
-import { isApiError } from "@/types/predicates";
 
 export async function updateKid(
   kidId: string,
@@ -26,16 +26,13 @@ export async function updateKid(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
-
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<KidResponseDTO>(response);
 
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a atualização do dependente",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
 

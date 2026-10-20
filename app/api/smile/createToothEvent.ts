@@ -1,31 +1,32 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
-import { isApiError } from "@/types/predicates";
 
 export async function createToothEvent(
   request: ToothEventRequestDTO,
   token?: string | null,
 ): Promise<ResponsePayload<ToothEvent>> {
-  const response = await authFetch(`${ENV.BASE_API_URL}/tooth-events`, {
-    method: "POST",
-    body: JSON.stringify(request),
-    headers: {
-      "Content-Type": "application/json",
+  const response = await authFetch(
+    `${ENV.BASE_API_URL}/tooth-events`,
+    {
+      method: "POST",
+      body: JSON.stringify(request),
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  }, token ?? null);
+    token ?? null,
+  );
 
-  const payload = (await response.json()) as ResponsePayload<ToothEvent>;
-
-  if (payload.status !== 201 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<ToothEvent>(response);
 
   if (payload.status !== 201) {
     throw new ApiError(
       "Erro inesperado ocorreu durante o registro do evento",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
 

@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { UserAuthResponseDTO } from "@/types/dtos/user";
-import { isApiError } from "@/types/predicates";
 
 export async function changePassword(
   userId: string,
@@ -21,16 +21,13 @@ export async function changePassword(
     token,
   );
 
-  const payload = (await response.json()) as ResponsePayload<UserAuthResponseDTO>;
-
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<UserAuthResponseDTO>(response);
 
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a troca da senha",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
 

@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, MetaApiPayload, ResponsePayload } from "@/types/domain";
 import type { ToothEvent } from "@/types/teeth";
-import { isApiError } from "@/types/predicates";
 
 export interface ToothEventsPageParams {
   page: number;
@@ -29,8 +29,15 @@ export async function getToothEventsByKid(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<ToothEvent[]>;
-  assertSuccessfulPayload(payload);
+  const payload = await parseResponse<ToothEvent[]>(response);
+
+  if (payload.status !== 200) {
+    throw new ApiError(
+      "Erro inesperado ocorreu durante a obtenção dos eventos",
+      "INTERNAL_SERVER_ERROR",
+      payload.status,
+    );
+  }
 
   return {
     ...payload,
@@ -54,25 +61,19 @@ export async function getAllToothEventsByKid(
     token,
   );
 
-  const payload = (await response.json()) as ResponsePayload<{
+  const payload = await parseResponse<{
     events?: ToothEvent[];
-  }>;
-  assertSuccessfulPayload(payload);
-
-  return payload.data?.events ?? [];
-}
-
-function assertSuccessfulPayload<T>(payload: ResponsePayload<T>) {
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  }>(response);
 
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a obtenção dos eventos",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
+
+  return payload.data?.events ?? [];
 }
 
 function normalizeMeta(

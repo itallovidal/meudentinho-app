@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { KidResponseDTO } from "@/types/dtos/user";
-import { isApiError } from "@/types/predicates";
 
 export async function getAllKids(
   token?: string | null,
@@ -18,19 +18,15 @@ export async function getAllKids(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<KidResponseDTO[]>;
+  const payload = await parseResponse<KidResponseDTO[]>(response);
 
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
-  
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a obtenção das crianças",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
-  
 
   return payload;
 }
