@@ -3,7 +3,12 @@ import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import {
+  RouteProp,
+  useNavigation,
+  useFocusEffect,
+  useRoute,
+} from "@react-navigation/native";
 import { Card } from "@/components/card";
 import {
   ArrowsClockwiseIcon,
@@ -17,13 +22,17 @@ import { SignupFormValues } from "@/lib/schemas/profile";
 import { UserContext } from "@/contexts/UserContext";
 import { errorMessage } from "@/lib/errorMessage";
 import { ApiError } from "@/types/domain";
-import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import {
+  ProfileNavegationProp,
+  ProfileRouteParams,
+} from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
 import { PRIVACY_POLICY_VERSION } from "@/lib/privacyPolicy";
 import { signup } from "@/api/auth/signup";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
+  const route = useRoute<RouteProp<ProfileRouteParams, "Signup">>();
   const scrollViewRef = useRef<ScrollView>(null);
   const formRef = useRef<View>(null);
 
@@ -39,8 +48,12 @@ export function Signup() {
           index: 0,
           routes: [{ name: "Index", params: { payload: user } }],
         });
+        const origin = route.params?.fromTab;
+        if (origin) {
+          navigation.getParent()?.navigate(origin);
+        }
       }
-    }, [hydrated, user, authToken, navigation]),
+    }, [hydrated, user, authToken, navigation, route.params?.fromTab]),
   );
 
   async function onSubmit({ accepted, ...profile }: SignupFormValues) {
@@ -74,6 +87,11 @@ export function Signup() {
         index: 0,
         routes: [{ name: "Index", params: { payload: basicUser } }],
       });
+
+      const origin = route.params?.fromTab;
+      if (origin) {
+        navigation.getParent()?.navigate(origin);
+      }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err);
@@ -170,7 +188,11 @@ export function Signup() {
 
           <Text variant={"small"}>Já tem uma conta?</Text>
           <Button
-            onPress={() => navigation.navigate("Login")}
+            onPress={() =>
+              navigation.navigate("Login", {
+                fromTab: route.params?.fromTab,
+              })
+            }
             variant={"ghost"}
           >
             <Text>Entrar</Text>

@@ -9,6 +9,18 @@ export type LooseNavigation = {
   reset?: (state: { index: number; routes: Array<{ name: string }> }) => void;
 };
 
+export function resetToRouteRoot(
+  navigation: LooseNavigation,
+  routeName: string,
+): boolean {
+  const root = rootScreenForRoute(routeName);
+  if (!root || root === routeName || !navigation.reset) {
+    return false;
+  }
+  navigation.reset({ index: 0, routes: [{ name: root }] });
+  return true;
+}
+
 export function goBackToOriginTab(
   navigation: LooseNavigation,
   routeName: string,
@@ -36,13 +48,6 @@ export function goBackToOriginTab(
   }
 
   const target = navigation.getParent() ?? navigation;
-  if (params.fromScreen) {
-    target.navigate(params.fromTab, {
-      screen: params.fromScreen,
-      params: params.fromParams,
-    });
-  } else {
-    target.navigate(params.fromTab);
-  }
+  target.navigate(params.fromTab);
   return true;
 }

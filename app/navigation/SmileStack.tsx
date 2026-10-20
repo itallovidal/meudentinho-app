@@ -5,11 +5,12 @@ import {
 import { Smile } from "@/pages/smile/index";
 import { SmileHistory } from "@/pages/smile/history";
 import { SmilePredictions } from "@/pages/smile/predictions";
+import type { CrossTabOrigin } from "./types";
 
 export type SmileStackParamList = {
   SmileHome: undefined;
-  SmileHistory: { kidId: string };
-  SmilePredictions: { kidId: string };
+  SmileHistory: { kidId: string } & CrossTabOrigin;
+  SmilePredictions: { kidId: string } & CrossTabOrigin;
 };
 
 export type SmileNavigationProp =

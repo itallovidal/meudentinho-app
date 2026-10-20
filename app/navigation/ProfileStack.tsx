@@ -17,7 +17,7 @@ import type { CrossTabOrigin } from "./types";
 
 export type ProfileRouteParams = {
   Login: undefined | CrossTabOrigin;
-  Signup: undefined;
+  Signup: undefined | CrossTabOrigin;
   Index: { payload?: BasicUser } | undefined;
   AdminPage: undefined;
   Responsible: undefined;

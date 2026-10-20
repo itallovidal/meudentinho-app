@@ -1,11 +1,17 @@
-import { Pressable, View } from "react-native";
+import { useCallback } from "react";
+import { BackHandler, Pressable, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { CaretLeftIcon } from "phosphor-react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { THEME } from "@/lib/theme";
 import {
   goBackToOriginTab,
+  resetToRouteRoot,
   type LooseNavigation,
 } from "@/navigation/crossTabBack";
 import type { CrossTabOrigin } from "@/navigation/types";
@@ -19,16 +25,34 @@ export function Header({ hasBackButton }: HeaderProps) {
   const route = useRoute();
   const colors = THEME.light;
 
-  function handleBack() {
+  const handleBack = useCallback(() => {
     const params = (route.params ?? {}) as CrossTabOrigin;
     if (goBackToOriginTab(navigation, route.name, params)) {
-      return;
+      return true;
     }
 
     if (navigation.canGoBack()) {
       navigation.goBack();
+      return true;
     }
-  }
+
+    return resetToRouteRoot(navigation, route.name);
+  }, [navigation, route.name, route.params]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasBackButton) {
+        return;
+      }
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        handleBack,
+      );
+
+      return () => subscription.remove();
+    }, [hasBackButton, handleBack]),
+  );
 
   return (
     <Wrapper

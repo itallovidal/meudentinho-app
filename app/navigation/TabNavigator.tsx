@@ -171,16 +171,30 @@ export function popNestedStackToTop<
   }
 }
 
+function isFocusedTab(
+  navigation: {
+    getState: () => { index: number; routes: Array<{ key: string }> };
+  },
+  routeKey: string,
+) {
+  const state = navigation.getState();
+  return state.routes[state.index]?.key === routeKey;
+}
+
 export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   initialRouteName: "Home",
-  backBehavior: "none",
+  backBehavior: "history",
   tabBar: (props) => <TabBar {...props} />,
+  screenListeners: ({ navigation, route }) => ({
+    tabPress: () => {
+      if (isFocusedTab(navigation, route.key)) {
+        popNestedStackToTop(navigation, route.key);
+      }
+    },
+  }),
   screens: {
     Home: {
       screen: HomeStack,
-      listeners: ({ navigation, route }) => ({
-        tabPress: () => popNestedStackToTop(navigation, route.key),
-      }),
       options: {
         tabBarLabel: "Início",
         tabBarIcon: ({ focused }) => (
@@ -195,9 +209,6 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     },
     Smile: {
       screen: SmileStack,
-      listeners: ({ navigation, route }) => ({
-        tabPress: () => popNestedStackToTop(navigation, route.key),
-      }),
       options: {
         tabBarLabel: "Sorriso",
         tabBarIcon: ({ focused }) => (
@@ -212,9 +223,6 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     },
     Articles: {
       screen: ArticlesStack,
-      listeners: ({ navigation, route }) => ({
-        tabPress: () => popNestedStackToTop(navigation, route.key),
-      }),
       options: {
         tabBarLabel: "Artigos",
 
@@ -230,9 +238,6 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     },
     Profile: {
       screen: ProfileStack,
-      listeners: ({ navigation, route }) => ({
-        tabPress: () => popNestedStackToTop(navigation, route.key),
-      }),
       options: {
         tabBarLabel: "Perfil",
         tabBarIcon: ({ focused }) => (

@@ -30,6 +30,7 @@ export function ArticleCard({
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
+          initial: false,
           params: { id: id, ...(fromTab ? { fromTab } : {}) },
         })
       }

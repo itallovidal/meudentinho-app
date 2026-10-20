@@ -146,6 +146,7 @@ export function Smile() {
     }
     navigation.navigate("Profile", {
       screen: "EditDependent",
+      initial: false,
       params: { kid: kidRecord, fromTab: "Smile" },
     });
   }
@@ -267,6 +268,7 @@ export function Smile() {
               onPress={() =>
                 navigation.navigate("Profile", {
                   screen: "Login",
+                  initial: false,
                   params: { fromTab: "Smile" },
                 })
               }
@@ -322,6 +324,7 @@ export function Smile() {
                 onPress={() =>
                   navigation.navigate("Profile", {
                     screen: "Login",
+                    initial: false,
                     params: { fromTab: "Smile" },
                   })
                 }
@@ -401,6 +404,7 @@ export function Smile() {
             onAdd={() =>
               navigation.navigate("Profile", {
                 screen: "Dependents",
+                initial: false,
                 params: { fromTab: "Smile" },
               })
             }

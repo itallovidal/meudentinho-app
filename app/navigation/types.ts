@@ -1,12 +1,12 @@
 import type { ArticlesStackParamList } from "./ArticlesStack";
+import type { HomeStackParamList } from "./HomeStack";
 import type { ProfileRouteParams } from "./ProfileStack";
+import type { SmileStackParamList } from "./SmileStack";
 
 export type TabName = "Home" | "Smile" | "Articles" | "Profile";
 
 export type CrossTabOrigin = {
   fromTab?: TabName;
-  fromScreen?: string;
-  fromParams?: Record<string, unknown>;
 };
 
 export const TAB_ROOT_SCREEN = {
@@ -44,7 +44,11 @@ export function rootScreenForRoute(routeName: string): string | null {
   if (routeName === "HomeRoot") {
     return "HomeRoot";
   }
-  if (routeName === "SmileHome") {
+  if (
+    routeName === "SmileHome" ||
+    routeName === "SmileHistory" ||
+    routeName === "SmilePredictions"
+  ) {
     return "SmileHome";
   }
   return null;
@@ -52,8 +56,10 @@ export function rootScreenForRoute(routeName: string): string | null {
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends ArticlesStackParamList, ProfileRouteParams {
-      SmileHome: undefined;
-    }
+    interface RootParamList
+      extends ArticlesStackParamList,
+        HomeStackParamList,
+        ProfileRouteParams,
+        SmileStackParamList {}
   }
 }
