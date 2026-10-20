@@ -2,9 +2,17 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
-import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import {
+  ProfileNavegationProp,
+  ProfileRouteParams,
+} from "@/navigation/ProfileStack";
 import { ApiError } from "@/types/domain";
 import { useCallback, useContext, useState } from "react";
 import type { LoginRequest } from "@/types/dtos/user";
@@ -14,6 +22,7 @@ import { login } from "@/api/auth/login";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
+  const route = useRoute<RouteProp<ProfileRouteParams, "Login">>();
   const [error, setError] = useState<ApiError | null>(null);
   const { updateAppUser, user, authToken, hydrated, sessionExpired, clearSessionExpired } = useContext(UserContext)!;
 
@@ -24,8 +33,12 @@ export function Login() {
           index: 0,
           routes: [{ name: "Index", params: { payload: user } }],
         });
+        const origin = route.params?.fromTab;
+        if (origin) {
+          navigation.getParent()?.navigate(origin);
+        }
       }
-    }, [hydrated, user, authToken, navigation]),
+    }, [hydrated, user, authToken, navigation, route.params?.fromTab]),
   );
 
   async function onLogin(LoginRequest: LoginRequest) {
@@ -53,6 +66,11 @@ export function Login() {
         index: 0,
         routes: [{ name: "Index", params: { payload: basicUser } }],
       });
+
+      const origin = route.params?.fromTab;
+      if (origin) {
+        navigation.getParent()?.navigate(origin);
+      }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err);
@@ -103,7 +121,14 @@ export function Login() {
       )}
 
       <Text variant={"small"}>Não possui uma conta?</Text>
-      <Button onPress={() => navigation.navigate("Signup")} variant={"ghost"}>
+      <Button
+        onPress={() =>
+          navigation.navigate("Signup", {
+            fromTab: route.params?.fromTab,
+          })
+        }
+        variant={"ghost"}
+      >
         <Text>Registrar-se</Text>
       </Button>
       </Wrapper>
