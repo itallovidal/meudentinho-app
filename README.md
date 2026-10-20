@@ -20,6 +20,7 @@
 - [Descrição](#descrição)
 - [Tecnologias](#tecnologias)
 - [Funcionalidades](#funcionalidades)
+- [Build e release](#build-e-release)
 
 ## Descrição
 
@@ -77,3 +78,32 @@ Edição de nome e e-mail com confirmação por senha em bottom sheet, troca de 
 ### Screenshots
 
 <!-- TODO: adicionar capturas de tela das abas Início, Sorriso, Artigos e Perfil. -->
+
+## Build e release
+
+### Pré-requisitos
+
+- Node >= 22 (ver `engines` no `package.json`).
+- JDK 21 e Android SDK (platform + build-tools) para build nativo local.
+- `.env` a partir do `.env.example`; builds de release passam antes por `npm run env:check -- --release`.
+
+### Comandos
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run web` | servidor de desenvolvimento web (Metro) |
+| `npm start` | servidor Expo (dev) |
+| `npm run android` | build/dev no device Android |
+| `npm run android:apk:preview` | APK de release local: valida o env, roda `prebuild` + `gradlew assembleRelease` — hoje assinado com a chave de debug do template Expo |
+| `npm run android:apk:preview:debug` | APK de debug local |
+| `npm run android:apk:install:preview` / `:debug` | instala o APK no device via `adb` |
+| `npm run typecheck` / `lint` / `test` | verificação do código |
+
+### Versão
+
+- `version`, `versionCode` (Android) e `buildNumber` (iOS) vivem no `app.json` — fonte única: o Perfil exibe `version` via `expo-constants` e o gradle nativo recebe `versionCode`/`versionName` no `prebuild`.
+- Política: `versionCode` e `buildNumber` sobem **+1 a cada release**, manualmente, e o bump entra no PR do release.
+
+### Release nativo
+
+Keystore própria e AAB para loja estão **adiados** até existir um alvo de distribuição nativo definido — o roadmap atual é web-first. Quando voltar: `*.keystore` e `keystore.properties` já estão no `.gitignore`; a chave e suas senhas nunca devem ser versionadas.

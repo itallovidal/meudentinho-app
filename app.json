@@ -8,7 +8,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.meudentinhoapp"
+      "bundleIdentifier": "com.meudentinhoapp",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,8 @@
       },
       "allowBackup": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.meudentinhoapp"
+      "package": "com.meudentinhoapp",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png",
