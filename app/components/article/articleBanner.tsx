@@ -36,6 +36,7 @@ export function ArticleBanner({
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
+          initial: false,
           params: { id: id, ...(fromTab ? { fromTab } : {}) },
         })
       }

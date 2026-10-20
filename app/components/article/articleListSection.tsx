@@ -87,7 +87,12 @@ export function ArticleListSection({
       {fromTab === "Home" && (
         <Button
           className="w-full"
-          onPress={() => navigation.navigate("Articles")}
+          onPress={() =>
+            navigation.navigate("Articles", {
+              screen: "ArticlesList",
+              pop: true,
+            })
+          }
         >
           <Text>Ver mais artigos</Text>
         </Button>
