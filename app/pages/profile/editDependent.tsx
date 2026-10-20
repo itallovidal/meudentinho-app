@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/toast";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKidMutations } from "@/hooks/useKidMutations";
+import { errorMessage } from "@/lib/errorMessage";
 import { buildKidRequest } from "@/lib/privacyPolicy";
 import { shouldUsePut } from "@/lib/utils";
 import { THEME } from "@/lib/theme";
@@ -61,8 +62,11 @@ export function EditDependent() {
       await createKidMutation.mutateAsync(await buildKidRequest(data));
       showToast("Dependente cadastrado com sucesso.");
       exitScreen();
-    } catch {
-      Alert.alert("Erro", "Não foi possível cadastrar o dependente.");
+    } catch (error) {
+      Alert.alert(
+        "Erro",
+        errorMessage(error, "Não foi possível cadastrar o dependente."),
+      );
     }
   }
 
@@ -90,8 +94,11 @@ export function EditDependent() {
       });
       showToast("Dependente atualizado com sucesso.");
       exitScreen();
-    } catch {
-      Alert.alert("Erro", "Não foi possível atualizar o dependente.");
+    } catch (error) {
+      Alert.alert(
+        "Erro",
+        errorMessage(error, "Não foi possível atualizar o dependente."),
+      );
     }
   }
 
@@ -104,8 +111,11 @@ export function EditDependent() {
       await revokeKidMutation.mutateAsync(kid.id);
       showToast("Consentimento revogado com sucesso.");
       exitScreen();
-    } catch {
-      Alert.alert("Erro", "Não foi possível revogar o consentimento.");
+    } catch (error) {
+      Alert.alert(
+        "Erro",
+        errorMessage(error, "Não foi possível revogar o consentimento."),
+      );
     }
   }
 

@@ -7,13 +7,11 @@ const NO_RETRY_CODES = [
   "KID_NOT_FOUND",
   "ARTICLES_NOT_FOUND",
   "TOOTH_EVENTS_NOT_FOUND",
+  "TIMEOUT",
 ];
 
 export function retryQuery(failureCount: number, error: unknown): boolean {
-  if (
-    error instanceof ApiError &&
-    NO_RETRY_CODES.includes(error.code as string)
-  ) {
+  if (error instanceof ApiError && NO_RETRY_CODES.includes(error.code)) {
     return false;
   }
   return failureCount < 3;

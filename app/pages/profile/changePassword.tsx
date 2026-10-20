@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { ApiError } from "@/types/domain";
+import { errorMessage } from "@/lib/errorMessage";
 import {
   updatePasswordSchema,
   UpdatePasswordDTO,
@@ -95,14 +95,10 @@ export function ChangePassword() {
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        (error.code as string) === "CURRENT_PASSWORD_INVALID"
-      ) {
-        Alert.alert("Erro", "Senha atual incorreta. Tente novamente.");
-        return;
-      }
-      Alert.alert("Erro", "Não foi possível alterar a senha.");
+      Alert.alert(
+        "Erro",
+        errorMessage(error, "Não foi possível alterar a senha."),
+      );
     }
   }
 

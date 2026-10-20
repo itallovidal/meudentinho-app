@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { isApiError } from "@/types/predicates";
 
 export async function deleteUser(
   userId: string,
@@ -20,16 +20,13 @@ export async function deleteUser(
     token,
   );
 
-  const payload = (await response.json()) as ResponsePayload<void>;
-
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<void>(response);
 
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a exclusão do usuário",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
 

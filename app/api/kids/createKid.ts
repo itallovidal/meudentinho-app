@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
 import type { KidResponseDTO, KidRequestDTO } from "@/types/dtos/user";
-import { isApiError } from "@/types/predicates";
 
 export async function createKid(
   kidDTO: KidRequestDTO,
@@ -26,19 +26,15 @@ export async function createKid(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<KidResponseDTO>;
-
-  if (payload.status !== 201 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<KidResponseDTO>(response);
 
   if (payload.status !== 201) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a criação da criança",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
-
 
   return payload;
 }

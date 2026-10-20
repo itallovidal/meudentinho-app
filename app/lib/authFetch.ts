@@ -1,5 +1,8 @@
 import { refreshSession } from "@/api/auth/refresh";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError } from "@/types/domain";
+import { isApiError } from "@/types/predicates";
 
 type SessionSnapshot = {
   authToken: string | null;
@@ -70,6 +73,19 @@ function logSessionRefresh(token: string) {
   }
 }
 
+const SESSION_EXPIRED_MESSAGE = "Sessão expirada. Faça login novamente.";
+
+async function sessionExpiredMessage(response: Response): Promise<string> {
+  try {
+    await parseResponse<unknown>(response);
+  } catch (error) {
+    if (isApiError(error) && error.code === "INVALID_CREDENTIALS") {
+      return error.message;
+    }
+  }
+  return SESSION_EXPIRED_MESSAGE;
+}
+
 async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
   if (!refreshPromise) {
     refreshPromise = (async (): Promise<RefreshResult> => {
@@ -112,27 +128,26 @@ export async function authFetch(
     refreshToken: null,
   };
   const effectiveToken = session.authToken ?? tokenOverride;
-  const response = await fetch(
-    input,
-    withToken(init, effectiveToken),
-  );
+  const response = await fetchWithTimeout(input, withToken(init, effectiveToken));
 
   if (response.status !== 401) {
     return response;
   }
 
+  const expiredMessage = await sessionExpiredMessage(response);
+
   const latest = handlers?.getSession() ?? session;
   const latestRefresh = latest.refreshToken ?? session.refreshToken;
   if (!latestRefresh) {
     handlers?.onSessionExpired();
-    throw new ApiError(
-      "Sessão expirada. Faça login novamente.",
-      "INVALID_CREDENTIALS",
-    );
+    throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
   }
 
   if (effectiveToken !== latest.authToken && latest.authToken) {
-    const retry = await fetch(input, withToken(init, latest.authToken));
+    const retry = await fetchWithTimeout(
+      input,
+      withToken(init, latest.authToken),
+    );
     if (retry.status !== 401) {
       return retry;
     }
@@ -143,17 +158,15 @@ export async function authFetch(
   if (!result.refreshed) {
     if (result.expired) {
       handlers?.onSessionExpired();
-      throw new ApiError(
-        "Sessão expirada. Faça login novamente.",
-        "INVALID_CREDENTIALS",
-      );
+      throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
     }
     throw new ApiError(
       "Não foi possível renovar a sessão. Tente novamente.",
       "INTERNAL_SERVER_ERROR",
+      401,
     );
   }
 
   const fresh = handlers?.getSession();
-  return fetch(input, withToken(init, fresh?.authToken ?? null));
+  return fetchWithTimeout(input, withToken(init, fresh?.authToken ?? null));
 }

@@ -4,11 +4,11 @@ import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticles } from "@/hooks/useArticles";
 import { useArticleSearch } from "@/hooks/useArticleSearch";
+import { errorMessage } from "@/lib/errorMessage";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { SearchInput } from "@/components/searchinput";
 import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
-import { isApiError } from "@/types/predicates";
 
 export function Index() {
   const {
@@ -36,9 +36,10 @@ export function Index() {
     setSearchQuery(term);
   }, []);
 
-  const searchErrorMessage = isApiError(searchError)
-    ? searchError.message
-    : "Verifique sua conexão e tente novamente.";
+  const searchErrorMessage = errorMessage(
+    searchError,
+    "Verifique sua conexão e tente novamente.",
+  );
 
   return (
     <Wrapper

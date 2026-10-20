@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
+import { errorMessage } from "@/lib/errorMessage";
 import { UserContext } from "@/contexts/UserContext";
 import type { ChronologyGender } from "@/lib/toothChronology";
-import { ApiError } from "@/types/domain";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
 
 function lifecycleStage(event: ToothEvent): number {
@@ -94,9 +94,7 @@ export function useToothEventEditor({
     } catch (error) {
       Alert.alert(
         "Erro",
-        error instanceof ApiError
-          ? error.message
-          : "Não foi possível salvar as alterações. Tente novamente.",
+        errorMessage(error, "Não foi possível salvar as alterações. Tente novamente."),
       );
     }
   }
@@ -112,9 +110,7 @@ export function useToothEventEditor({
     } catch (error) {
       Alert.alert(
         "Erro",
-        error instanceof ApiError
-          ? error.message
-          : "Não foi possível excluir o registro. Tente novamente.",
+        errorMessage(error, "Não foi possível excluir o registro. Tente novamente."),
       );
     }
   }

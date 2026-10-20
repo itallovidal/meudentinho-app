@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
+import { parseResponse } from "@/lib/parseResponse";
 import { ApiError, ResponsePayload } from "@/types/domain";
-import { isApiError } from "@/types/predicates";
 
 export async function revokeKidConsent(
   kidId: string,
@@ -18,16 +18,13 @@ export async function revokeKidConsent(
     token ?? null,
   );
 
-  const payload = (await response.json()) as ResponsePayload<void>;
-
-  if (payload.status !== 200 && isApiError(payload.error)) {
-    throw new ApiError(payload.error.message, payload.error.code);
-  }
+  const payload = await parseResponse<void>(response);
 
   if (payload.status !== 200) {
     throw new ApiError(
       "Erro inesperado ocorreu durante a revogação do consentimento",
       "INTERNAL_SERVER_ERROR",
+      payload.status,
     );
   }
 

@@ -23,6 +23,7 @@ import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
+import { errorMessage } from "@/lib/errorMessage";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import PredictionsCard from "@/components/smile/PredictionsCard";
@@ -123,8 +124,11 @@ export function Smile() {
       }
       setAddDependentError(
         new ApiError(
-          "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
-          "INTERNAL_SERVER_ERROR",
+          errorMessage(
+            error,
+            "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
         ),
       );
     }
