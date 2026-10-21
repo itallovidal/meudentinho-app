@@ -33,7 +33,7 @@ export function RegisterKidSection({
     >
       <Wrapper direction="column" gap="gap-2">
         <Text variant={"h4"} className="mb-0">
-          Bem Vindo ao MeuDentinho!
+          Bem Vindo ao Janelinha!
         </Text>
         <Text className="text-muted">
           Precisamos de alguns dados básicos para começar a acompanhar o

@@ -72,7 +72,7 @@ export function Header({ hasBackButton }: HeaderProps) {
         </Pressable>
       )}
 
-      <Text className="font-bold text-primary-500">Meu Dentinho</Text>
+      <Text className="font-bold text-primary-500">Janelinha</Text>
 
       <View style={{ width: 24 }} />
     </Wrapper>

@@ -197,7 +197,7 @@ export function Index() {
             v{Constants.expoConfig?.version ?? "0.0.0"}
           </Text>
           <Text className="mb-4 mt-0 text-sm text-muted">
-            &copy; {year} MeuDentinho
+            &copy; {year} Janelinha
           </Text>
         </Wrapper>
       </ScrollView>
