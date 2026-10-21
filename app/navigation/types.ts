@@ -26,7 +26,11 @@ export function isTabName(value: unknown): value is TabName {
 }
 
 export function rootScreenForRoute(routeName: string): string | null {
-  if (routeName === "Article" || routeName === "ArticlesList") {
+  if (
+    routeName === "Article" ||
+    routeName === "ArticlesList" ||
+    routeName === "ArticleEditor"
+  ) {
     return "ArticlesList";
   }
   if (

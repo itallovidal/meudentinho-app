@@ -8,7 +8,7 @@ import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
 import { articleSchema } from "@/lib/schemas/article";
 import type { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
 import { ScrollView } from "react-native";
 import { PropsBadge } from "../propsBadge";
@@ -19,6 +19,7 @@ interface ArticleFormProps {
   defaultValues?: Partial<ArticleRequestDTO>;
   submitLabel?: string;
   submittingLabel?: string;
+  footer?: ReactNode;
 }
 
 const MAX_CATEGORIES = 1;
@@ -29,6 +30,7 @@ export function ArticleForm({
   submitLabel = "Criar Artigo",
   submittingLabel = "Criando artigo...",
   submitError,
+  footer,
 }: ArticleFormProps) {
   const {
     control,
@@ -194,6 +196,8 @@ export function ArticleForm({
         >
           <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
         </Button>
+
+        {footer}
       </Wrapper>
     </ScrollView>
   );
