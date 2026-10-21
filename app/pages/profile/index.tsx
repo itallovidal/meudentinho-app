@@ -26,7 +26,8 @@ import { Text } from "@/components/ui/text";
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
-  const { updateAppUser, user, hydrated, refreshToken } = useContext(UserContext)!;
+  const { updateAppUser, user, hydrated, refreshToken, sessionExpired } =
+    useContext(UserContext)!;
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const year = new Date().getFullYear();
 
@@ -50,23 +51,48 @@ export function Index() {
     }
   };
 
+  const accountOption = user
+    ? {
+        icon: <UserCircleIcon color={colors.primary400} />,
+        title: "Gerencie sua conta",
+        description: "Administre seus dados pessoais.",
+        variant: "default" as const,
+        handlePress: () => navigation.navigate("Responsible"),
+        isDisabled: false,
+      }
+    : {
+        icon: <UserCircleIcon color={colors.primary400} />,
+        title: "Entrar",
+        description: sessionExpired
+          ? "Sua sessão expirou. Entre novamente para continuar."
+          : "Acesse sua conta e seus dependentes.",
+        variant: "default" as const,
+        handlePress: () => navigation.navigate("Login"),
+        isDisabled: false,
+      };
+
+  const signupOption = {
+    icon: <UserCircleIcon color={colors.primary400} />,
+    title: "Criar conta",
+    description: "Ainda não tem conta? Cadastre-se.",
+    variant: "default" as const,
+    handlePress: () => navigation.navigate("Signup"),
+    isDisabled: false,
+  };
+
+  const dependentsOption = {
+    icon: <UsersThreeIcon color={colors.primary400} />,
+    title: "Gerencie Dependentes",
+    description: "Administre seus dependentes.",
+    variant: "default" as const,
+    handlePress: () => navigation.navigate("Dependents"),
+    isDisabled: false,
+  };
+
   const profileOptions = [
-    {
-      icon: <UserCircleIcon color={colors.primary400} />,
-      title: `${user ? "Gerencie" : "Crie"} sua conta`,
-      description: "Administre seus dados pessoais.",
-      variant: "default" as const,
-      handlePress: () => navigation.navigate(user ? "Responsible" : "Signup"),
-      isDisabled: false,
-    },
-    {
-      icon: <UsersThreeIcon color={colors.primary400} />,
-      title: "Gerencie Dependentes",
-      description: "Administre seus dependentes.",
-      variant: "default" as const,
-      handlePress: () => navigation.navigate("Dependents"),
-      isDisabled: user ? false : true,
-    },
+    accountOption,
+    ...(user ? [] : [signupOption]),
+    ...(user ? [dependentsOption] : []),
     {
       icon: <ShieldCheckIcon color={colors.primary400} />,
       title: "Políticas de privacidade",

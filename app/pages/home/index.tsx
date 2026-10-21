@@ -11,7 +11,6 @@ import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
 import { useKids } from "@/hooks/useKids";
-import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import type { KidRequestDTO } from "@/types/dtos/user";
@@ -21,6 +20,8 @@ import { buildKidRequest } from "@/lib/privacyPolicy";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
 import { createKid } from "@/api/kids/createKid";
+import { SessionCard } from "@/components/sessionCard";
+import { SessionNotice } from "@/components/sessionNotice";
 
 const HOME_VISIBLE_ARTICLES = 2;
 
@@ -29,7 +30,8 @@ export function Home() {
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
-  const { authToken, hydrated } = useContext(UserContext)!;
+  const { authToken, hydrated, sessionExpired, expireSession } =
+    useContext(UserContext)!;
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -95,7 +97,27 @@ export function Home() {
   }
 
   async function handleRefresh() {
+    if (!authToken) {
+      await onRefresh();
+      return;
+    }
     await Promise.all([onRefresh(), refetchKids()]);
+  }
+
+  function goToLogin() {
+    navigation.navigate("Profile", {
+      screen: "Login",
+      initial: false,
+      params: { fromTab: "Home" },
+    });
+  }
+
+  function goToSignup() {
+    navigation.navigate("Profile", {
+      screen: "Signup",
+      initial: false,
+      params: { fromTab: "Home" },
+    });
   }
 
   return (
@@ -139,17 +161,13 @@ export function Home() {
           )}
 
           {hydrated && showKidsError && kidsFailure === "auth" && (
-            <Wrapper
-              direction="column"
-              gap="gap-2"
-              className="mt-4 w-full rounded-xl bg-base-100 p-5"
-            >
-              <Text variant="h4" className="mb-0">
-                Sessão expirada
-              </Text>
-              <Text className="text-muted">
-                Faça login novamente para cadastrar o dependente.
-              </Text>
+            <Wrapper className="mt-4 w-full">
+              <SessionNotice
+                title="Sessão expirada"
+                message="Faça login novamente para cadastrar o dependente."
+                actionLabel="Entrar"
+                onAction={() => void expireSession()}
+              />
             </Wrapper>
           )}
 
@@ -161,13 +179,24 @@ export function Home() {
           )}
 
           {hydrated && !authToken && (
-            <Wrapper direction="column" gap="gap-1" className="mb-2 mt-4">
-              <Text variant="h2" className="mb-0">
-                Bem-vindo!
-              </Text>
-              <Text className="text-muted">
-                Acompanhe a saúde bucal do seu filho.
-              </Text>
+            <Wrapper className="mb-2 mt-4 w-full">
+              {sessionExpired ? (
+                <SessionNotice
+                  title="Sessão expirada"
+                  message="Entre novamente para continuar de onde parou."
+                  actionLabel="Entrar"
+                  onAction={goToLogin}
+                />
+              ) : (
+                <SessionCard
+                  title="Bem-vindo!"
+                  message="Acompanhe a saúde bucal do seu filho."
+                  actionLabel="Entrar"
+                  onAction={goToLogin}
+                  secondaryLabel="Criar conta"
+                  onSecondary={goToSignup}
+                />
+              )}
             </Wrapper>
           )}
 
