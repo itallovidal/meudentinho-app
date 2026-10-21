@@ -11,6 +11,9 @@ import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
 import { useKids } from "@/hooks/useKids";
+import { useKidsSmileSummaries } from "@/hooks/useKidsSmileSummaries";
+import { KidsSmileCarousel } from "@/components/home/kidsSmileCarousel";
+import { SkeletonKidsSmileCarousel } from "@/skeletons/components/skeletonKidsSmileCarousel";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import type { KidRequestDTO } from "@/types/dtos/user";
@@ -47,8 +50,21 @@ export function Home() {
     refetchError: articlesRefetchError,
   } = useArticles({ withCategories: false });
 
-  const { kids, isLoading: kidsPending, failure: kidsFailure, refetch: refetchKids, isRefreshing: kidsRefreshing, refetchError: kidsRefetchError } =
-    useKids(authToken);
+  const {
+    kids,
+    isLoading: kidsPending,
+    failure: kidsFailure,
+    refetch: refetchKids,
+    isRefreshing: kidsRefreshing,
+    refetchError: kidsRefetchError,
+  } = useKids(authToken);
+
+  const {
+    items: smileSummaries,
+    isLoading: smilePending,
+    isError: smileError,
+    refetch: refetchSmile,
+  } = useKidsSmileSummaries(kids, authToken);
 
   const showOnboarding =
     hydrated &&
@@ -59,6 +75,8 @@ export function Home() {
 
   const showKidsError =
     hydrated && !!authToken && !kidsPending && kidsFailure !== null;
+
+  const showSmileCarousel = hydrated && !!authToken && kids.length > 0;
 
   const createKidMutation = useMutation({
     mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
@@ -101,7 +119,24 @@ export function Home() {
       await onRefresh();
       return;
     }
-    await Promise.all([onRefresh(), refetchKids()]);
+    await Promise.all([onRefresh(), refetchKids(), refetchSmile()]);
+  }
+
+  function openKidSmile(kidId: string) {
+    navigation.navigate("Smile", {
+      screen: "SmileHome",
+      initial: false,
+      pop: true,
+      params: { kidId },
+    });
+  }
+
+  function openKidHistory(kidId: string) {
+    navigation.navigate("Smile", {
+      screen: "SmileHistory",
+      initial: false,
+      params: { kidId, fromTab: "Home" },
+    });
   }
 
   function goToLogin() {
@@ -200,6 +235,33 @@ export function Home() {
             </Wrapper>
           )}
 
+          {showSmileCarousel && (smilePending || smileError) && (
+            <Wrapper
+              direction="column"
+              align="start"
+              justify="start"
+              className="w-full"
+              gap="gap-4"
+            >
+              {smileError && (
+                <ErrorState
+                  message="Não foi possível carregar o resumo do sorriso dos dependentes."
+                  onRetry={() => void refetchSmile()}
+                />
+              )}
+              <SkeletonKidsSmileCarousel itemCount={kids.length} />
+            </Wrapper>
+          )}
+
+          {showSmileCarousel && !smilePending && !smileError && (
+            <KidsSmileCarousel
+              items={smileSummaries}
+              onOpenKid={openKidSmile}
+              onOpenHistory={openKidHistory}
+              onRegisterEvent={openKidSmile}
+            />
+          )}
+
           <Wrapper
             direction="column"
             align="start"
@@ -214,9 +276,7 @@ export function Home() {
               isLoading={isLoading}
               isError={isError}
               refetchError={articlesRefetchError}
-              hideError={
-                showKidsError && kidsFailure !== "auth" && isError
-              }
+              hideError={showKidsError && kidsFailure !== "auth" && isError}
               onRetry={onRefresh}
               fromTab="Home"
             />
