@@ -3,26 +3,32 @@ import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { Text } from "@/components/ui/text";
+import { FloatingActionButton } from "@/components/ui/floatingActionButton";
 import { getArticleById } from "@/api/article/getArticleById";
+import { UserContext } from "@/contexts/UserContext";
+import { THEME } from "@/lib/theme";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import type {
   ArticlesNavigationProp,
   ArticlesStackParamList,
 } from "@/navigation/ArticlesStack";
 import { Badge } from "@/components/ui/badge";
-import { Image, RefreshControl, ScrollView } from "react-native";
+import { Image, RefreshControl, ScrollView, View } from "react-native";
 import { Markdown } from "react-native-remark";
-import { ClockIcon } from "phosphor-react-native";
+import { ClockIcon, PencilSimpleIcon } from "phosphor-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { retryQuery } from "@/lib/queryRetry";
 import { isApiError } from "@/types/predicates";
 import { SkeletonArticlePage } from "@/skeletons/pages/skeletonArticlePage";
+import { useContext } from "react";
 
 type ArticleRouteProp = RouteProp<ArticlesStackParamList, "Article">;
 
 export function Article() {
   const route = useRoute<ArticleRouteProp>();
   const navigation = useNavigation<ArticlesNavigationProp>();
+  const { user, hydrated } = useContext(UserContext)!;
+  const colors = THEME.light;
   const id = route.params?.id ?? "";
 
   const {
@@ -48,6 +54,13 @@ export function Article() {
 
   function handleRefresh(): void {
     void refetch();
+  }
+
+  function handleEditArticle(): void {
+    if (!article) {
+      return;
+    }
+    navigation.navigate("ArticleEditor", { article });
   }
 
   if (!id) {
@@ -149,60 +162,76 @@ export function Article() {
     >
       <Header hasBackButton />
 
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isPending}
-            onRefresh={handleRefresh}
-          />
-        }
-      >
-        <Wrapper
-          className="mx-6 flex-1 bg-base-100"
-          direction="column"
-          align="start"
-          justify="start"
-          gap="gap-2"
-        >
-          {isRefetchError && (
-            <QueryWarningBanner
-              message={
-                articleNotFound
-                  ? "Este artigo não está mais disponível. Mostrando a última versão carregada."
-                  : "Não foi possível atualizar o artigo. Mostrando a versão carregada anteriormente."
-              }
-              onRetry={handleRefresh}
+      <View className="relative w-full flex-1">
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !isPending}
+              onRefresh={handleRefresh}
             />
-          )}
+          }
+        >
+          <Wrapper
+            className="mx-6 flex-1 bg-base-100"
+            direction="column"
+            align="start"
+            justify="start"
+            gap="gap-2"
+          >
+            {isRefetchError && (
+              <QueryWarningBanner
+                message={
+                  articleNotFound
+                    ? "Este artigo não está mais disponível. Mostrando a última versão carregada."
+                    : "Não foi possível atualizar o artigo. Mostrando a versão carregada anteriormente."
+                }
+                onRetry={handleRefresh}
+              />
+            )}
 
-          <Wrapper direction="row" align="center" gap="gap-4">
-            <Badge variant="secondary" className="">
-              <Text>{categories}</Text>
-            </Badge>
-            <Wrapper direction="row" align="center" gap="gap-1">
-              <ClockIcon size={16} color="gray" weight="regular" />
-              <Text variant="small" className="text-base-500">
-                {article.readingTime} min de leitura
-              </Text>
+            <Wrapper direction="row" align="center" gap="gap-4">
+              <Badge variant="secondary" className="">
+                <Text>{categories}</Text>
+              </Badge>
+              <Wrapper direction="row" align="center" gap="gap-1">
+                <ClockIcon size={16} color="gray" weight="regular" />
+                <Text variant="small" className="text-base-500">
+                  {article.readingTime} min de leitura
+                </Text>
+              </Wrapper>
+            </Wrapper>
+
+            <Wrapper
+              className="my-4 w-full"
+              direction="column"
+              align="center"
+              justify="start"
+              gap="gap-4"
+            >
+              <Image
+                source={{ uri: article.imageCoverURL }}
+                className="h-56 w-full rounded-2xl bg-base-200"
+              />
+
+              <Markdown markdown={article.content} />
             </Wrapper>
           </Wrapper>
+        </ScrollView>
 
-          <Wrapper
-            className="my-4 w-full"
-            direction="column"
-            align="center"
-            justify="start"
-            gap="gap-4"
-          >
-            <Image
-              source={{ uri: article.imageCoverURL }}
-              className="h-56 w-full rounded-2xl bg-base-200"
-            />
-
-            <Markdown markdown={article.content} />
-          </Wrapper>
-        </Wrapper>
-      </ScrollView>
+        {hydrated && user?.isAdmin && (
+          <FloatingActionButton
+            accessibilityLabel="Editar artigo"
+            onPress={handleEditArticle}
+            icon={
+              <PencilSimpleIcon
+                size={24}
+                weight="bold"
+                color={colors.primaryForeground}
+              />
+            }
+          />
+        )}
+      </View>
     </Wrapper>
   );
 }
