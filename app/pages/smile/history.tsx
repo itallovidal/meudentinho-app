@@ -6,11 +6,18 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import {
+  RouteProp,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { SkeletonToothEventCard } from "@/skeletons/components/skeletonToothEventCard";
+import { SessionGate } from "@/components/sessionGate";
+import { SessionNotice } from "@/components/sessionNotice";
+import type { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { Text } from "@/components/ui/text";
@@ -22,12 +29,16 @@ import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventsInfinite } from "@/hooks/useToothEventsInfinite";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
-import type { SmileStackParamList } from "@/navigation/SmileStack";
+import type {
+  SmileNavigationProp,
+  SmileStackParamList,
+} from "@/navigation/SmileStack";
 
 const LOAD_MORE_THRESHOLD = 200;
 
 export function SmileHistory() {
-  const { authToken } = useContext(UserContext)!;
+  const { authToken, sessionExpired } = useContext(UserContext)!;
+  const navigation = useNavigation<SmileNavigationProp>();
   const { params } = useRoute<RouteProp<SmileStackParamList, "SmileHistory">>();
   const [viewportHeight, setViewportHeight] = useState(0);
 
@@ -74,7 +85,18 @@ export function SmileHistory() {
     }
   }
 
+  function goToLogin() {
+    navigation.getParent<TabNavigatorNavigationProp>()?.navigate("Profile", {
+      screen: "Login",
+      initial: false,
+      params: { fromTab: "Smile" },
+    });
+  }
+
   function handleRefresh() {
+    if (!authToken) {
+      return;
+    }
     void refetch();
     void allEventsQuery.refetch();
   }
@@ -120,6 +142,38 @@ export function SmileHistory() {
       className="flex-1 bg-base-200"
     >
       <Header hasBackButton />
+      <SessionGate
+        loadingFallback={
+          <ScrollView className="w-full px-6 py-4">
+            <View className="w-full gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <SkeletonToothEventCard key={index} />
+              ))}
+            </View>
+          </ScrollView>
+        }
+        fallback={
+          <Wrapper
+            className="w-full flex-1 px-6 py-4"
+            direction="column"
+            align="center"
+            justify="center"
+          >
+            <SessionNotice
+              title={
+                sessionExpired ? "Sessão expirada" : "Entre para ver o histórico"
+              }
+              message={
+                sessionExpired
+                  ? "Faça login novamente para ver o histórico."
+                  : "Faça login para acompanhar os registros do seu filho."
+              }
+              actionLabel="Fazer login"
+              onAction={goToLogin}
+            />
+          </Wrapper>
+        }
+      >
       <ScrollView
         className="w-full"
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
@@ -211,6 +265,7 @@ export function SmileHistory() {
           {!isPending && !isLoadingError && renderFooter()}
         </Wrapper>
       </ScrollView>
+      </SessionGate>
 
       <ToothEventModal {...editor.modalProps} />
 

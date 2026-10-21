@@ -1,10 +1,17 @@
 import { useContext, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import {
+  RouteProp,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { CaretDownIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
+import { SessionGate } from "@/components/sessionGate";
+import { SessionNotice } from "@/components/sessionNotice";
+import { SkeletonText } from "@/skeletons/components/skeletonText";
 import DentalProgressChart from "@/components/smile/DentalProgressChart";
 import { DentalCalendar } from "@/components/smile/DentalCalendar";
 import { Button } from "@/components/ui/button";
@@ -13,7 +20,11 @@ import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
-import type { SmileStackParamList } from "@/navigation/SmileStack";
+import type {
+  SmileNavigationProp,
+  SmileStackParamList,
+} from "@/navigation/SmileStack";
+import type { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { THEME } from "@/lib/theme";
 import {
   buildPredictionCalendarMarks,
@@ -56,7 +67,8 @@ function formatMonthWindow(start: string, end: string) {
 }
 
 export function SmilePredictions() {
-  const { authToken } = useContext(UserContext)!;
+  const { authToken, sessionExpired } = useContext(UserContext)!;
+  const navigation = useNavigation<SmileNavigationProp>();
   const colors = THEME.light;
   const { params } =
     useRoute<RouteProp<SmileStackParamList, "SmilePredictions">>();
@@ -149,7 +161,18 @@ export function SmilePredictions() {
   const kidMissing = !kidsPending && !kidsFailure && !kid;
   const kidName = kid?.name || "Seu filho(a)";
 
+  function goToLogin() {
+    navigation.getParent<TabNavigatorNavigationProp>()?.navigate("Profile", {
+      screen: "Login",
+      initial: false,
+      params: { fromTab: "Smile" },
+    });
+  }
+
   function handleRefresh() {
+    if (!authToken) {
+      return;
+    }
     void refetchKids();
     void refetch();
   }
@@ -162,6 +185,40 @@ export function SmilePredictions() {
       className="flex-1 bg-base-200"
     >
       <Header hasBackButton />
+      <SessionGate
+        loadingFallback={
+          <ScrollView className="w-full px-6 py-4">
+            <View className="w-full gap-4">
+              <SkeletonText variant="h3" />
+              <SkeletonText />
+              <SkeletonText />
+            </View>
+          </ScrollView>
+        }
+        fallback={
+          <Wrapper
+            className="w-full flex-1 px-6 py-4"
+            direction="column"
+            align="center"
+            justify="center"
+          >
+            <SessionNotice
+              title={
+                sessionExpired
+                  ? "Sessão expirada"
+                  : "Entre para ver as previsões"
+              }
+              message={
+                sessionExpired
+                  ? "Faça login novamente para ver as previsões."
+                  : "Faça login para acompanhar as previsões do seu filho."
+              }
+              actionLabel="Fazer login"
+              onAction={goToLogin}
+            />
+          </Wrapper>
+        }
+      >
       <ScrollView
         ref={scrollRef}
         className="w-full"
@@ -351,6 +408,7 @@ export function SmilePredictions() {
           )}
         </Wrapper>
       </ScrollView>
+      </SessionGate>
     </Wrapper>
   );
 }

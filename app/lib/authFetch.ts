@@ -26,7 +26,7 @@ type AuthFetchHandlers = {
 };
 
 type RefreshResult =
-  | { refreshed: true }
+  | { refreshed: true; authToken: string }
   | { refreshed: false; expired: boolean };
 
 let handlers: AuthFetchHandlers | null = null;
@@ -100,7 +100,7 @@ async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
           userId: data.userId,
         });
         logSessionRefresh(data.token);
-        return { refreshed: true };
+        return { refreshed: true, authToken: data.token };
       } catch (err) {
         if (
           err instanceof ApiError &&
@@ -139,7 +139,9 @@ export async function authFetch(
   const latest = handlers?.getSession() ?? session;
   const latestRefresh = latest.refreshToken ?? session.refreshToken;
   if (!latestRefresh) {
-    handlers?.onSessionExpired();
+    if (latest.authToken) {
+      handlers?.onSessionExpired();
+    }
     throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
   }
 
@@ -167,6 +169,17 @@ export async function authFetch(
     );
   }
 
-  const fresh = handlers?.getSession();
-  return fetchWithTimeout(input, withToken(init, fresh?.authToken ?? null));
+  const retry = await fetchWithTimeout(
+    input,
+    withToken(init, result.authToken),
+  );
+  if (retry.status === 401) {
+    handlers?.onSessionExpired();
+    throw new ApiError(
+      await sessionExpiredMessage(retry),
+      "INVALID_CREDENTIALS",
+      401,
+    );
+  }
+  return retry;
 }
