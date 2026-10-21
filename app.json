@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Meu Dentinho",
-    "slug": "meudentinho",
+    "name": "Janelinha",
+    "slug": "janelinha",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/new-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.meudentinhoapp",
+      "bundleIdentifier": "com.janelinhaapp",
       "buildNumber": "1"
     },
     "android": {
@@ -18,7 +18,7 @@
       },
       "allowBackup": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.meudentinhoapp",
+      "package": "com.janelinhaapp",
       "versionCode": 1
     },
     "web": {
