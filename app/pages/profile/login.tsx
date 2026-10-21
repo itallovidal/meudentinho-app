@@ -112,13 +112,20 @@ export function Login() {
         </Text>
       </Wrapper>
 
-      <LoginForm submitError={error} onSubmit={onLogin} />
-
       {sessionExpired && !error && (
-        <Text className="mb-2 text-center text-red-600">
-          Sessão expirada. Faça login novamente.
-        </Text>
+        <Wrapper
+          className="mb-4 w-full rounded-xl bg-base-200 p-3"
+          direction="column"
+          align="center"
+          justify="center"
+        >
+          <Text className="text-center text-destructive">
+            Sessão expirada. Faça login novamente.
+          </Text>
+        </Wrapper>
       )}
+
+      <LoginForm submitError={error} onSubmit={onLogin} />
 
       <Text variant={"small"}>Não possui uma conta?</Text>
       <Button
