@@ -14,9 +14,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { QuestionIcon } from "phosphor-react-native";
-import { THEME } from "@/lib/theme";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { InfoPopover } from "../infoPopover";
 import { AnimatedCheckbox } from "./animatedCheckbox";
 import { GenderSelector } from "./genderSelector";
 import { BirthDateInput } from "./birthDateInput";
@@ -43,7 +41,6 @@ export function RegisterKidForm({
   footer,
   popoverHost,
 }: Props) {
-  const colors = THEME.light;
   const [isPremature, setIsPremature] = useState(
     Boolean(
       defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
@@ -173,32 +170,12 @@ export function RegisterKidForm({
             A criança nasceu antes do tempo previsto?
           </Text>
         </Pressable>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="O que é prematuridade?"
-              accessibilityHint="Mostra a explicação sobre prematuridade"
-              hitSlop={8}
-            >
-              <QuestionIcon size={22} color={colors.base400} weight="fill" />
-            </Pressable>
-          </PopoverTrigger>
-          <PopoverContent
-            side="top"
-            align="end"
-            sideOffset={8}
-            portalHost={popoverHost}
-            className="w-64 border-0 bg-transparent p-0 shadow-none"
-          >
-            <View className="rounded-2xl bg-base-400 px-4 py-3 shadow-lg">
-              <Text className="text-sm leading-5 text-base-100">
-                A prematuridade acontece quando o nascimento ocorre antes de 37
-                semanas de gestação.
-              </Text>
-            </View>
-          </PopoverContent>
-        </Popover>
+        <InfoPopover
+          accessibilityLabel="O que é prematuridade?"
+          accessibilityHint="Mostra a explicação sobre prematuridade"
+          message="A prematuridade acontece quando o nascimento ocorre antes de 37 semanas de gestação."
+          portalHost={popoverHost}
+        />
       </View>
 
       <Animated.View

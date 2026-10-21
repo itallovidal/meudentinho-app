@@ -44,9 +44,12 @@ export function SkeletonDentalMap({ error }: { error?: ReactNode }) {
       gap="gap-4"
       className="mx-5 my-2 w-full rounded-lg bg-base-100 p-4"
     >
-      <Text variant="h4" className="text-primary-500">
-        Mapa do Sorriso
-      </Text>
+      <View className="w-full flex-row items-center justify-between gap-4">
+        <Text variant="h4" className="text-primary-500">
+          Mapa do Sorriso
+        </Text>
+        <Skeleton className="h-6 w-6 rounded-full" />
+      </View>
 
       <SkeletonSmileHeader />
 

@@ -22,6 +22,7 @@ import {
   type ToothMapStateKey,
 } from "./teeth/toothStyle";
 import { Text } from "@/components/ui/text";
+import { InfoPopover } from "@/components/infoPopover";
 import { ToothEventModal } from "./ToothEventModal";
 import { ageInMonths } from "@/lib/utils";
 import {
@@ -454,9 +455,21 @@ export function DentalMap({
         gap="gap-4"
         className="w-full rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
       >
-        <Text variant="h4" className="text-primary-500">
-          Mapa do Sorriso
-        </Text>
+        <Wrapper
+          direction="row"
+          align="center"
+          justify="between"
+          className="w-full"
+        >
+          <Text variant="h4" className="text-primary-500">
+            Mapa do Sorriso
+          </Text>
+          <InfoPopover
+            accessibilityLabel="Sobre o Mapa do Sorriso"
+            accessibilityHint="Mostra um aviso sobre os registros e as previsões do mapa"
+            message="O registro e as previsões estimadas não substituem o acompanhamento de um profissional odontológico."
+          />
+        </Wrapper>
 
         {renderArchSection(arches.upperRight, arches.upperLeft, "Superior")}
         {renderArchSection(arches.lowerRight, arches.lowerLeft, "Inferior")}
