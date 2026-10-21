@@ -12,6 +12,9 @@ import { Dependents } from "@/pages/profile/dependents";
 import { Responsible } from "@/pages/profile/responsible";
 import { EditDependent } from "@/pages/profile/editDependent";
 import { ChangePassword } from "@/pages/profile/changePassword";
+import { Categories } from "@/pages/profile/categories";
+import { EditCategory } from "@/pages/profile/editCategory";
+import type { ArticleCategoryDTO } from "@/types/dtos/article";
 import type { CrossTabOrigin } from "./types";
 
 export type ProfileRouteParams = {
@@ -22,6 +25,8 @@ export type ProfileRouteParams = {
   ChangePassword: undefined;
   Dependents: undefined | CrossTabOrigin;
   EditDependent: undefined | ({ kid?: KidResponseDTO } & CrossTabOrigin);
+  Categories: undefined;
+  EditCategory: undefined | { category?: ArticleCategoryDTO };
 };
 
 export type ProfileNavegationProp =
@@ -39,6 +44,8 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     ChangePassword,
     Dependents,
     EditDependent,
+    Categories,
+    EditCategory,
   },
   screenOptions: {
     headerShown: false,

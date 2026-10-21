@@ -40,7 +40,9 @@ export function rootScreenForRoute(routeName: string): string | null {
     routeName === "Responsible" ||
     routeName === "ChangePassword" ||
     routeName === "Dependents" ||
-    routeName === "EditDependent"
+    routeName === "EditDependent" ||
+    routeName === "Categories" ||
+    routeName === "EditCategory"
   ) {
     return "Index";
   }

@@ -14,6 +14,7 @@ import {
   UserCircleIcon,
   UsersThreeIcon,
   SignOutIcon,
+  TagSimpleIcon,
 } from "phosphor-react-native";
 import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
@@ -53,7 +54,7 @@ export function Index() {
   const accountOption = user
     ? {
         icon: <UserCircleIcon color={colors.primary400} />,
-        title: "Gerencie sua conta",
+        title: "Gerenciar conta",
         description: "Administre seus dados pessoais.",
         variant: "default" as const,
         handlePress: () => navigation.navigate("Responsible"),
@@ -72,7 +73,7 @@ export function Index() {
 
   const signupOption = {
     icon: <UserCircleIcon color={colors.primary400} />,
-    title: "Criar conta",
+    title: "Criar Conta",
     description: "Ainda não tem conta? Cadastre-se.",
     variant: "default" as const,
     handlePress: () => navigation.navigate("Signup"),
@@ -81,10 +82,19 @@ export function Index() {
 
   const dependentsOption = {
     icon: <UsersThreeIcon color={colors.primary400} />,
-    title: "Gerencie Dependentes",
+    title: "Gerenciar Dependentes",
     description: "Administre seus dependentes.",
     variant: "default" as const,
     handlePress: () => navigation.navigate("Dependents"),
+    isDisabled: false,
+  };
+
+  const categoriesOption = {
+    icon: <TagSimpleIcon color={colors.primary400} />,
+    title: "Gerenciar Categorias",
+    description: "Administre as categorias dos artigos.",
+    variant: "default" as const,
+    handlePress: () => navigation.navigate("Categories"),
     isDisabled: false,
   };
 
@@ -92,6 +102,7 @@ export function Index() {
     accountOption,
     ...(user ? [] : [signupOption]),
     ...(user ? [dependentsOption] : []),
+    ...(user?.isAdmin ? [categoriesOption] : []),
     {
       icon: <ShieldCheckIcon color={colors.primary400} />,
       title: "Políticas de privacidade",
