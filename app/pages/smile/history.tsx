@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Pressable,
   RefreshControl,
   ScrollView,
   View,
@@ -11,6 +12,7 @@ import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
+import { ExportIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
@@ -20,6 +22,7 @@ import { SessionNotice } from "@/components/sessionNotice";
 import type { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
+import { ExportHistorySheet } from "@/components/smile/ExportHistorySheet";
 import { Text } from "@/components/ui/text";
 import { ToothEventCard } from "@/components/smile/ToothEventCard";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
@@ -29,18 +32,22 @@ import { useKids } from "@/hooks/useKids";
 import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventsInfinite } from "@/hooks/useToothEventsInfinite";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
+import { THEME } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 import type {
   SmileNavigationProp,
   SmileStackParamList,
 } from "@/navigation/SmileStack";
 
 const LOAD_MORE_THRESHOLD = 200;
+const colors = THEME.light;
 
 export function SmileHistory() {
   const { authToken, sessionExpired } = useContext(UserContext)!;
   const navigation = useNavigation<SmileNavigationProp>();
   const { params } = useRoute<RouteProp<SmileStackParamList, "SmileHistory">>();
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [exportVisible, setExportVisible] = useState(false);
 
   const allEventsQuery = useToothEvents(params.kidId, authToken);
   const {
@@ -60,6 +67,11 @@ export function SmileHistory() {
   const kidRecord = kids.find((kid) => kid.id === params.kidId);
   const kidBirthDate = kidRecord?.birthDate ?? null;
   const kidGender = kidRecord?.gender ?? null;
+  const canExport =
+    !!kidRecord &&
+    !isPending &&
+    !isLoadingError &&
+    allEventsQuery.events.length > 0;
 
   const editor = useToothEventEditor({
     kidId: params.kidId,
@@ -198,15 +210,33 @@ export function SmileHistory() {
           justify="start"
           gap="gap-4"
         >
-          <Wrapper direction="column" gap="gap-1" className="w-full">
-            <Text variant="h3" className="text-primary-500">
-              Histórico de registros
-            </Text>
-            {!isPending && !isLoadingError && (
-              <Text className="text-sm text-base-500">
-                {total === 1 ? "1 registro" : `${total} registros`}
+          <Wrapper
+            direction="row"
+            align="center"
+            justify="between"
+            className="w-full"
+          >
+            <Wrapper direction="column" gap="gap-1" className="flex-1">
+              <Text variant="h3" className="text-primary-500">
+                Histórico de registros
               </Text>
-            )}
+              {!isPending && !isLoadingError && (
+                <Text className="text-sm text-base-500">
+                  {total === 1 ? "1 registro" : `${total} registros`}
+                </Text>
+              )}
+            </Wrapper>
+            <Pressable
+              onPress={() => setExportVisible(true)}
+              disabled={!canExport}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Exportar histórico em PDF"
+              accessibilityState={{ disabled: !canExport }}
+              className={cn("p-1", !canExport && "opacity-40")}
+            >
+              <ExportIcon size={24} color={colors.primary500} weight="regular" />
+            </Pressable>
           </Wrapper>
 
           {isPending && (
@@ -270,6 +300,16 @@ export function SmileHistory() {
       <ToothEventModal {...editor.modalProps} />
 
       <DeleteEventSheet {...editor.confirmProps} />
+
+      <ExportHistorySheet
+        visible={exportVisible}
+        kidName={kidRecord?.name ?? "Dependente"}
+        kidBirthDate={kidBirthDate}
+        kidGender={kidGender ?? "male"}
+        kidPrematureWeeks={kidRecord?.prematureWeeks ?? null}
+        events={allEventsQuery.events}
+        onClose={() => setExportVisible(false)}
+      />
     </Wrapper>
   );
 }
