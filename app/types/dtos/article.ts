@@ -15,8 +15,11 @@ export interface ArticleRequestDTO {
   imageCoverURL: string;
 }
 
-export interface ArticleCategory {
+export interface ArticleCategoryDTO {
   id: string;
   name: string;
+}
+
+export interface ArticleCategory extends ArticleCategoryDTO {
   isSelected: boolean;
 }
