@@ -18,7 +18,7 @@ import {
 } from "phosphor-react-native";
 import { Wrapper } from "./wrapper";
 
-interface Props extends CalendarProps {}
+type Props = CalendarProps;
 
 interface CalendarHeaderProps {
   addMonth?: (count: number) => void;
@@ -191,9 +191,7 @@ export function CustomCalendar({
   }
 
   function applyMonth(monthIndex: number) {
-    setJumpKey(
-      `${pickerYear}-${String(monthIndex + 1).padStart(2, "0")}-15`,
-    );
+    setJumpKey(`${pickerYear}-${String(monthIndex + 1).padStart(2, "0")}-15`);
     setVisibleMonth(new Date(pickerYear, monthIndex, 1));
     setPickerOpen(false);
   }

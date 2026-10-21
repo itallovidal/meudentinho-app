@@ -5,7 +5,6 @@ import { ErrorState } from "../errorState";
 import { QueryWarningBanner } from "../queryWarningBanner";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
-import { Wrapper } from "../wrapper";
 import type { TabName } from "@/navigation/types";
 import { View } from "react-native";
 import { useNavigation } from "@react-navigation/native";

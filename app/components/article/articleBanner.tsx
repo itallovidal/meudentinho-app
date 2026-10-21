@@ -1,4 +1,4 @@
-import { Image, TouchableNativeFeedback, View } from "react-native";
+import { Image, TouchableNativeFeedback } from "react-native";
 import { ClockIcon } from "phosphor-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";

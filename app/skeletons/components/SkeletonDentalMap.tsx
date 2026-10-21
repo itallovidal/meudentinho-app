@@ -3,7 +3,7 @@ import { Wrapper } from "@/components/wrapper";
 import { View } from "react-native";
 import type { ReactNode } from "react";
 import { SkeletonText } from "./skeletonText";
-import ToothSVG from "@/components/smile/teeth/ToothSVG";
+import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
   LEGEND,
   LEGEND_TOOTH,
@@ -16,21 +16,6 @@ function SkeletonSmileHeader() {
     <View className="w-full flex-row justify-between gap-4">
       <SkeletonText variant="small" />
       <SkeletonText variant="small" />
-    </View>
-  );
-}
-
-function SkeletonTeethInfo() {
-  return (
-    <View className="w-full flex-row justify-between gap-4">
-      <View className="align-start flex flex-row justify-center gap-2">
-        <Skeleton className="h-10 w-10 rounded-full" />
-        <View className="flex flex-col gap-2">
-          <SkeletonText variant="small" />
-          <SkeletonText variant="default" />
-        </View>
-      </View>
-      <Skeleton className="h-8 w-8 rounded-full" />
     </View>
   );
 }

@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
 import type { ArticleCategoryDTO } from "@/types/dtos/article";
-import { CaretRightIcon, TagIcon, TagSimpleIcon } from "phosphor-react-native";
+import { CaretRightIcon, TagSimpleIcon } from "phosphor-react-native";
 import { TouchableOpacity, View } from "react-native";
 
 interface Props {

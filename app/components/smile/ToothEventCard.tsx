@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import ToothSVG from "@/components/smile/teeth/ToothSVG";
+import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
   LEGEND_TOOTH,
   MILK_SYMBOL_DASH,

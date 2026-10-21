@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { parseResponse } from "@/lib/parseResponse";
-import { ApiError, ResponsePayload } from "@/types/domain";
+import { ApiError } from "@/types/domain";
 import type { ArticleRequestDTO } from "@/types/dtos/article";
 
 export async function createNewArticle(
@@ -20,7 +20,7 @@ export async function createNewArticle(
     authToken,
   );
 
-  const payload = await parseResponse<{}>(response);
+  const payload = await parseResponse<unknown>(response);
 
   if (payload.status !== 201) {
     throw new ApiError(

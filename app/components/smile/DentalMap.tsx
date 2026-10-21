@@ -11,7 +11,7 @@ import {
 import Svg, { Path } from "react-native-svg";
 import { Wrapper } from "@/components/wrapper";
 import { useToast } from "@/components/ui/toast";
-import ToothSVG from "./teeth/ToothSVG";
+import { ToothSVG } from "./teeth/ToothSVG";
 import { FDI_TEETH, type FdiNumber } from "./teeth/fdiTeeth";
 import {
   LEGEND,
@@ -25,10 +25,7 @@ import { Text } from "@/components/ui/text";
 import { InfoPopover } from "@/components/infoPopover";
 import { ToothEventModal } from "./ToothEventModal";
 import { ageInMonths } from "@/lib/utils";
-import {
-  parseToothId,
-  toothAccessibilityLabel,
-} from "@/lib/teethLabels";
+import { parseToothId, toothAccessibilityLabel } from "@/lib/teethLabels";
 import {
   isInEruptionWindow,
   toothState,
@@ -432,7 +429,7 @@ export function DentalMap({
   ) {
     return (
       <View className="w-full">
-        {title == "Inferior" && renderOpenArch(right, left)}
+        {title === "Inferior" && renderOpenArch(right, left)}
         <Wrapper direction="row" justify="between" className="mb-1 w-full">
           <Text className="text-xs font-bold text-base-500">
             {`${title} · Direito`}
@@ -441,7 +438,7 @@ export function DentalMap({
             {`${title} · Esquerdo`}
           </Text>
         </Wrapper>
-        {title == "Superior" && renderOpenArch(right, left, true)}
+        {title === "Superior" && renderOpenArch(right, left, true)}
       </View>
     );
   }
@@ -522,10 +519,10 @@ export function DentalMap({
       {kidId && (
         <ToothEventModal
           visible={modalVisible}
-          toothId={selectedTooth}
-          kidId={kidId}
-          kidBirthDate={kidBirthDate}
-          kidGender={kidGender}
+        toothId={selectedTooth}
+        kidId={kidId}
+        kidBirthDate={kidBirthDate}
+        kidGender={kidGender}
         toothEvents={selectedToothEvents}
         events={events}
         onClose={() => setModalVisible(false)}

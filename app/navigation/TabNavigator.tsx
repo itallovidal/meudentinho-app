@@ -1,11 +1,16 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   BottomTabBar,
+  createBottomTabNavigator,
   type BottomTabBarButtonProps,
   type BottomTabBarProps,
+  type BottomTabNavigationProp,
 } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
-import { StackActions, CommonActions } from "@react-navigation/native";
+import {
+  CommonActions,
+  NavigatorScreenParams,
+  StackActions,
+} from "@react-navigation/native";
 import { TAB_ROOT_SCREEN, isTabName } from "./types";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -24,8 +29,6 @@ import {
   UserIcon,
 } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
-import { NavigatorScreenParams } from "@react-navigation/native";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const colors = THEME.light;
 const focusedColor = colors.primary400;
@@ -153,7 +156,7 @@ export function popNestedStackToTop<
   const expectedRoot = TAB_ROOT_SCREEN[rawTabName];
   const nestedRoutes =
     "routes" in nested && Array.isArray(nested.routes)
-      ? (nested.routes as Array<{ name?: string }>)
+      ? (nested.routes as { name?: string }[])
       : [];
   const firstRouteName = nestedRoutes[0]?.name;
   if (
@@ -173,7 +176,7 @@ export function popNestedStackToTop<
 
 function isFocusedTab(
   navigation: {
-    getState: () => { index: number; routes: Array<{ key: string }> };
+    getState: () => { index: number; routes: { key: string }[] };
   },
   routeKey: string,
 ) {

@@ -5,8 +5,8 @@ export type LooseNavigation = {
   goBack: () => void;
   getParent: () => LooseNavigation | undefined;
   navigate: (screen: string, params?: unknown) => void;
-  getState?: () => { routes: Array<{ name: string }> };
-  reset?: (state: { index: number; routes: Array<{ name: string }> }) => void;
+  getState?: () => { routes: { name: string }[] };
+  reset?: (state: { index: number; routes: { name: string }[] }) => void;
 };
 
 export function resetToRouteRoot(

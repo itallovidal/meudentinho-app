@@ -14,7 +14,6 @@ import { SessionNotice } from "@/components/sessionNotice";
 import { SkeletonText } from "@/skeletons/components/skeletonText";
 import DentalProgressChart from "@/components/smile/DentalProgressChart";
 import { DentalCalendar } from "@/components/smile/DentalCalendar";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";

@@ -50,7 +50,7 @@ export function useArticles(options: UseArticlesOptions = {}) {
       map[cat.name] = [];
     });
 
-    const [latest, ...list] = articles;
+    const list = articles.slice(1);
 
     list.forEach((article) => {
       for (const category of article.categories ?? []) {

@@ -4,7 +4,6 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
   ZoomIn,
   ZoomOut,

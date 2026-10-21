@@ -7,7 +7,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
-import { THEME } from "@/lib/theme";
 
 type GenderSelectionProps = {
   gender: "male" | "female";
@@ -25,7 +24,6 @@ export function GenderSelector({
   onChange,
   className,
 }: GenderSelectionProps) {
-  const colors = THEME.light;
   const [width, setWidth] = useState(0);
   const progress = useSharedValue(gender === "female" ? 1 : 0);
 

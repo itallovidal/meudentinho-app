@@ -14,7 +14,7 @@ export async function getLocalStorageItem(key: string): Promise<string | null> {
 }
 
 export async function setLocalStorageItems(
-  entries: Array<[string, string]>,
+  entries: [string, string][],
 ): Promise<void> {
   const prefix = ENV.LOCAL_STORAGE_KEY_PREFIX;
   await AsyncStorage.multiSet(
