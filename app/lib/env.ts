@@ -11,7 +11,7 @@ export interface EnvBuildResult {
   issues: string[];
 }
 
-const DEFAULT_STORAGE_PREFIX = "@meudentinho";
+const DEFAULT_STORAGE_PREFIX = "@janelinha";
 
 const FALLBACK_ENV: EnvValues = {
   BASE_API_URL: "",

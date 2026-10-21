@@ -34,12 +34,12 @@ describe("buildEnv", () => {
   });
 
   it("accepts https in both modes and strips the trailing slash", () => {
-    const result = buildEnv(rawEnv("https://api.meudentinho.com/"), {
+    const result = buildEnv(rawEnv("https://api.janelinha.com/"), {
       requireHttps: true,
     });
 
     expect(result.issues).toEqual([]);
-    expect(result.env.BASE_API_URL).toBe("https://api.meudentinho.com");
+    expect(result.env.BASE_API_URL).toBe("https://api.janelinha.com");
     expect(result.env.PRIVACY_POLICY_URL).toBe(HTTPS_PRIVACY);
   });
 
@@ -54,7 +54,7 @@ describe("buildEnv", () => {
   it("rejects a privacy policy url that is not https", () => {
     const result = buildEnv(
       {
-        EXPO_PUBLIC_API_BASE_URL: "https://api.meudentinho.com",
+        EXPO_PUBLIC_API_BASE_URL: "https://api.janelinha.com",
         EXPO_PUBLIC_PRIVACY_POLICY_URL: "http://exemplo.com/politica",
       },
       { requireHttps: false },
@@ -65,17 +65,17 @@ describe("buildEnv", () => {
   });
 
   it("falls back to the default storage prefix", () => {
-    const result = buildEnv(rawEnv("https://api.meudentinho.com"), {
+    const result = buildEnv(rawEnv("https://api.janelinha.com"), {
       requireHttps: true,
     });
 
-    expect(result.env.LOCAL_STORAGE_KEY_PREFIX).toBe("@meudentinho");
+    expect(result.env.LOCAL_STORAGE_KEY_PREFIX).toBe("@janelinha");
   });
 
   it("keeps a provided storage prefix", () => {
     const result = buildEnv(
       {
-        EXPO_PUBLIC_API_BASE_URL: "https://api.meudentinho.com",
+        EXPO_PUBLIC_API_BASE_URL: "https://api.janelinha.com",
         EXPO_PUBLIC_PRIVACY_POLICY_URL: HTTPS_PRIVACY,
         EXPO_PUBLIC_LOCAL_STORAGE_KEY: "@custom",
       },
@@ -90,6 +90,6 @@ describe("env module", () => {
   it("resolves without throwing on import", () => {
     expect(Array.isArray(envIssues)).toBe(true);
     expect(typeof ENV.BASE_API_URL).toBe("string");
-    expect(ENV.LOCAL_STORAGE_KEY_PREFIX).toBe("@meudentinho");
+    expect(ENV.LOCAL_STORAGE_KEY_PREFIX).toBe("@janelinha");
   });
 });
