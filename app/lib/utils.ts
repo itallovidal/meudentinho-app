@@ -208,6 +208,15 @@ export function formatAgeFromBirthDate(birthDate: string): string {
   return years === 1 ? "1 ano" : `${years} anos`;
 }
 
+export function formatAgeMonthsFromBirthDate(birthDate: string): string | null {
+  const months = ageInMonths(birthDate);
+  if (months === null || Number.isNaN(months) || months < 0) {
+    return null;
+  }
+  const wholeMonths = Math.max(1, Math.floor(months));
+  return wholeMonths === 1 ? "1 mês" : `${wholeMonths} meses`;
+}
+
 export function maskDateBr(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 8);
   if (digits.length <= 2) {

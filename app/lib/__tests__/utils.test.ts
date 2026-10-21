@@ -2,6 +2,7 @@
 import {
   ageInMonths,
   brDateToIsoKey,
+  formatAgeMonthsFromBirthDate,
   localDateKeyToISO,
   parseLocalDate,
   toLocalDateKey,
@@ -84,5 +85,31 @@ describe("ageInMonths", () => {
   it("returns null for invalid input", () => {
     expect(ageInMonths("")).toBeNull();
     expect(ageInMonths("not-a-date")).toBeNull();
+  });
+});
+
+describe("formatAgeMonthsFromBirthDate", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-10-17T12:00:00"));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("labels the age in months", () => {
+    expect(formatAgeMonthsFromBirthDate("2026-09-17")).toBe("1 mês");
+    expect(formatAgeMonthsFromBirthDate("2026-07-17")).toBe("3 meses");
+  });
+
+  it("never reports a newborn as zero months", () => {
+    expect(formatAgeMonthsFromBirthDate("2026-10-17")).toBe("1 mês");
+    expect(formatAgeMonthsFromBirthDate("2026-10-10")).toBe("1 mês");
+  });
+
+  it("returns null for invalid input", () => {
+    expect(formatAgeMonthsFromBirthDate("")).toBeNull();
+    expect(formatAgeMonthsFromBirthDate("not-a-date")).toBeNull();
   });
 });
