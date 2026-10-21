@@ -1,6 +1,10 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Alert, RefreshControl, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useContext, useMemo, useState } from "react";
+import { RefreshControl, ScrollView } from "react-native";
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from "@react-navigation/native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
@@ -22,6 +26,7 @@ import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { errorMessage } from "@/lib/errorMessage";
+import type { SmileStackParamList } from "@/navigation/SmileStack";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
 import PredictionsCard from "@/components/smile/PredictionsCard";
@@ -45,8 +50,9 @@ export function Smile() {
   const { user, authToken, userId, hydrated, sessionExpired, expireSession } =
     useContext(UserContext)!;
   const navigation = useNavigation<TabNavigatorNavigationProp>();
+  const { params } = useRoute<RouteProp<SmileStackParamList, "SmileHome">>();
+  const routeKidId = params?.kidId ?? null;
   const queryClient = useQueryClient();
-  const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
   const [addDependentVisible, setAddDependentVisible] = useState(false);
   const [addDependentError, setAddDependentError] = useState<ApiError | null>(
     null,
@@ -75,17 +81,28 @@ export function Smile() {
 
   const accountId = resolveAccountId(userId, authToken);
 
-  useEffect(() => {
+  const [selectedKidId, setSelectedKidId] = useState<string | null>(routeKidId);
+  const [prevRouteKidId, setPrevRouteKidId] = useState(routeKidId);
+  const kidsKey = kids.map((kid) => kid.id).join(",");
+  const [prevKidsKey, setPrevKidsKey] = useState<string | null>(null);
+
+  if (routeKidId !== prevRouteKidId) {
+    setPrevRouteKidId(routeKidId);
+    if (routeKidId) {
+      setSelectedKidId(routeKidId);
+    }
+  }
+
+  if (kidsKey !== prevKidsKey) {
+    setPrevKidsKey(kidsKey);
     if (kids.length === 0) {
       if (selectedKidId !== null) {
         setSelectedKidId(null);
       }
-      return;
-    }
-    if (!kids.some((kid) => kid.id === selectedKidId)) {
+    } else if (!kids.some((kid) => kid.id === selectedKidId)) {
       setSelectedKidId(kids[0].id);
     }
-  }, [kids, selectedKidId]);
+  }
 
   const eventsQuery = useToothEvents(selectedKidId, authToken);
   const { events } = eventsQuery;

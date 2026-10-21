@@ -8,7 +8,7 @@ import { SmilePredictions } from "@/pages/smile/predictions";
 import type { CrossTabOrigin } from "./types";
 
 export type SmileStackParamList = {
-  SmileHome: undefined;
+  SmileHome: { kidId?: string } & CrossTabOrigin;
   SmileHistory: { kidId: string } & CrossTabOrigin;
   SmilePredictions: { kidId: string } & CrossTabOrigin;
 };
