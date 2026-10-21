@@ -33,6 +33,7 @@ export interface UserContextProps {
     profile: Partial<Pick<BasicUser, "name" | "email">>,
   ) => Promise<void>;
   clearSessionExpired: () => void;
+  expireSession: () => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextProps | null>(null);
@@ -138,25 +139,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     );
     await task;
   }
-
-  useEffect(() => {
-    configureAuthFetch({
-      getSession: () => ({
-        authToken: sessionRef.current.authToken,
-        refreshToken: sessionRef.current.refreshToken,
-      }),
-      onSessionRefreshed: (token, refresh, info) => {
-        void persistRefreshedSession(token, refresh, info);
-      },
-      onSessionExpired: () => {
-        void (async () => {
-          await updateAppUser(null, null);
-          setSessionExpired(true);
-        })();
-      },
-    });
-    return () => configureAuthFetch(null);
-  }, []);
 
   function safeParse<T>(raw: string | null): T | null {
     if (!raw) {
@@ -314,6 +296,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
   [],
 );
 
+  const expireSession = useCallback(async () => {
+    if (sessionRef.current.authToken == null) {
+      return;
+    }
+    const generation = sessionGeneration.current;
+    await updateAppUser(null, null);
+    if (sessionGeneration.current !== generation + 1) {
+      return;
+    }
+    setSessionExpired(true);
+  }, [updateAppUser]);
+
+  useEffect(() => {
+    configureAuthFetch({
+      getSession: () => ({
+        authToken: sessionRef.current.authToken,
+        refreshToken: sessionRef.current.refreshToken,
+      }),
+      onSessionRefreshed: (token, refresh, info) => {
+        void persistRefreshedSession(token, refresh, info);
+      },
+      onSessionExpired: () => {
+        void expireSession();
+      },
+    });
+    return () => configureAuthFetch(null);
+  }, [expireSession]);
+
   const updateUserProfile = useCallback(
     async (profile: Partial<Pick<BasicUser, "name" | "email">>) => {
     try {
@@ -357,6 +367,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       updateAppUser,
       updateUserProfile,
       clearSessionExpired,
+      expireSession,
     }),
     [
       user,
@@ -368,6 +379,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       updateAppUser,
       updateUserProfile,
       clearSessionExpired,
+      expireSession,
     ],
   );
 
