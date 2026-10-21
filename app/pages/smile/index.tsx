@@ -5,9 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
-import { Button } from "@/components/ui/button";
 import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
-import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast";
 import { AddDependentSheet } from "@/components/smile/AddDependentSheet";
 import { DentalMap } from "@/components/smile/DentalMap";
@@ -38,11 +36,14 @@ import { SkeletonKidSelector } from "@/skeletons/components/skeletonKidSelector"
 import { SkeletonDentalTipCard } from "@/skeletons/components/skeletonDentalTipCard";
 import { SkeletonRecentEventsList } from "@/skeletons/components/skeletonRecentEventsList";
 import { SkeletonSmilePage } from "@/skeletons/pages/skeletonSmilePage";
+import { SessionCard } from "@/components/sessionCard";
+import { SessionNotice } from "@/components/sessionNotice";
 
 const TOTAL_MILK_TEETH = 20;
 
 export function Smile() {
-  const { user, authToken, userId, hydrated } = useContext(UserContext)!;
+  const { user, authToken, userId, hydrated, sessionExpired, expireSession } =
+    useContext(UserContext)!;
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const queryClient = useQueryClient();
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
@@ -232,6 +233,23 @@ export function Smile() {
       queryClient.invalidateQueries({ queryKey: ["tooth-events"] }),
     ]);
   }
+
+  function goToLogin() {
+    navigation.navigate("Profile", {
+      screen: "Login",
+      initial: false,
+      params: { fromTab: "Smile" },
+    });
+  }
+
+  function goToSignup() {
+    navigation.navigate("Profile", {
+      screen: "Signup",
+      initial: false,
+      params: { fromTab: "Smile" },
+    });
+  }
+
   if (!hydrated) {
     return <SkeletonSmilePage />;
   }
@@ -251,31 +269,24 @@ export function Smile() {
           justify="center"
           className="w-full flex-1 px-6"
         >
-          <Wrapper
-            className="w-full items-center rounded-xl bg-base-100 p-5"
-            direction="column"
-            align="center"
-            justify="center"
-            gap="gap-4"
-          >
-            <Text variant="h4" className="text-center text-primary-500">
-              Acompanhe o sorriso
-            </Text>
-            <Text className="text-center text-base-500">
-              Faça login para registrar e acompanhar os eventos dentários.
-            </Text>
-            <Button
-              onPress={() =>
-                navigation.navigate("Profile", {
-                  screen: "Login",
-                  initial: false,
-                  params: { fromTab: "Smile" },
-                })
-              }
-            >
-              <Text>Fazer login</Text>
-            </Button>
-          </Wrapper>
+          {sessionExpired ? (
+            <SessionNotice
+              title="Sessão expirada"
+              message="Entre novamente para acompanhar o sorriso."
+              actionLabel="Entrar"
+              onAction={goToLogin}
+            />
+          ) : (
+            <SessionCard
+              layout="stacked"
+              title="Acompanhe o sorriso"
+              message="Faça login para registrar e acompanhar os eventos dentários."
+              actionLabel="Fazer login"
+              onAction={goToLogin}
+              secondaryLabel="Criar conta"
+              onSecondary={goToSignup}
+            />
+          )}
         </Wrapper>
       </Wrapper>
     );
@@ -307,31 +318,12 @@ export function Smile() {
             justify="center"
             className="w-full flex-1 px-6"
           >
-            <Wrapper
-              className="w-full items-center rounded-xl bg-base-100 p-5"
-              direction="column"
-              align="center"
-              justify="center"
-              gap="gap-4"
-            >
-              <Text variant="h4" className="text-center text-primary-500">
-                Sessão expirada
-              </Text>
-              <Text className="text-center text-base-500">
-                Faça login novamente para acompanhar o sorriso.
-              </Text>
-              <Button
-                onPress={() =>
-                  navigation.navigate("Profile", {
-                    screen: "Login",
-                    initial: false,
-                    params: { fromTab: "Smile" },
-                  })
-                }
-              >
-                <Text>Fazer login</Text>
-              </Button>
-            </Wrapper>
+            <SessionNotice
+              title="Sessão expirada"
+              message="Faça login novamente para acompanhar o sorriso."
+              actionLabel="Entrar"
+              onAction={() => void expireSession()}
+            />
           </Wrapper>
         </Wrapper>
       );
