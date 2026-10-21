@@ -4,7 +4,7 @@ import { ArticleCard } from "./articleCard";
 import { Wrapper } from "../wrapper";
 import { Text } from "../ui/text";
 import { PropsBadge } from "../propsBadge";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { TabName } from "@/navigation/types";
 
 type ArticleListRenderProps = {
@@ -26,18 +26,21 @@ export function ArticleListRender({
 }: ArticleListRenderProps) {
   const ALL_CATEGORY_ID = "all";
   const [selectedCategoryId, setSelectedCategoryId] = useState(ALL_CATEGORY_ID);
+  const categoriesKey = categories.map((category) => category.id).join(",");
+  const [prevCategoriesKey, setPrevCategoriesKey] = useState(categoriesKey);
 
-  useEffect(() => {
-    if (selectedCategoryId === ALL_CATEGORY_ID) return;
+  if (categoriesKey !== prevCategoriesKey) {
+    setPrevCategoriesKey(categoriesKey);
+    if (selectedCategoryId !== ALL_CATEGORY_ID) {
+      const hasSelectedCategory = categories.some(
+        (category) => category.id === selectedCategoryId,
+      );
 
-    const hasSelectedCategory = categories.some(
-      (category) => category.id === selectedCategoryId,
-    );
-
-    if (!hasSelectedCategory) {
-      setSelectedCategoryId(ALL_CATEGORY_ID);
+      if (!hasSelectedCategory) {
+        setSelectedCategoryId(ALL_CATEGORY_ID);
+      }
     }
-  }, [categories, selectedCategoryId]);
+  }
 
   function handleCategoryPress(category: ArticleCategory) {
     setSelectedCategoryId(category.id);

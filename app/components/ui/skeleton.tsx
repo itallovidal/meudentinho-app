@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Animated, View } from "react-native";
 
 function Skeleton({
   className,
   ...props
 }: React.ComponentProps<typeof Animated.View> & React.RefAttributes<View>) {
-  const opacity = useRef(new Animated.Value(0.5)).current;
+  const [opacity] = useState(() => new Animated.Value(0.5));
 
   useEffect(() => {
     const pulse = Animated.loop(

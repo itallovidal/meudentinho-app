@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, ScrollView, View, type ViewStyle } from "react-native";
 import { CaretLeftIcon, CaretRightIcon } from "phosphor-react-native";
 import { Text } from "@/components/ui/text";
@@ -86,26 +86,31 @@ export function DentalCalendar({
   const [month, setMonth] = useState(() =>
     resolveInitialDate(selectedDate, initialDate).getMonth(),
   );
+  const [prevSelectedDate, setPrevSelectedDate] = useState(selectedDate);
 
-  useEffect(() => {
-    if (!selectedDate) {
-      return;
+  if (selectedDate !== prevSelectedDate) {
+    setPrevSelectedDate(selectedDate);
+    if (selectedDate) {
+      const parsed = parseLocalDate(selectedDate);
+      if (parsed) {
+        setYear(parsed.getFullYear());
+        setMonth(parsed.getMonth());
+      }
     }
-    const parsed = parseLocalDate(selectedDate);
-    if (!parsed) {
-      return;
-    }
-    setYear(parsed.getFullYear());
-    setMonth(parsed.getMonth());
-  }, [selectedDate]);
+  }
 
-  useEffect(() => {
-    if (!focusRequest) {
-      return;
+  const focusKey = focusRequest ? focusRequest.date.getTime() : null;
+  const [prevFocusKey, setPrevFocusKey] = useState<number | null | undefined>(
+    undefined,
+  );
+
+  if (focusKey !== prevFocusKey) {
+    setPrevFocusKey(focusKey);
+    if (focusRequest) {
+      setYear(focusRequest.date.getFullYear());
+      setMonth(focusRequest.date.getMonth());
     }
-    setYear(focusRequest.date.getFullYear());
-    setMonth(focusRequest.date.getMonth());
-  }, [focusRequest]);
+  }
 
   const minYear = minDate ? parseLocalDate(minDate)?.getFullYear() : undefined;
   const maxYear = maxDate ? parseLocalDate(maxDate)?.getFullYear() : undefined;

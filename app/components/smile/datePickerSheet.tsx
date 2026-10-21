@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
 import { DentalCalendar } from "@/components/smile/DentalCalendar";
@@ -22,21 +22,23 @@ export function DatePickerSheet({
   onCancel,
 }: DatePickerSheetProps) {
   const [draft, setDraft] = useState(value);
+  const [prevVisible, setPrevVisible] = useState(visible);
+  const [prevValue, setPrevValue] = useState(value);
 
-  useEffect(() => {
+  if (visible !== prevVisible || value !== prevValue) {
+    setPrevVisible(visible);
+    setPrevValue(value);
     if (visible) {
       setDraft(value);
     }
-  }, [visible, value]);
+  }
 
   return (
     <BottomSheet
       visible={visible}
       onClose={onCancel}
       header={
-        <Text className="text-xl font-bold text-base-900">
-          Selecionar data
-        </Text>
+        <Text className="text-xl font-bold text-base-900">Selecionar data</Text>
       }
     >
       <DentalCalendar

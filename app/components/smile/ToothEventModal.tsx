@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarBlankIcon, CheckIcon } from "phosphor-react-native";
 import { DatePickerSheet } from "@/components/smile/datePickerSheet";
 import { THEME } from "@/lib/theme";
-import ToothSVG from "@/components/smile/teeth/ToothSVG";
+import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
   LEGEND_TOOTH,
   MILK_SYMBOL_DASH,
@@ -77,6 +77,8 @@ export function ToothEventModal({
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [pickerOpen, setPickerOpen] = useState(false);
   const deleteRequestedRef = useRef(false);
+  const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}`;
+  const [prevModalKey, setPrevModalKey] = useState(modalKey);
 
   const parsed = parseToothId(toothId);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
@@ -138,23 +140,23 @@ export function ToothEventModal({
     setDate(toLocalDateKey(new Date()));
   }
 
-  useEffect(() => {
-    if (!visible) {
-      return;
+  if (modalKey !== prevModalKey) {
+    setPrevModalKey(modalKey);
+    if (visible) {
+      setEventType(initialEventType);
+      resetForm(
+        initialEventType === "exfoliation"
+          ? exfoliationDentition
+          : defaultDentition,
+      );
+      if (editingEvent) {
+        setEventType(editingEvent.eventType);
+        setDentition(editingEvent.dentition);
+        setNote(editingEvent.note ?? "");
+        setDate(eventDateKey(editingEvent.occurrenceDate));
+      }
     }
-    setEventType(initialEventType);
-    resetForm(
-      initialEventType === "exfoliation"
-        ? exfoliationDentition
-        : defaultDentition,
-    );
-    if (editingEvent) {
-      setEventType(editingEvent.eventType);
-      setDentition(editingEvent.dentition);
-      setNote(editingEvent.note ?? "");
-      setDate(eventDateKey(editingEvent.occurrenceDate));
-    }
-  }, [visible, toothId, editingEvent]);
+  }
 
   function changeEventType(next: "eruption" | "exfoliation") {
     setEventType(next);

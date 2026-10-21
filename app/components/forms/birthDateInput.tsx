@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ComponentProps } from "react";
 import { View } from "react-native";
 import { CalendarBlankIcon } from "phosphor-react-native";
@@ -27,16 +27,17 @@ export function BirthDateInput({
 }: BirthDateInputProps) {
   const colors = THEME.light;
   const [text, setText] = useState(() => (value ? isoToBrDate(value) : ""));
+  const [prevValue, setPrevValue] = useState(value);
 
-  useEffect(() => {
-    if (!value) {
-      return;
+  if (value !== prevValue) {
+    setPrevValue(value);
+    if (value) {
+      const formatted = isoToBrDate(value);
+      if (formatted && formatted !== text) {
+        setText(formatted);
+      }
     }
-    const formatted = isoToBrDate(value);
-    if (formatted && formatted !== text) {
-      setText(formatted);
-    }
-  }, [value]);
+  }
 
   function handleChangeText(raw: string) {
     const masked = maskDateBr(raw);

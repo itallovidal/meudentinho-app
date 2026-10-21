@@ -73,6 +73,13 @@ export function BottomSheet({
     });
   }
 
+  function handleShow() {
+    translateY.value = OFFSCREEN_OFFSET;
+    backdropOpacity.value = 0;
+    translateY.value = withTiming(0, { duration: 250 });
+    backdropOpacity.value = withTiming(1, { duration: 250 });
+  }
+
   useEffect(() => {
     if (visible) {
       if (mountedRef.current) {
@@ -111,13 +118,6 @@ export function BottomSheet({
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
   }));
-
-  function handleShow() {
-    translateY.value = OFFSCREEN_OFFSET;
-    backdropOpacity.value = 0;
-    translateY.value = withTiming(0, { duration: 250 });
-    backdropOpacity.value = withTiming(1, { duration: 250 });
-  }
 
   if (!mounted) {
     return null;
