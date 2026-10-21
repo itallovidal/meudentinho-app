@@ -2,25 +2,23 @@ import { KidCard } from "@/components/dependents/kidCard";
 import { KidsListStatus } from "@/components/dependents/kidsListStatus";
 import { Header } from "@/components/header";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
+import { FloatingActionButton } from "@/components/ui/floatingActionButton";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { useKids } from "@/hooks/useKids";
+import { THEME } from "@/lib/theme";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import type { KidResponseDTO } from "@/types/dtos/user";
 import { useNavigation } from "@react-navigation/native";
 import { PlusIcon } from "phosphor-react-native";
 import { useContext, useEffect } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 
 export function Dependents() {
   const { authToken, hydrated } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
+  const colors = THEME.light;
 
   const { kids, isLoading, isRefreshing, failure, refetchError, refetch } =
     useKids(authToken);
@@ -128,14 +126,17 @@ export function Dependents() {
         </ScrollView>
 
         {!isLoading && !failure && (
-          <TouchableOpacity
-            onPress={handleCreateKid}
-            activeOpacity={0.8}
+          <FloatingActionButton
             accessibilityLabel="Novo dependente"
-            className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/20"
-          >
-            <PlusIcon size={24} weight="bold" color="#FFFFFF" />
-          </TouchableOpacity>
+            onPress={handleCreateKid}
+            icon={
+              <PlusIcon
+                size={24}
+                weight="bold"
+                color={colors.primaryForeground}
+              />
+            }
+          />
         )}
       </View>
     </Wrapper>
