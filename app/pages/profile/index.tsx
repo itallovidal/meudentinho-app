@@ -14,7 +14,6 @@ import {
   UserCircleIcon,
   UsersThreeIcon,
   SignOutIcon,
-  ListPlusIcon,
 } from "phosphor-react-native";
 import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
@@ -126,21 +125,6 @@ export function Index() {
       isDisabled: false,
     },
   ];
-
-  const adminOptions = [
-    {
-      icon: <ListPlusIcon color={colors.primary400} />,
-      title: "Adicionar Artigo",
-      description: "Adicione um novo artigo.",
-      variant: "default" as const,
-      handlePress: () => navigation.navigate("AdminPage"),
-      isDisabled: false,
-    },
-  ] as const;
-
-  if (user?.isAdmin) {
-    profileOptions.unshift(...adminOptions);
-  }
 
   if (!hydrated) {
     return (

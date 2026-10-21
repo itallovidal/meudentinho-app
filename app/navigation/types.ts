@@ -37,7 +37,6 @@ export function rootScreenForRoute(routeName: string): string | null {
     routeName === "Index" ||
     routeName === "Login" ||
     routeName === "Signup" ||
-    routeName === "AdminPage" ||
     routeName === "Responsible" ||
     routeName === "ChangePassword" ||
     routeName === "Dependents" ||

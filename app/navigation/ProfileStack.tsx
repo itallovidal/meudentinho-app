@@ -8,7 +8,6 @@ import { Index } from "@/pages/profile";
 import { RouteProp } from "@react-navigation/native";
 import type { BasicUser } from "@/types/domain";
 import type { KidResponseDTO } from "@/types/dtos/user";
-import { AdminPage } from "@/pages/profile/adminPage";
 import { Dependents } from "@/pages/profile/dependents";
 import { Responsible } from "@/pages/profile/responsible";
 import { EditDependent } from "@/pages/profile/editDependent";
@@ -19,7 +18,6 @@ export type ProfileRouteParams = {
   Login: undefined | CrossTabOrigin;
   Signup: undefined | CrossTabOrigin;
   Index: { payload?: BasicUser } | undefined;
-  AdminPage: undefined;
   Responsible: undefined;
   ChangePassword: undefined;
   Dependents: undefined | CrossTabOrigin;
@@ -37,7 +35,6 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     Login,
     Signup,
     Index,
-    AdminPage,
     Responsible,
     ChangePassword,
     Dependents,
