@@ -1,19 +1,19 @@
-import {
-  clearAllLocalStorage,
-  getLocalStorageItem,
-  removeLocalStorageItem,
-  setLocalStorageItem,
-} from "@/lib/asyncStorage";
-import {
-  getSecureItem,
-  setSecureItem,
-} from "@/lib/secureStorage";
+import { AppState } from "react-native";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { configureAuthFetch } from "@/lib/authFetch";
-import type { RefreshedSessionInfo } from "@/lib/authFetch";
+import { createSessionManager } from "@/lib/sessionManager";
+import { errorMessage } from "@/lib/errorMessage";
 import { getUserIdFromToken } from "@/lib/utils";
+import type { StoredSession } from "@/lib/sessionStorage";
 import type { BasicUser } from "@/types/domain";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 
 export interface UserContextProps {
@@ -34,358 +34,171 @@ export interface UserContextProps {
   ) => Promise<void>;
   clearSessionExpired: () => void;
   expireSession: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextProps | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [user, setUser] = useState<BasicUser | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [session, setSession] = useState<StoredSession | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [manager] = useState(() =>
+    createSessionManager({
+      onChange: (next, expired) => {
+        setSession(next);
+        setSessionExpired(expired);
+      },
+      onClearCache: async () => {
+        await queryClient.cancelQueries();
+        queryClient.clear();
+      },
+    }),
+  );
 
-  const sessionRef = useRef({ user, authToken, refreshToken, userId });
-  sessionRef.current = { user, authToken, refreshToken, userId };
-  const sessionGeneration = useRef(0);
-  const persistGate = useRef<Promise<void>>(Promise.resolve());
-
-  async function writeToken(
-    key: "token" | "refreshToken",
-    value: string,
-  ): Promise<void> {
-    const raw = JSON.stringify(value);
-    try {
-      await setSecureItem(key, raw);
-    } catch {
-      await setLocalStorageItem(key, raw);
-    }
-  }
-
-  async function readMigratedToken(
-    key: "token" | "refreshToken",
-  ): Promise<string | null> {
-    const secure = safeParse<string>(
-      await getSecureItem(key).catch(() => null),
+  const showSessionError = useCallback((error: unknown) => {
+    setSessionError(
+      errorMessage(
+        error,
+        "Não foi possível atualizar a sessão. Tente novamente.",
+      ),
     );
-    if (secure) {
-      return secure;
-    }
-    const rawLegacy = await getLocalStorageItem(key);
-    const legacy = safeParse<string>(rawLegacy);
-    if (!legacy) {
-      if (rawLegacy) {
-        await removeLocalStorageItem(key).catch(() => undefined);
-      }
-      return null;
-    }
-    await writeToken(key, legacy);
-    await removeLocalStorageItem(key).catch(() => undefined);
-    return legacy;
-  }
-
-  async function persistRefreshedSession(
-    token: string,
-    refresh: string | null,
-    info?: RefreshedSessionInfo,
-  ) {
-    const task = (async () => {
-      const generation = sessionGeneration.current;
-      const current = sessionRef.current;
-      if (current.authToken == null) {
-        return;
-      }
-      const nextRefreshToken = refresh ?? current.refreshToken;
-      const nextUser =
-        current.user && (info?.name || typeof info?.isAdmin === "boolean")
-          ? {
-              ...current.user,
-              ...(info?.name ? { name: info.name } : null),
-              ...(typeof info?.isAdmin === "boolean"
-                ? { isAdmin: info.isAdmin }
-                : null),
-            }
-          : current.user;
-      await writeToken("token", token);
-      if (nextRefreshToken) {
-        await writeToken("refreshToken", nextRefreshToken);
-      }
-      if (nextUser && nextUser !== current.user) {
-        await setLocalStorageItem("user", JSON.stringify(nextUser));
-      }
-      if (sessionGeneration.current !== generation) {
-        if (sessionRef.current.authToken == null) {
-          await clearAllLocalStorage();
-        }
-        return;
-      }
-      sessionRef.current = {
-        ...current,
-        user: nextUser,
-        authToken: token,
-        refreshToken: nextRefreshToken,
-      };
-      setAuthToken(token);
-      setRefreshToken(nextRefreshToken);
-      if (nextUser && nextUser !== current.user) {
-        setUser(nextUser);
-      }
-    })();
-    persistGate.current = task.then(
-      () => undefined,
-      () => undefined,
-    );
-    await task;
-  }
-
-  function safeParse<T>(raw: string | null): T | null {
-    if (!raw) {
-      return null;
-    }
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      return null;
-    }
-  }
-
-  async function clearSessionCache() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-  }
-
-  async function loadUserFromStorage() {
-    try {
-      const storedUser = await getLocalStorageItem("user");
-      const storedUserId = await getLocalStorageItem("userId");
-      const parsedToken = await readMigratedToken("token");
-      const parsedRefresh = await readMigratedToken("refreshToken");
-
-      if (!storedUser || !parsedToken) {
-        if (storedUser || parsedToken || parsedRefresh || storedUserId) {
-          await clearAllLocalStorage();
-        }
-        return;
-      }
-
-      const parsedUser = safeParse<BasicUser>(storedUser);
-      const parsedUserId = safeParse<string>(storedUserId);
-
-      const storageCorrupted =
-        (storedUser && !parsedUser) || (storedUserId && !parsedUserId);
-
-      if (storageCorrupted || !parsedUser) {
-        await clearAllLocalStorage();
-        return;
-      }
-
-      setUser(parsedUser);
-      setAuthToken(parsedToken);
-      if (parsedRefresh) {
-        setRefreshToken(parsedRefresh);
-      }
-      let resolvedUserId = parsedUserId;
-      if (!resolvedUserId && parsedToken) {
-        try {
-          const decoded = getUserIdFromToken(parsedToken);
-          if (decoded) {
-            resolvedUserId = decoded;
-            await setLocalStorageItem("userId", JSON.stringify(decoded));
-          }
-        } catch {
-          resolvedUserId = null;
-        }
-      }
-      if (resolvedUserId) {
-        setUserId(resolvedUserId);
-      }
-    } catch (err) {
-      if (__DEV__) {
-        console.log("Error loading user from storage:", err);
-      }
-      await clearAllLocalStorage();
-    } finally {
-      setHydrated(true);
-    }
-  }
+  }, []);
 
   useEffect(() => {
-    void loadUserFromStorage();
-  }, []);
+    let active = true;
+    async function restoreSession() {
+      try {
+        await manager.restore();
+      } catch (error) {
+        if (active) {
+          showSessionError(error);
+        }
+      } finally {
+        if (active) {
+          setHydrated(true);
+        }
+      }
+      if (active) {
+        void manager.retryPendingRevocations().catch(showSessionError);
+      }
+    }
+    void restoreSession();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        void manager.retryPendingRevocations().catch(showSessionError);
+      }
+    });
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [manager, showSessionError]);
 
   const updateAppUser = useCallback(
     async (
       user: BasicUser | null,
-      authToken: string | null = null,
+      authToken: string | null,
       refreshToken?: string | null,
       userId?: string | null,
     ) => {
-    try {
-      await persistGate.current;
-      sessionGeneration.current += 1;
-      if (user === null || authToken === null) {
-        await clearSessionCache();
-        setAuthToken(null);
-        setUser(null);
-        setRefreshToken(null);
-        setUserId(null);
-        sessionRef.current = {
-          user: null,
-          authToken: null,
-          refreshToken: null,
-          userId: null,
-        };
-        setSessionExpired(false);
-        await clearAllLocalStorage();
-
+      if (!user || !authToken) {
+        await manager.update(null);
         return;
       }
-
-      const nextRefreshToken =
-        refreshToken === undefined
-          ? sessionRef.current.refreshToken
-          : refreshToken;
-      let nextUserId =
-        userId === undefined ? sessionRef.current.userId : userId;
-      if (!nextUserId) {
-        try {
-          const decoded = getUserIdFromToken(authToken);
-          if (decoded) {
-            nextUserId = decoded;
-          }
-        } catch {
-          nextUserId = null;
-        }
-      }
-
-      const previousUserId = sessionRef.current.userId;
-      const isAccountSwitch =
-        !!previousUserId && previousUserId !== nextUserId;
-      if (isAccountSwitch) {
-        await clearSessionCache();
-      }
-
-      setUser(user);
-      setAuthToken(authToken);
-      setRefreshToken(nextRefreshToken);
-      setUserId(nextUserId);
-      sessionRef.current = {
+      const current = manager.getSession();
+      const nextUserId = userId ?? getUserIdFromToken(authToken);
+      const sameAccount = current?.userId === nextUserId;
+      await manager.update({
         user,
         authToken,
-        refreshToken: nextRefreshToken,
+        refreshToken:
+          refreshToken === undefined && sameAccount
+            ? (current?.refreshToken ?? null)
+            : (refreshToken ?? null),
         userId: nextUserId,
-      };
-      setSessionExpired(false);
-
-      await setLocalStorageItem("user", JSON.stringify(user));
-      await writeToken("token", authToken);
-      if (nextRefreshToken) {
-        await writeToken("refreshToken", nextRefreshToken);
-      }
-      if (nextUserId) {
-        await setLocalStorageItem("userId", JSON.stringify(nextUserId));
-      }
-    } catch (err) {
-      if (__DEV__) {
-        console.log("Error updating user:", err);
-      }
-    }
-  },
-  [],
-);
+      });
+    },
+    [manager],
+  );
 
   const expireSession = useCallback(async () => {
-    if (sessionRef.current.authToken == null) {
-      return;
+    try {
+      await manager.expire();
+    } catch (error) {
+      showSessionError(error);
     }
-    const generation = sessionGeneration.current;
-    await updateAppUser(null, null);
-    if (sessionGeneration.current !== generation + 1) {
-      return;
-    }
-    setSessionExpired(true);
-  }, [updateAppUser]);
+  }, [manager, showSessionError]);
 
   useEffect(() => {
     configureAuthFetch({
       getSession: () => ({
-        authToken: sessionRef.current.authToken,
-        refreshToken: sessionRef.current.refreshToken,
+        authToken: manager.getSession()?.authToken ?? null,
+        refreshToken: manager.getSession()?.refreshToken ?? null,
+        generation: manager.getRevision(),
       }),
-      onSessionRefreshed: (token, refresh, info) => {
-        void persistRefreshedSession(token, refresh, info);
+      onSessionRefreshed: async (token, refresh, info, expectedRefresh) => {
+        try {
+          await manager.refresh(token, refresh, info, expectedRefresh);
+        } catch (error) {
+          showSessionError(error);
+          throw error;
+        }
       },
-      onSessionExpired: () => {
-        void expireSession();
+      onSessionExpired: async (expectedRefresh) => {
+        try {
+          await manager.expire(expectedRefresh);
+        } catch (error) {
+          showSessionError(error);
+        }
       },
     });
     return () => configureAuthFetch(null);
-  }, [expireSession]);
+  }, [manager, showSessionError]);
 
   const updateUserProfile = useCallback(
-    async (profile: Partial<Pick<BasicUser, "name" | "email">>) => {
-    try {
-      const current = sessionRef.current.user;
-      if (!current) {
-        return;
-      }
-      const nextUser: BasicUser = {
-        ...current,
-        ...(profile.name !== undefined
-          ? { name: profile.name.trim() }
-          : null),
-        ...(profile.email !== undefined
-          ? { email: profile.email.trim() }
-          : null),
-      };
-      setUser(nextUser);
-      sessionRef.current = { ...sessionRef.current, user: nextUser };
-      await setLocalStorageItem("user", JSON.stringify(nextUser));
-    } catch (err) {
-      if (__DEV__) {
-        console.log("Error updating user profile:", err);
-      }
-    }
-  },
-  [],
-);
-
-  const clearSessionExpired = useCallback(() => {
-    setSessionExpired(false);
-  }, []);
-
+    (profile: Partial<Pick<BasicUser, "name" | "email">>) =>
+      manager.updateProfile(profile),
+    [manager],
+  );
+  const signOut = useCallback(() => manager.signOut(), [manager]);
+  const clearSessionExpired = useCallback(() => setSessionExpired(false), []);
   const contextValue = useMemo(
     () => ({
-      user,
-      authToken,
-      refreshToken,
-      userId,
+      user: session?.user ?? null,
+      authToken: session?.authToken ?? null,
+      refreshToken: session?.refreshToken ?? null,
+      userId: session?.userId ?? null,
       hydrated,
       sessionExpired,
       updateAppUser,
       updateUserProfile,
       clearSessionExpired,
       expireSession,
+      signOut,
     }),
     [
-      user,
-      authToken,
-      refreshToken,
-      userId,
+      session,
       hydrated,
       sessionExpired,
       updateAppUser,
       updateUserProfile,
       clearSessionExpired,
       expireSession,
+      signOut,
     ],
   );
 
   return (
     <UserContext.Provider value={contextValue}>
       {children}
+      <FeedbackSheet
+        title="Não foi possível concluir a operação"
+        message={sessionError}
+        onClose={() => setSessionError(null)}
+      />
     </UserContext.Provider>
   );
 }
