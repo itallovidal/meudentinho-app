@@ -34,6 +34,8 @@ import { useToothEventsInfinite } from "@/hooks/useToothEventsInfinite";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { KID_NOT_LINKED_MESSAGE } from "@/lib/toothEventError";
+import { isApiError } from "@/types/predicates";
 import type {
   SmileNavigationProp,
   SmileStackParamList,
@@ -48,16 +50,17 @@ export function SmileHistory() {
   const { params } = useRoute<RouteProp<SmileStackParamList, "SmileHistory">>();
   const [viewportHeight, setViewportHeight] = useState(0);
   const [exportVisible, setExportVisible] = useState(false);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   const allEventsQuery = useToothEvents(params.kidId, authToken);
   const {
     events,
     total,
+    error: eventsError,
     isPending,
     isLoadingError,
     isRefetchError,
     isFetchNextPageError,
-    isRefetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -72,6 +75,12 @@ export function SmileHistory() {
     !isPending &&
     !isLoadingError &&
     allEventsQuery.events.length > 0;
+
+  const kidUnlinked =
+    (isApiError(eventsError) &&
+      eventsError.code === "KID_NOT_LINKED_TO_PARENT") ||
+    (isApiError(allEventsQuery.error) &&
+      allEventsQuery.error.code === "KID_NOT_LINKED_TO_PARENT");
 
   const editor = useToothEventEditor({
     kidId: params.kidId,
@@ -105,12 +114,16 @@ export function SmileHistory() {
     });
   }
 
-  function handleRefresh() {
+  async function handleRefresh() {
     if (!authToken) {
       return;
     }
-    void refetch();
-    void allEventsQuery.refetch();
+    setManualRefreshing(true);
+    try {
+      await Promise.all([refetch(), allEventsQuery.refetch()]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }
 
   function renderFooter() {
@@ -198,8 +211,8 @@ export function SmileHistory() {
         scrollEventThrottle={200}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching || allEventsQuery.isFetching}
-            onRefresh={handleRefresh}
+            refreshing={manualRefreshing}
+            onRefresh={() => void handleRefresh()}
           />
         }
       >
@@ -251,8 +264,13 @@ export function SmileHistory() {
             <View className="w-full gap-3">
               <ErrorState
                 title="Não foi possível carregar os registros"
-                message="Verifique sua conexão e tente novamente."
+                message={
+                  kidUnlinked
+                    ? KID_NOT_LINKED_MESSAGE
+                    : "Verifique sua conexão e tente novamente."
+                }
                 onRetry={() => void refetch()}
+                retryLabel={kidUnlinked ? "Atualizar" : "Tentar novamente"}
               />
               {Array.from({ length: 3 }).map((_, index) => (
                 <SkeletonToothEventCard key={index} />
@@ -278,7 +296,11 @@ export function SmileHistory() {
             <View className="w-full gap-3">
               {isRefetchError && (
                 <QueryWarningBanner
-                  message="Não foi possível atualizar os registros. Mostrando o histórico carregado anteriormente."
+                  message={
+                    kidUnlinked
+                      ? KID_NOT_LINKED_MESSAGE
+                      : "Não foi possível atualizar os registros. Mostrando o histórico carregado anteriormente."
+                  }
                   onRetry={() => void refetch()}
                 />
               )}

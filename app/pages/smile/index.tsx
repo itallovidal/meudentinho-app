@@ -26,6 +26,8 @@ import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { errorMessage } from "@/lib/errorMessage";
+import { KID_NOT_LINKED_MESSAGE } from "@/lib/toothEventError";
+import { isApiError } from "@/types/predicates";
 import type { SmileStackParamList } from "@/navigation/SmileStack";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
@@ -57,13 +59,13 @@ export function Smile() {
   const [addDependentError, setAddDependentError] = useState<ApiError | null>(
     null,
   );
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const { showToast } = useToast();
   const { createKidMutation } = useKidMutations(authToken);
 
   const {
     kids: kidsList,
     isLoading: kidsInitialLoading,
-    isRefreshing: kidsRefreshing,
     failure: kidsFailure,
     refetchError: kidsRefetchError,
     refetch: refetchKids,
@@ -108,7 +110,6 @@ export function Smile() {
   const { events } = eventsQuery;
 
   const eventsInitialLoading = eventsQuery.isLoading;
-  const eventsRefreshing = eventsQuery.isRefetching;
   const eventsFirstLoadError = eventsQuery.isLoadingError;
   const eventsRefetchError = eventsQuery.isRefetchError;
 
@@ -241,14 +242,19 @@ export function Smile() {
   }
 
   const kidUnlinked =
-    eventsQuery.error instanceof ApiError &&
+    isApiError(eventsQuery.error) &&
     eventsQuery.error.code === "KID_NOT_LINKED_TO_PARENT";
 
   async function handleRefreshKids() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["kids"] }),
-      queryClient.invalidateQueries({ queryKey: ["tooth-events"] }),
-    ]);
+    setManualRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["kids"] }),
+        queryClient.invalidateQueries({ queryKey: ["tooth-events"] }),
+      ]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }
 
   function goToLogin() {
@@ -312,8 +318,8 @@ export function Smile() {
   if (kidsInitialLoading) {
     return (
       <SkeletonSmilePage
-        refreshing={kidsRefreshing}
-        onRefresh={() => void refetchKids()}
+        refreshing={manualRefreshing}
+        onRefresh={() => void handleRefreshKids()}
       />
     );
   }
@@ -357,7 +363,7 @@ export function Smile() {
           className="w-full"
           refreshControl={
             <RefreshControl
-              refreshing={kidsRefreshing}
+              refreshing={manualRefreshing}
               onRefresh={() => void handleRefreshKids()}
             />
           }
@@ -393,7 +399,7 @@ export function Smile() {
         className="w-full"
         refreshControl={
           <RefreshControl
-            refreshing={kidsRefreshing || eventsRefreshing}
+            refreshing={manualRefreshing}
             onRefresh={() => void handleRefreshKids()}
           />
         }
@@ -434,7 +440,7 @@ export function Smile() {
                   <ErrorState
                     message={
                       kidUnlinked
-                        ? "Este dependente não está mais vinculado à sua conta."
+                        ? KID_NOT_LINKED_MESSAGE
                         : "Não foi possível carregar os eventos. Verifique sua conexão."
                     }
                     onRetry={() =>
@@ -457,7 +463,7 @@ export function Smile() {
                 <QueryWarningBanner
                   message={
                     kidUnlinked
-                      ? "Este dependente não está mais vinculado à sua conta."
+                      ? KID_NOT_LINKED_MESSAGE
                       : "Não foi possível atualizar os dados. Mostrando as últimas informações carregadas."
                   }
                   onRetry={() => void handleRefreshKids()}

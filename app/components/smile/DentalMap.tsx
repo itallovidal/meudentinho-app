@@ -32,7 +32,8 @@ import {
   type ChronologyGender,
   type MapToothState,
 } from "@/lib/toothChronology";
-import { ApiError } from "@/types/domain";
+import { isApiError } from "@/types/predicates";
+import { toothEventErrorMessage } from "@/lib/toothEventError";
 import type {
   Arch,
   Quadrant,
@@ -227,10 +228,7 @@ export function DentalMap({
         await onRegisterEvent(payload);
         setModalVisible(false);
       } catch (error) {
-        if (
-          error instanceof ApiError &&
-          error.code === "TOOTH_EVENT_DUPLICATE"
-        ) {
+        if (isApiError(error) && error.code === "TOOTH_EVENT_DUPLICATE") {
           await queryClient.invalidateQueries({
             queryKey: ["tooth-events"],
           });
@@ -240,7 +238,10 @@ export function DentalMap({
         }
         Alert.alert(
           "Erro",
-          "Não foi possível registrar o evento. Verifique sua conexão e tente novamente.",
+          toothEventErrorMessage(
+            error,
+            "Não foi possível registrar o evento. Verifique sua conexão e tente novamente.",
+          ),
         );
       }
     },

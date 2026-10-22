@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
-import { errorMessage } from "@/lib/errorMessage";
+import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { UserContext } from "@/contexts/UserContext";
 import type { ChronologyGender } from "@/lib/toothChronology";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
@@ -94,7 +94,10 @@ export function useToothEventEditor({
     } catch (error) {
       Alert.alert(
         "Erro",
-        errorMessage(error, "Não foi possível salvar as alterações. Tente novamente."),
+        toothEventErrorMessage(
+          error,
+          "Não foi possível salvar as alterações. Tente novamente.",
+        ),
       );
     }
   }
@@ -110,7 +113,10 @@ export function useToothEventEditor({
     } catch (error) {
       Alert.alert(
         "Erro",
-        errorMessage(error, "Não foi possível excluir o registro. Tente novamente."),
+        toothEventErrorMessage(
+          error,
+          "Não foi possível excluir o registro. Tente novamente.",
+        ),
       );
     }
   }
