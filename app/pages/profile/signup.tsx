@@ -13,6 +13,7 @@ import { Card } from "@/components/card";
 import {
   ArrowsClockwiseIcon,
   BookOpenIcon,
+  FileIcon,
   ToothIcon,
 } from "phosphor-react-native";
 import { useContext, useCallback, useRef, useState } from "react";
@@ -144,22 +145,22 @@ export function Signup() {
           </Text>
           <Wrapper direction="column" className="w-full" gap={"gap-6"}>
             <Card
-              icon={<ToothIcon color={colors.primary400} />}
-              title="Previsões dentárias"
-            >
-              Acompanhe quando cada dentinho deve nascer.
-            </Card>
-            <Card
               icon={<ArrowsClockwiseIcon color={colors.primary400} />}
               title="Sincronize seus dados"
             >
               Acesse o histórico dental em qualquer dispositivo.
             </Card>
             <Card
-              icon={<BookOpenIcon color={colors.primary400} />}
-              title="Conteúdo exclusivo"
+              icon={<ToothIcon color={colors.primary400} />}
+              title="Previsões dentárias"
             >
-              Novos artigos e guias especializados odontopediatria toda semana.
+              Acompanhe quando cada dentinho deve nascer.
+            </Card>
+            <Card
+              icon={<FileIcon color={colors.primary400} />}
+              title="Tudo pronto para a consulta"
+            >
+              Exporte o histórico dental e compartilhe com o odontopediatra.
             </Card>
           </Wrapper>
 
