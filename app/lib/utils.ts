@@ -5,17 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function shouldUsePut<T extends Record<string, unknown>>(
-  original: T,
-  updated: T,
-  fields: (keyof T)[],
-): boolean {
-  const changedFields = fields.filter(
-    (field) => original[field] !== updated[field],
-  );
-  return changedFields.length === fields.length;
-}
-
 export function getUserIdFromToken(token: string): string {
   const parts = token.split(".");
   if (parts.length !== 3) {

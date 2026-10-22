@@ -76,7 +76,11 @@ export function Dependents() {
       <View className="relative w-full flex-1">
         <ScrollView
           className="w-full px-6"
-          contentContainerStyle={{ flexGrow: 1, paddingVertical: 16 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: 16,
+            paddingBottom: 104,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}

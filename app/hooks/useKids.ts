@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllKids } from "@/api/kids/getAllKids";
 import { kidsSubject } from "@/lib/kidsSubject";
@@ -14,7 +14,7 @@ export function useKids(authToken: string | null | undefined) {
   const queryClient = useQueryClient();
   const { userId } = useContext(UserContext)!;
   const accountId = resolveAccountId(userId, authToken);
-  const kidsKey = kidsQueryKey(accountId);
+  const kidsKey = useMemo(() => kidsQueryKey(accountId), [accountId]);
   const query = useQuery({
     queryKey: kidsKey,
     queryFn: () => getAllKids(authToken!).then((res) => res.data ?? []),
@@ -53,7 +53,7 @@ export function useKids(authToken: string | null | undefined) {
       void queryClient.invalidateQueries({ queryKey: kidsKey });
     });
     return unsubscribe;
-  }, [queryClient, accountId]);
+  }, [queryClient, accountId, kidsKey]);
 
   let failure: KidsLoadFailure | null = null;
   if (query.isLoadingError) {
@@ -71,8 +71,19 @@ export function useKids(authToken: string | null | undefined) {
     }
   }
 
+  const kids = useMemo(
+    () =>
+      [...(query.data ?? [])].sort(
+        (left, right) =>
+          left.name.localeCompare(right.name, "pt-BR", {
+            sensitivity: "base",
+          }) || left.id.localeCompare(right.id),
+      ),
+    [query.data],
+  );
+
   return {
-    kids: accountId ? (query.data ?? []) : [],
+    kids: accountId ? kids : [],
     isLoading: query.isPending && query.fetchStatus !== "idle",
     isRefreshing: query.isRefetching,
     isFetching: query.isFetching,
