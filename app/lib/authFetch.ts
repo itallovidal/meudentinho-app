@@ -7,6 +7,7 @@ import { isApiError } from "@/types/predicates";
 type SessionSnapshot = {
   authToken: string | null;
   refreshToken: string | null;
+  generation?: number;
 };
 
 export type RefreshedSessionInfo = {
@@ -20,27 +21,32 @@ type AuthFetchHandlers = {
   onSessionRefreshed: (
     authToken: string,
     refreshToken: string | null,
-    info?: RefreshedSessionInfo,
+    info: RefreshedSessionInfo | undefined,
+    expectedRefreshToken: string,
+  ) => Promise<void>;
+  onSessionExpired: (
+    expectedRefreshToken?: string | null,
   ) => void | Promise<void>;
-  onSessionExpired: () => void;
 };
 
 type RefreshResult =
   | { refreshed: true; authToken: string }
-  | { refreshed: false; expired: boolean };
+  | { refreshed: false; expired: boolean; error?: ApiError };
 
 let handlers: AuthFetchHandlers | null = null;
-let refreshPromise: Promise<RefreshResult> | null = null;
+let refreshFlight: {
+  id: symbol;
+  owner: AuthFetchHandlers;
+  refreshToken: string;
+  promise: Promise<RefreshResult>;
+} | null = null;
 
 export function configureAuthFetch(next: AuthFetchHandlers | null) {
   handlers = next;
-  refreshPromise = null;
+  refreshFlight = null;
 }
 
-function withToken(
-  init: RequestInit,
-  token: string | null,
-): RequestInit {
+function withToken(init: RequestInit, token: string | null): RequestInit {
   if (!token) {
     return init;
   }
@@ -86,36 +92,76 @@ async function sessionExpiredMessage(response: Response): Promise<string> {
   return SESSION_EXPIRED_MESSAGE;
 }
 
-async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
-  if (!refreshPromise) {
-    refreshPromise = (async (): Promise<RefreshResult> => {
-      try {
-        const { data } = await refreshSession(refreshToken);
-        if (!data?.token) {
-          return { refreshed: false, expired: false };
-        }
-        await handlers?.onSessionRefreshed(data.token, data.refreshToken ?? null, {
+async function tryRefresh(
+  refreshToken: string,
+  owner: AuthFetchHandlers,
+): Promise<RefreshResult> {
+  if (
+    refreshFlight?.owner === owner &&
+    refreshFlight.refreshToken === refreshToken
+  ) {
+    return refreshFlight.promise;
+  }
+  const flightId = Symbol();
+  const promise = (async (): Promise<RefreshResult> => {
+    try {
+      const { data } = await refreshSession(refreshToken);
+      if (!data?.token || !data.refreshToken) {
+        throw new ApiError(
+          "Resposta inválida ao renovar a sessão. Tente novamente.",
+          "SESSION_REFRESH_FAILED",
+        );
+      }
+      await owner.onSessionRefreshed(
+        data.token,
+        data.refreshToken,
+        {
           name: data.name,
           isAdmin: data.isAdmin,
           userId: data.userId,
-        });
-        logSessionRefresh(data.token);
-        return { refreshed: true, authToken: data.token };
-      } catch (err) {
-        if (
-          err instanceof ApiError &&
-          (err.code === "INVALID_CREDENTIALS" ||
-            err.code === "USER_NOT_FOUND")
-        ) {
-          return { refreshed: false, expired: true };
-        }
-        return { refreshed: false, expired: false };
-      } finally {
-        refreshPromise = null;
+        },
+        refreshToken,
+      );
+      if (handlers !== owner || owner.getSession().authToken !== data.token) {
+        throw new ApiError(
+          "A sessão foi alterada. Tente novamente.",
+          "SESSION_CHANGED",
+        );
       }
-    })();
-  }
-  return refreshPromise;
+      logSessionRefresh(data.token);
+      return { refreshed: true, authToken: data.token };
+    } catch (err) {
+      if (
+        isApiError(err) &&
+        (err.code === "INVALID_CREDENTIALS" || err.code === "USER_NOT_FOUND")
+      ) {
+        return { refreshed: false, expired: true };
+      }
+      return {
+        refreshed: false,
+        expired: false,
+        error:
+          isApiError(err) &&
+          (err.code === "SESSION_STORAGE_ERROR" ||
+            err.code === "SESSION_CHANGED")
+            ? err
+            : new ApiError(
+                isApiError(err)
+                  ? err.message
+                  : "Não foi possível renovar a sessão. Tente novamente.",
+                "SESSION_REFRESH_FAILED",
+                isApiError(err) ? err.status : undefined,
+                err,
+              ),
+      };
+    } finally {
+      if (refreshFlight?.id === flightId) {
+        refreshFlight = null;
+      }
+    }
+  })();
+  refreshFlight = { id: flightId, owner, refreshToken, promise };
+  return promise;
 }
 
 export async function authFetch(
@@ -123,24 +169,39 @@ export async function authFetch(
   init: RequestInit = {},
   tokenOverride: string | null = null,
 ): Promise<Response> {
-  const session = handlers?.getSession() ?? {
+  const owner = handlers;
+  const session = owner?.getSession() ?? {
     authToken: null,
     refreshToken: null,
   };
+  function currentSession() {
+    const current = owner?.getSession() ?? session;
+    if (handlers !== owner || current.generation !== session.generation) {
+      throw new ApiError(
+        "A sessão foi alterada. Tente novamente.",
+        "SESSION_CHANGED",
+      );
+    }
+    return current;
+  }
   const effectiveToken = session.authToken ?? tokenOverride;
-  const response = await fetchWithTimeout(input, withToken(init, effectiveToken));
+  const response = await fetchWithTimeout(
+    input,
+    withToken(init, effectiveToken),
+  );
 
+  currentSession();
   if (response.status !== 401) {
     return response;
   }
 
   const expiredMessage = await sessionExpiredMessage(response);
 
-  const latest = handlers?.getSession() ?? session;
+  const latest = currentSession();
   const latestRefresh = latest.refreshToken ?? session.refreshToken;
   if (!latestRefresh) {
     if (latest.authToken) {
-      handlers?.onSessionExpired();
+      await owner?.onSessionExpired(latest.refreshToken);
     }
     throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
   }
@@ -150,22 +211,35 @@ export async function authFetch(
       input,
       withToken(init, latest.authToken),
     );
+    currentSession();
     if (retry.status !== 401) {
       return retry;
     }
   }
 
-  const result = await tryRefresh(latestRefresh);
+  if (!owner) {
+    throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
+  }
+  const result = await tryRefresh(
+    currentSession().refreshToken ?? latestRefresh,
+    owner,
+  );
+  if (!result.refreshed && result.error?.code === "SESSION_STORAGE_ERROR") {
+    throw result.error;
+  }
+  const refreshedSession = currentSession();
 
   if (!result.refreshed) {
     if (result.expired) {
-      handlers?.onSessionExpired();
+      await owner.onSessionExpired(refreshedSession.refreshToken);
       throw new ApiError(expiredMessage, "INVALID_CREDENTIALS", 401);
     }
-    throw new ApiError(
-      "Não foi possível renovar a sessão. Tente novamente.",
-      "INTERNAL_SERVER_ERROR",
-      401,
+    throw (
+      result.error ??
+      new ApiError(
+        "Não foi possível renovar a sessão. Tente novamente.",
+        "SESSION_REFRESH_FAILED",
+      )
     );
   }
 
@@ -173,8 +247,16 @@ export async function authFetch(
     input,
     withToken(init, result.authToken),
   );
+  currentSession();
   if (retry.status === 401) {
-    handlers?.onSessionExpired();
+    const current = currentSession();
+    if (current.authToken !== result.authToken) {
+      throw new ApiError(
+        "A sessão foi alterada. Tente novamente.",
+        "SESSION_CHANGED",
+      );
+    }
+    await owner.onSessionExpired(current.refreshToken);
     throw new ApiError(
       await sessionExpiredMessage(retry),
       "INVALID_CREDENTIALS",
