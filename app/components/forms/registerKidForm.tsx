@@ -1,8 +1,8 @@
-import { kidSchema, KidFormValues } from "@/lib/schemas/kid";
+import { kidSchema, kidEditSchema, KidFormValues } from "@/lib/schemas/kid";
 import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { ApiError } from "@/types/domain";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { Wrapper } from "../wrapper";
 import { Button } from "../ui/button";
@@ -28,6 +28,7 @@ interface Props {
   submittingLabel?: string;
   footer?: ReactNode;
   popoverHost?: string;
+  isEditing?: boolean;
 }
 
 const SECTION_MAX_HEIGHT = 300;
@@ -40,13 +41,8 @@ export function RegisterKidForm({
   submitError,
   footer,
   popoverHost,
+  isEditing = false,
 }: Props) {
-  const [isPremature, setIsPremature] = useState(
-    Boolean(
-      defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
-    ),
-  );
-  const sectionProgress = useSharedValue(isPremature ? 1 : 0);
   const {
     control,
     handleSubmit,
@@ -54,12 +50,14 @@ export function RegisterKidForm({
     watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<KidFormValues>({
-    resolver: zodResolver(kidSchema),
+    resolver: zodResolver(isEditing ? kidEditSchema : kidSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
       birthDate: "",
-      gender: "male",
+      isPremature: Boolean(
+        defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
+      ),
       accepted: false,
       ...defaultValues,
     },
@@ -67,27 +65,8 @@ export function RegisterKidForm({
 
   const gender = watch("gender");
   const birthDate = watch("birthDate");
-  const prematureWeeksValue = watch("prematureWeeks");
-
-  useEffect(() => {
-    setIsPremature(
-      Boolean(
-        defaultValues?.prematureWeeks && defaultValues.prematureWeeks !== "0",
-      ),
-    );
-  }, [defaultValues?.prematureWeeks]);
-
-  useEffect(() => {
-    if (prematureWeeksValue && prematureWeeksValue !== "0") {
-      setIsPremature(true);
-    }
-  }, [prematureWeeksValue]);
-
-  useEffect(() => {
-    if (!isPremature) {
-      setValue("prematureWeeks", undefined, { shouldDirty: true });
-    }
-  }, [isPremature, setValue]);
+  const isPremature = watch("isPremature");
+  const sectionProgress = useSharedValue(isPremature ? 1 : 0);
 
   useEffect(() => {
     sectionProgress.value = withTiming(isPremature ? 1 : 0, {
@@ -101,11 +80,18 @@ export function RegisterKidForm({
   }));
 
   function changeGender(gender: "male" | "female") {
-    setValue("gender", gender, { shouldDirty: true });
+    setValue("gender", gender, { shouldDirty: true, shouldValidate: true });
   }
 
   function togglePremature() {
-    setIsPremature((previous) => !previous);
+    setValue("isPremature", !isPremature, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("prematureWeeks", undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   }
 
   function chooseBirthDate(isoDate: string) {
@@ -154,13 +140,18 @@ export function RegisterKidForm({
         </View>
         <View className="flex-1">
           <GenderSelector gender={gender} onChange={changeGender} />
+          {errors.gender ? (
+            <Text className="text-destructive" variant="small">
+              {errors.gender.message}
+            </Text>
+          ) : null}
         </View>
       </View>
 
       <View className="w-full flex-row items-start gap-3">
         <View className="mt-0.5">
           <AnimatedCheckbox
-            checked={isPremature}
+            checked={!!isPremature}
             onChange={togglePremature}
             accessibilityLabel="A criança nasceu antes do tempo previsto?"
           />
@@ -200,36 +191,40 @@ export function RegisterKidForm({
         </View>
       </Animated.View>
 
-      <View className="w-full flex-row items-start gap-3">
-        <View className="mt-0.5">
-          <Controller
-            control={control}
-            name="accepted"
-            render={({ field: { onChange, value } }) => (
-              <AnimatedCheckbox
-                checked={value}
-                onChange={onChange}
-                accessibilityLabel="Li e aceito a Política de Privacidade em nome desta criança"
+      {!isEditing ? (
+        <>
+          <View className="w-full flex-row items-start gap-3">
+            <View className="mt-0.5">
+              <Controller
+                control={control}
+                name="accepted"
+                render={({ field: { onChange, value } }) => (
+                  <AnimatedCheckbox
+                    checked={value}
+                    onChange={onChange}
+                    accessibilityLabel="Li e aceito a Política de Privacidade em nome desta criança"
+                  />
+                )}
               />
-            )}
-          />
-        </View>
-        <Text className="flex-1 text-sm">
-          Li e aceito a{" "}
-          <Text
-            onPress={() => void handleOpenPolicy()}
-            className="font-bold text-primary-500 underline"
-          >
-            Política de Privacidade
-          </Text>{" "}
-          em nome desta criança.
-        </Text>
-      </View>
+            </View>
+            <Text className="flex-1 text-sm">
+              Li e aceito a{" "}
+              <Text
+                onPress={() => void handleOpenPolicy()}
+                className="font-bold text-primary-500 underline"
+              >
+                Política de Privacidade
+              </Text>{" "}
+              em nome desta criança.
+            </Text>
+          </View>
 
-      {errors.accepted ? (
-        <Text className="text-destructive" variant="small">
-          {errors.accepted.message}
-        </Text>
+          {errors.accepted ? (
+            <Text className="text-destructive" variant="small">
+              {errors.accepted.message}
+            </Text>
+          ) : null}
+        </>
       ) : null}
 
       {submitError && (

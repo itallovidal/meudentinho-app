@@ -9,7 +9,6 @@ import { UserContext } from "@/contexts/UserContext";
 import { useKidMutations } from "@/hooks/useKidMutations";
 import { errorMessage } from "@/lib/errorMessage";
 import { buildKidRequest } from "@/lib/privacyPolicy";
-import { shouldUsePut } from "@/lib/utils";
 import { THEME } from "@/lib/theme";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import {
@@ -23,8 +22,6 @@ import { TrashIcon } from "phosphor-react-native";
 import { useContext, useEffect, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import type { ProfileRouteParams } from "@/navigation/ProfileStack";
-
-const PUT_FIELDS = ["name", "birthDate", "gender", "prematureWeeks"] as const;
 
 export function EditDependent() {
   const colors = THEME.light;
@@ -72,25 +69,9 @@ export function EditDependent() {
 
   async function handleUpdate(kid: KidResponseDTO, data: KidFormValues) {
     try {
-      const usePut = shouldUsePut(
-        {
-          name: kid.name,
-          birthDate: kid.birthDate,
-          gender: kid.gender,
-          prematureWeeks: kid.prematureWeeks ?? "",
-        },
-        {
-          name: data.name,
-          birthDate: data.birthDate,
-          gender: data.gender,
-          prematureWeeks: data.prematureWeeks ?? "",
-        },
-        [...PUT_FIELDS],
-      );
       await saveKidMutation.mutateAsync({
         kidId: kid.id,
         data: await buildKidRequest(data),
-        usePut,
       });
       showToast("Dependente atualizado com sucesso.");
       exitScreen();
@@ -156,6 +137,8 @@ export function EditDependent() {
         <Wrapper direction="column" className="w-full" gap="gap-4">
           <View className="w-full rounded-2xl bg-base-100 p-5 shadow-sm shadow-base-300">
             <RegisterKidForm
+              key={kid?.id ?? "new"}
+              isEditing={isEditing}
               onSubmit={kid ? (data) => handleUpdate(kid, data) : handleCreate}
               defaultValues={
                 kid

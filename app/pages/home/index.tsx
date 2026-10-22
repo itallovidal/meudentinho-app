@@ -4,7 +4,7 @@ import { Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useKidMutations } from "@/hooks/useKidMutations";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
@@ -16,13 +16,11 @@ import { KidsSmileCarousel } from "@/components/home/kidsSmileCarousel";
 import { SkeletonKidsSmileCarousel } from "@/skeletons/components/skeletonKidsSmileCarousel";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
-import type { KidRequestDTO } from "@/types/dtos/user";
 import { KidFormValues } from "@/lib/schemas/kid";
 import { errorMessage } from "@/lib/errorMessage";
 import { buildKidRequest } from "@/lib/privacyPolicy";
 import { RegisterKidSection } from "@/components/home/registerKidSection";
 import { useToast } from "@/components/ui/toast";
-import { createKid } from "@/api/kids/createKid";
 import { SessionCard } from "@/components/sessionCard";
 import { SessionNotice } from "@/components/sessionNotice";
 
@@ -35,7 +33,6 @@ export function Home() {
   );
   const { authToken, hydrated, sessionExpired, expireSession } =
     useContext(UserContext)!;
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const {
@@ -78,10 +75,7 @@ export function Home() {
 
   const showSmileCarousel = hydrated && !!authToken && kids.length > 0;
 
-  const createKidMutation = useMutation({
-    mutationFn: (kidDTO: KidRequestDTO) => createKid(kidDTO, authToken ?? ""),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kids"] }),
-  });
+  const { createKidMutation } = useKidMutations(authToken);
 
   async function onRegisterKid(kidDTO: KidFormValues) {
     if (createKidMutation.isPending) {

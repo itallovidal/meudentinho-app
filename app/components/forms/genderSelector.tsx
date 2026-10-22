@@ -9,7 +9,7 @@ import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 
 type GenderSelectionProps = {
-  gender: "male" | "female";
+  gender?: "male" | "female";
   onChange: (gender: "male" | "female") => void;
   className?: string;
 };
@@ -51,11 +51,13 @@ export function GenderSelector({
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
         className="relative flex-row rounded-lg bg-base-200 p-1"
       >
-        <Animated.View
-          pointerEvents="none"
-          className="absolute bottom-1 left-1 top-1 rounded-md bg-primary-500"
-          style={indicatorStyle}
-        />
+        {gender ? (
+          <Animated.View
+            pointerEvents="none"
+            className="absolute bottom-1 left-1 top-1 rounded-md bg-primary-500"
+            style={indicatorStyle}
+          />
+        ) : null}
         {OPTIONS.map((option) => (
           <TouchableOpacity
             key={option.value}

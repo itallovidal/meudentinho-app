@@ -43,7 +43,10 @@ export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
     Responsible,
     ChangePassword,
     Dependents,
-    EditDependent,
+    EditDependent: {
+      screen: EditDependent,
+      getId: ({ params }) => params?.kid?.id ?? "new",
+    },
     Categories,
     EditCategory,
   },

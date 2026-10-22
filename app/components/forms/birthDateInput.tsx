@@ -6,7 +6,12 @@ import { THEME } from "@/lib/theme";
 import { Input } from "../ui/input";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
-import { brDateToIsoKey, isoToBrDate, maskDateBr } from "@/lib/utils";
+import {
+  brDateToIsoKey,
+  isoToBrDate,
+  maskDateBr,
+  validateBirthDateKey,
+} from "@/lib/utils";
 
 type BirthDateInputProps = {
   value: string;
@@ -28,27 +33,33 @@ export function BirthDateInput({
   const colors = THEME.light;
   const [text, setText] = useState(() => (value ? isoToBrDate(value) : ""));
   const [prevValue, setPrevValue] = useState(value);
+  const [emittedValue, setEmittedValue] = useState<string | null>(null);
+  const [inputError, setInputError] = useState<string | null>(null);
 
   if (value !== prevValue) {
     setPrevValue(value);
-    if (value) {
-      const formatted = isoToBrDate(value);
-      if (formatted && formatted !== text) {
-        setText(formatted);
-      }
+    if (value !== emittedValue) {
+      setText(value ? isoToBrDate(value) : "");
+      setInputError(null);
     }
+    setEmittedValue(null);
   }
 
   function handleChangeText(raw: string) {
     const masked = maskDateBr(raw);
+    const validationError = !masked
+      ? null
+      : masked.length < 10
+        ? "Digite a data completa."
+        : validateBirthDateKey(masked.split("/").reverse().join("-"));
+    const nextValue = validationError ? "" : (brDateToIsoKey(masked) ?? "");
     setText(masked);
-    if (masked.length === 10) {
-      const iso = brDateToIsoKey(masked);
-      onChange(iso ?? "");
-    } else if (masked.length === 0 && value) {
-      onChange("");
-    }
+    setInputError(validationError);
+    setEmittedValue(nextValue);
+    onChange(nextValue);
   }
+
+  const displayedError = inputError ?? error;
 
   return (
     <Wrapper
@@ -79,9 +90,9 @@ export function BirthDateInput({
           <CalendarBlankIcon size={20} color={colors.base500} weight="bold" />
         </View>
       </View>
-      {error ? (
+      {displayedError ? (
         <Text className="text-destructive" variant="small">
-          {error}
+          {displayedError}
         </Text>
       ) : null}
     </Wrapper>

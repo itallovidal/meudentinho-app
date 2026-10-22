@@ -1,47 +1,38 @@
 import { z } from "zod";
-import { parseLocalDate } from "@/lib/utils";
+import { validateBirthDateKey } from "@/lib/utils";
 
-function isRealDate(value: string): boolean {
-  if (!value) {
-    return true;
-  }
-  const date = parseLocalDate(value.split("T")[0]);
-  return date !== null;
-}
-
-function isNotFutureDate(value: string): boolean {
-  if (!value) {
-    return true;
-  }
-  const date = parseLocalDate(value.split("T")[0]);
-  if (!date) {
-    return true;
-  }
-  const today = new Date();
-  const startOfTomorrow = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate() + 1,
-  );
-  return date.getTime() < startOfTomorrow.getTime();
-}
-
-export const kidSchema = z.object({
-  name: z
-    .string({ message: "O nome é obrigatório." })
-    .min(3, "O nome deve ter no mínimo 3 caracteres."),
-  birthDate: z
-    .string()
-    .min(1, "A data de nascimento é obrigatória.")
-    .refine(isRealDate, "Digite uma data válida.")
-    .refine(isNotFutureDate, "A data não pode ser futura."),
-  gender: z.enum(["male", "female"], { message: "O gênero é obrigatório." }),
-  prematureWeeks: z.string().optional().default("0"),
-  accepted: z
-    .boolean({ message: "É necessário aceitar a Política de Privacidade." })
-    .refine((value) => value === true, {
-      message: "É necessário aceitar a Política de Privacidade.",
+export const kidSchema = z
+  .object({
+    name: z
+      .string({ message: "O nome é obrigatório." })
+      .min(3, "O nome deve ter no mínimo 3 caracteres."),
+    birthDate: z.string().superRefine((value, context) => {
+      const message = validateBirthDateKey(value);
+      if (message) {
+        context.addIssue({ code: "custom", message });
+      }
     }),
-});
+    gender: z.enum(["male", "female"], {
+      message: "Selecione o sexo do dependente.",
+    }),
+    isPremature: z.boolean().default(false),
+    prematureWeeks: z.string().optional().default("0"),
+    accepted: z
+      .boolean({ message: "É necessário aceitar a Política de Privacidade." })
+      .refine((value) => value === true, {
+        message: "É necessário aceitar a Política de Privacidade.",
+      }),
+  })
+  .superRefine((data, context) => {
+    if (data.isPremature && !/^(2[0-9]|3[0-6])$/.test(data.prematureWeeks)) {
+      context.addIssue({
+        code: "custom",
+        path: ["prematureWeeks"],
+        message: "Selecione com quantas semanas de gestação a criança nasceu.",
+      });
+    }
+  });
+
+export const kidEditSchema = kidSchema.safeExtend({ accepted: z.boolean() });
 
 export type KidFormValues = z.input<typeof kidSchema>;
