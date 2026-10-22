@@ -26,9 +26,10 @@ export async function openPrivacyPolicy(): Promise<boolean> {
 export async function buildKidRequest(
   data: KidFormValues,
 ): Promise<KidRequestDTO> {
-  const { accepted, ...kid } = data;
+  const { accepted, isPremature, prematureWeeks, ...kid } = data;
   return {
     ...kid,
+    prematureWeeks: isPremature ? prematureWeeks : "0",
     acceptedPolicyVersion: PRIVACY_POLICY_VERSION,
     acceptedAt: new Date().toISOString(),
     requestId: Crypto.randomUUID(),

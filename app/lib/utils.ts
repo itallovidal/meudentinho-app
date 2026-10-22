@@ -228,6 +228,19 @@ export function maskDateBr(value: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
+export function validateBirthDateKey(value: string): string | null {
+  if (!value) {
+    return "A data de nascimento é obrigatória.";
+  }
+  const date = parseLocalDate(value);
+  if (!date || date.getFullYear() < 1900) {
+    return "Digite uma data válida.";
+  }
+  return toLocalDateKey(date) > toLocalDateKey(new Date())
+    ? "A data não pode ser futura."
+    : null;
+}
+
 export function brDateToIsoKey(br: string): string | null {
   const match = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!match) {
@@ -249,7 +262,7 @@ export function brDateToIsoKey(br: string): string | null {
     return null;
   }
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);
-  if (date.getTime() > Date.now()) {
+  if (toLocalDateKey(date) > toLocalDateKey(new Date())) {
     return null;
   }
   return `${yyyy}-${mm}-${dd}`;

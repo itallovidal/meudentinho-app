@@ -95,7 +95,7 @@ export function PrematureWeeksSelector({
       </Pressable>
 
       <Text className="text-sm text-base-500">
-        Preencha apenas se souber informar.
+        Informe as semanas de gestação para registrar a prematuridade.
       </Text>
 
       {error ? (

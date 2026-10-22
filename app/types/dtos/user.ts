@@ -52,7 +52,6 @@ export interface KidResponseDTO {
   prematureWeeks?: string;
   parentId: string;
   gender: "male" | "female";
-  isPremature: boolean;
   createdAt: string;
   updatedAt: string;
   acceptedPolicyVersion?: string;

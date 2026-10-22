@@ -156,6 +156,8 @@ export function EditDependent() {
         <Wrapper direction="column" className="w-full" gap="gap-4">
           <View className="w-full rounded-2xl bg-base-100 p-5 shadow-sm shadow-base-300">
             <RegisterKidForm
+              key={kid?.id ?? "new"}
+              isEditing={isEditing}
               onSubmit={kid ? (data) => handleUpdate(kid, data) : handleCreate}
               defaultValues={
                 kid
