@@ -62,6 +62,10 @@ export type API_ERROR_CODES = {
   ResponseParseError: "RESPONSE_PARSE_ERROR";
   NetworkError: "NETWORK_ERROR";
   TimeoutError: "TIMEOUT";
+  SessionRefreshFailed: "SESSION_REFRESH_FAILED";
+  SessionStorageError: "SESSION_STORAGE_ERROR";
+  SessionChanged: "SESSION_CHANGED";
+  LogoutFailed: "LOGOUT_FAILED";
 };
 
 export type ApiErrorCode = API_ERROR_CODES[keyof API_ERROR_CODES];
