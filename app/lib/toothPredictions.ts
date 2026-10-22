@@ -1,11 +1,6 @@
 import { getChronology, type ChronologyGender } from "@/lib/toothChronology";
 import { archLabel, toothTypeLabel } from "@/lib/teethLabels";
-import {
-  ageInMonths,
-  eventDateKey,
-  parseLocalDate,
-  toLocalDateKey,
-} from "@/lib/utils";
+import { eventDateKey, parseLocalDate, toLocalDateKey } from "@/lib/utils";
 import type {
   Arch,
   Dentition,
@@ -29,8 +24,6 @@ const TOOTH_TYPES: ToothType[] = [
   "second_molar",
   "third_molar",
 ];
-
-const MONTH_MS = 1000 * 60 * 60 * 24 * 30.4375;
 
 const MONTH_NAMES_PT_BR = [
   "janeiro",
@@ -56,7 +49,9 @@ interface EruptionRange {
   dentition: Dentition;
   start: number;
   end: number;
-  limit: number;
+  endDays: number;
+  limit: number | null;
+  limitDays: number;
 }
 
 function rangesFor(
@@ -73,16 +68,20 @@ function rangesFor(
   if (chronology.deciduous) {
     ranges.push({
       dentition: "primary",
-      start: chronology.deciduous.at,
+      start: chronology.deciduous.from,
       end: chronology.deciduous.limit,
+      endDays: chronology.deciduous.limitDays,
       limit: chronology.deciduous.limit,
+      limitDays: chronology.deciduous.limitDays,
     });
   }
   ranges.push({
     dentition: "permanent",
     start: chronology.permanent.from,
     end: chronology.permanent.to,
+    endDays: 0,
     limit: chronology.permanent.limit,
+    limitDays: 0,
   });
   return ranges;
 }
@@ -111,8 +110,18 @@ function isSidePending(
   );
 }
 
-function monthsAfter(birth: Date, months: number): Date {
-  return new Date(birth.getTime() + months * MONTH_MS);
+function dateAtAge(birth: Date, months: number, days = 0): Date {
+  const target = new Date(birth.getFullYear(), birth.getMonth() + months, 1);
+  const lastDay = new Date(
+    target.getFullYear(),
+    target.getMonth() + 1,
+    0,
+  ).getDate();
+  return new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    Math.min(birth.getDate(), lastDay) + days,
+  );
 }
 
 function keyToDate(key: string): Date {
@@ -129,8 +138,8 @@ export function buildToothPredictions(
     return [];
   }
   const birth = parseLocalDate(birthDate);
-  const ageMonths = ageInMonths(birthDate);
-  if (!birth || ageMonths === null || ageMonths < 0) {
+  const today = toLocalDateKey(new Date());
+  if (!birth || toLocalDateKey(birth) > today) {
     return [];
   }
 
@@ -140,13 +149,16 @@ export function buildToothPredictions(
       const groups = new Map<string, { range: EruptionRange; sides: Side[] }>();
       for (const side of SIDES) {
         for (const range of rangesFor(arch, toothType, side, gender)) {
+          const limit = toLocalDateKey(
+            dateAtAge(birth, range.limit ?? range.end, range.limitDays),
+          );
           if (
-            ageMonths > range.limit ||
+            today > limit ||
             !isSidePending(events, arch, side, toothType, range.dentition)
           ) {
             continue;
           }
-          const key = `${range.dentition}:${range.start}:${range.end}`;
+          const key = `${range.dentition}:${range.start}:${range.end}:${range.endDays}`;
           const group = groups.get(key) ?? { range, sides: [] };
           group.sides.push(side);
           groups.set(key, group);
@@ -162,9 +174,12 @@ export function buildToothPredictions(
           title: `${toothTypeLabel(toothType)} ${archLabel(arch)}`,
           sides,
           pendingSides: sides.length,
-          status: ageMonths >= range.start ? "current" : "upcoming",
-          windowStart: toLocalDateKey(monthsAfter(birth, range.start)),
-          windowEnd: toLocalDateKey(monthsAfter(birth, range.end)),
+          status:
+            today >= toLocalDateKey(dateAtAge(birth, range.start))
+              ? "current"
+              : "upcoming",
+          windowStart: toLocalDateKey(dateAtAge(birth, range.start)),
+          windowEnd: toLocalDateKey(dateAtAge(birth, range.end, range.endDays)),
         });
       }
     }
