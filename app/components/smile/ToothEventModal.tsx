@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { InfoPopover } from "@/components/infoPopover";
 import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -77,16 +78,20 @@ export function ToothEventModal({
   const [date, setDate] = useState(() => toLocalDateKey(new Date()));
   const [pickerOpen, setPickerOpen] = useState(false);
   const deleteRequestedRef = useRef(false);
+  const popoverHost = useId();
   const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}`;
-  const [prevModalKey, setPrevModalKey] = useState(modalKey);
+  const [prevModalKey, setPrevModalKey] = useState<string | null>(null);
 
   const parsed = parseToothId(toothId);
+  const milkAllowed =
+    parsed !== null && hasDeciduousForm(parsed.arch, parsed.toothType);
   const ageMonths = kidBirthDate !== null ? ageInMonths(kidBirthDate) : null;
   const milkStepPending =
-    parsed !== null
+    parsed !== null && milkAllowed
       ? pendingMilkStep(parsed.arch, parsed.quadrant, parsed.toothType, events)
       : null;
   const milkFell =
+    milkAllowed &&
     parsed !== null &&
     events.some(
       (event) =>
@@ -105,6 +110,7 @@ export function ToothEventModal({
         event.eventType === "eruption",
     );
   const milkEruptionRecorded =
+    milkAllowed &&
     parsed !== null &&
     events.some(
       (event) =>
@@ -116,23 +122,23 @@ export function ToothEventModal({
   const lockedToPermanent = milkFell && !permanentErupted;
   const exfoliationOnlyLeft =
     (milkEruptionRecorded && !milkFell) || permanentErupted;
+  const exfoliationDentition: Dentition =
+    !milkAllowed || permanentErupted ? "permanent" : "primary";
+  const defaultDentition =
+    !milkAllowed || lockedToPermanent
+      ? "permanent"
+      : parsed !== null && milkStepPending === null
+        ? expectedDentition(
+            parsed.toothType,
+            parsed.arch,
+            ageMonths,
+            parsed.side,
+            kidGender,
+          )
+        : "primary";
   const initialEventType: "eruption" | "exfoliation" = exfoliationOnlyLeft
     ? "exfoliation"
     : "eruption";
-  const exfoliationDentition: Dentition = permanentErupted
-    ? "permanent"
-    : "primary";
-  const defaultDentition = lockedToPermanent
-    ? "permanent"
-    : parsed !== null && milkStepPending === null
-      ? expectedDentition(
-          parsed.toothType,
-          parsed.arch,
-          ageMonths,
-          parsed.side,
-          kidGender,
-        )
-      : "primary";
 
   function resetForm(fallbackDentition: Dentition) {
     setDentition(fallbackDentition);
@@ -188,7 +194,8 @@ export function ToothEventModal({
       await onSubmit({
         kidId,
         occurrenceDate,
-        dentition,
+        dentition:
+          editingEvent?.dentition ?? (milkAllowed ? dentition : "permanent"),
         arch: parsed.arch,
         side: parsed.side,
         toothType: parsed.toothType,
@@ -205,9 +212,6 @@ export function ToothEventModal({
     void performSave();
   }
 
-  const milkAllowed =
-    parsed !== null && hasDeciduousForm(parsed.arch, parsed.toothType);
-
   const alreadyRegistered = toothEvents.some(
     (event) => event.eventType === eventType && event.dentition === dentition,
   );
@@ -223,16 +227,33 @@ export function ToothEventModal({
     !parsed ||
     alreadyRegistered ||
     !!dateError ||
-    (eventType === "eruption" &&
+    (!editingEvent &&
+      eventType === "eruption" &&
       milkStepPending !== null &&
       dentition === "permanent") ||
     (editingEvent !== null && !editChanged);
+
+  const confirmDisabledReason = !parsed
+    ? "Não foi possível identificar este dente."
+    : alreadyRegistered
+      ? "Este evento já está registrado para o dente."
+      : dateError
+        ? dateError
+        : !editingEvent &&
+            eventType === "eruption" &&
+            milkStepPending !== null &&
+            dentition === "permanent"
+          ? "Registre primeiro o dente de leite deste local."
+          : editingEvent !== null && !editChanged
+            ? "Altere a data ou a observação para salvar."
+            : null;
 
   const editingState = editingEvent ? eventToothState(editingEvent) : null;
 
   return (
     <BottomSheet
       visible={visible}
+      portalHostName={popoverHost}
       onClose={() => {
         onClose();
         if (deleteRequestedRef.current) {
@@ -275,19 +296,31 @@ export function ToothEventModal({
                 <Text className="text-base text-base-500">
                   O que aconteceu?
                 </Text>
-                <View className="flex-row gap-3">
+                <View className="flex-row flex-wrap gap-3">
                   <Chip
+                    portalHost={popoverHost}
                     label={toothEventVerb("eruption")}
                     selected={eventType === "eruption"}
                     disabled={exfoliationOnlyLeft}
+                    disabledReason={
+                      !milkAllowed
+                        ? "O nascimento permanente deste dente já foi registrado."
+                        : "Este dente já nasceu; registre a queda antes de uma nova erupção."
+                    }
                     onPress={() => changeEventType("eruption")}
                   />
                   <Chip
+                    portalHost={popoverHost}
                     label={toothEventVerb("exfoliation")}
                     selected={eventType === "exfoliation"}
                     disabled={
                       !(milkEruptionRecorded || permanentErupted) ||
                       lockedToPermanent
+                    }
+                    disabledReason={
+                      lockedToPermanent
+                        ? "A dentição de leite já caiu; registre a erupção permanente."
+                        : "Registre a erupção do dente antes da queda."
                     }
                     onPress={() => changeEventType("exfoliation")}
                   />
@@ -296,22 +329,36 @@ export function ToothEventModal({
 
               <View className="gap-3">
                 <Text className="text-base text-base-500">Dentição</Text>
-                <View className="flex-row gap-3">
+                <View className="flex-row flex-wrap gap-3">
                   <Chip
+                    portalHost={popoverHost}
                     label={dentitionLabel("primary")}
                     selected={dentition === "primary"}
                     disabled={
                       !milkAllowed || lockedToPermanent || permanentErupted
                     }
+                    disabledReason={
+                      !milkAllowed
+                        ? "Este dente permite apenas registros permanentes."
+                        : "O ciclo já avançou para a dentição permanente."
+                    }
                     onPress={() => setDentition("primary")}
                   />
                   <Chip
+                    portalHost={popoverHost}
                     label={dentitionLabel("permanent")}
                     selected={dentition === "permanent"}
                     disabled={
                       eventType === "exfoliation"
                         ? !permanentErupted
-                        : milkStepPending !== null
+                        : !editingEvent && milkStepPending !== null
+                    }
+                    disabledReason={
+                      eventType === "exfoliation" && !permanentErupted
+                        ? "Registre a erupção permanente antes da queda."
+                        : !editingEvent && milkStepPending !== null
+                          ? "Registre primeiro a erupção e a queda do dente de leite."
+                          : undefined
                     }
                     onPress={() => setDentition("permanent")}
                   />
@@ -362,23 +409,36 @@ export function ToothEventModal({
             />
           </View>
 
-          <Pressable
-            onPress={handleConfirmPress}
-            disabled={confirmDisabled || isSaving}
-            accessibilityRole="button"
-            className={cn(
-              "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
-              (confirmDisabled || isSaving) && "opacity-50",
-            )}
-          >
-            <Text className="text-base font-bold text-base-100">
-              {isSaving
-                ? "Salvando..."
-                : editingEvent
-                  ? "Salvar alterações"
-                  : "Confirmar"}
-            </Text>
-          </Pressable>
+          <View className="relative">
+            <Pressable
+              onPress={handleConfirmPress}
+              disabled={confirmDisabled || isSaving}
+              accessibilityRole="button"
+              accessibilityHint={confirmDisabledReason ?? undefined}
+              className={cn(
+                "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
+                (confirmDisabled || isSaving) && "opacity-50",
+              )}
+            >
+              <Text className="text-base font-bold text-base-100">
+                {isSaving
+                  ? "Salvando..."
+                  : editingEvent
+                    ? "Salvar alterações"
+                    : "Confirmar"}
+              </Text>
+            </Pressable>
+            {(confirmDisabled || isSaving) && confirmDisabledReason ? (
+              <View className="absolute -right-1 -top-1 z-10 rounded-full bg-base-100 shadow-sm shadow-base-400">
+                <InfoPopover
+                  accessibilityLabel="Por que não posso salvar?"
+                  message={confirmDisabledReason}
+                  portalHost={popoverHost}
+                  iconSize={20}
+                />
+              </View>
+            ) : null}
+          </View>
 
           {editingEvent && onDelete && (
             <Pressable
@@ -416,38 +476,55 @@ function Chip({
   label,
   selected,
   disabled = false,
+  disabledReason,
+  portalHost,
   onPress,
 }: {
   label: string;
   selected: boolean;
   disabled?: boolean;
+  disabledReason?: string;
+  portalHost: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="radio"
-      accessibilityState={{ selected, disabled }}
-      className={cn(
-        "relative rounded-full px-5 py-2.5",
-        selected ? "bg-primary-500" : "bg-base-200",
-        disabled && "opacity-50",
-      )}
-    >
-      {selected ? (
-        <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
-          <CheckIcon size={12} color={colors.primary500} weight="bold" />
-        </View>
-      ) : null}
-      <Text
+    <View className="relative">
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityRole="radio"
+        accessibilityState={{ selected, disabled }}
+        accessibilityHint={disabled ? disabledReason : undefined}
         className={cn(
-          "text-base font-medium",
-          selected ? "text-base-100" : "text-base-900",
+          "relative rounded-full px-5 py-2.5",
+          selected ? "bg-primary-500" : "bg-base-200",
+          disabled && "opacity-50",
         )}
       >
-        {label}
-      </Text>
-    </Pressable>
+        {selected && !disabled ? (
+          <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
+            <CheckIcon size={12} color={colors.primary500} weight="bold" />
+          </View>
+        ) : null}
+        <Text
+          className={cn(
+            "text-base font-medium",
+            selected ? "text-base-100" : "text-base-900",
+          )}
+        >
+          {label}
+        </Text>
+      </Pressable>
+      {disabled && disabledReason ? (
+        <View className="absolute -right-1 -top-1 z-10 rounded-full bg-base-100 shadow-sm shadow-base-400">
+          <InfoPopover
+            accessibilityLabel={`Por que "${label}" está indisponível?`}
+            message={disabledReason}
+            portalHost={portalHost}
+            iconSize={20}
+          />
+        </View>
+      ) : null}
+    </View>
   );
 }

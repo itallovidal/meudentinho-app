@@ -25,15 +25,15 @@ export function ToothSVG({
   onPress?: () => void;
 }) {
   const outline = contour.match(/M[^M]*/)?.[0] ?? contour;
-  const dash = strokeDasharray ? ` stroke-dasharray="${strokeDasharray}"` : "";
-  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"${dash}`;
+  const dash = strokeDasharray || "none";
+  const edge = `fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-dasharray="${dash}"`;
   const pathsXml =
     `<path d="${outline}" ${edge}/>` +
     `<path d="${contour}" ${edge}/>` +
     details
       .map(
         (detail) =>
-          `<path d="${detail}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth * 0.6}" stroke-linejoin="round"/>`,
+          `<path d="${detail}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth * 0.6}" stroke-linejoin="round" stroke-dasharray="none"/>`,
       )
       .join("");
 
@@ -47,7 +47,13 @@ export function ToothSVG({
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
     >
-      <SvgXml xml={svg} width={width} height={height} onPress={onPress} />
+      <SvgXml
+        key={dash}
+        xml={svg}
+        width={width}
+        height={height}
+        onPress={onPress}
+      />
     </View>
   );
 }
