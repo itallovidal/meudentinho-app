@@ -28,6 +28,10 @@ function getDeleteDependents(
       other.id !== event.id &&
       other.quadrant === event.quadrant &&
       other.toothType === event.toothType &&
+      (!(
+        event.toothType === "first_molar" || event.toothType === "second_molar"
+      ) ||
+        other.dentition === event.dentition) &&
       lifecycleStage(other) > lifecycleStage(event),
   );
 }

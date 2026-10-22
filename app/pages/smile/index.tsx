@@ -193,7 +193,7 @@ export function Smile() {
       return {
         title: "Troca de dentes",
         description:
-          "Os permanentes nascem empurrando os de leite. Mantenha a escovação após as refeições e visite o dentista regularmente.",
+          "Os dentes permanentes substituem os de leite; os molares permanentes nascem atrás da arcada. Mantenha a escovação após as refeições e visite o dentista regularmente.",
       };
     }
     if (kidAgeMonths !== null && kidAgeMonths < 30) {
