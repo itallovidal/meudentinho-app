@@ -18,7 +18,7 @@ import {
 } from "phosphor-react-native";
 import { useContext, useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
-import { logout } from "@/api/auth/logout";
+import { errorMessage } from "@/lib/errorMessage";
 import { openPrivacyPolicy } from "@/lib/privacyPolicy";
 import { THEME } from "@/lib/theme";
 import { Text } from "@/components/ui/text";
@@ -26,21 +26,28 @@ import { Text } from "@/components/ui/text";
 export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
-  const { updateAppUser, user, hydrated, refreshToken, sessionExpired } =
-    useContext(UserContext)!;
+  const { signOut, user, hydrated, sessionExpired } = useContext(UserContext)!;
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   const year = new Date().getFullYear();
 
   async function handleConfirmLogout() {
-    setLogoutConfirmOpen(false);
-    const staleRefreshToken = refreshToken;
-    await updateAppUser(null, null);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Index" }],
-    });
-    if (staleRefreshToken) {
-      void logout(staleRefreshToken);
+    if (loggingOut) {
+      return;
+    }
+    setLoggingOut(true);
+    setLogoutError(null);
+    try {
+      await signOut();
+      setLogoutConfirmOpen(false);
+      navigation.reset({ index: 0, routes: [{ name: "Index" }] });
+    } catch (error) {
+      setLogoutError(
+        errorMessage(error, "Não foi possível sair da conta. Tente novamente."),
+      );
+    } finally {
+      setLoggingOut(false);
     }
   }
 
@@ -201,24 +208,34 @@ export function Index() {
         visible={logoutConfirmOpen}
         onClose={() => setLogoutConfirmOpen(false)}
         header={
-          <Text className="text-xl font-bold text-base-900">
-            Sair da conta
-          </Text>
+          <Text className="text-xl font-bold text-base-900">Sair da conta</Text>
         }
       >
         <Text className="text-base text-base-500">
           Deseja sair da sua conta neste aparelho?
         </Text>
+        {logoutError && (
+          <Text
+            accessibilityRole="alert"
+            className="text-base text-destructive"
+          >
+            {logoutError}
+          </Text>
+        )}
         <Button
           variant="destructive"
           onPress={() => void handleConfirmLogout()}
+          disabled={loggingOut}
           className="h-14 w-full rounded-full"
         >
-          <Text className="text-base font-bold">Sair</Text>
+          <Text className="text-base font-bold">
+            {loggingOut ? "Saindo..." : "Sair"}
+          </Text>
         </Button>
         <Button
           variant="outline"
           onPress={() => setLogoutConfirmOpen(false)}
+          disabled={loggingOut}
           className="h-14 w-full rounded-full"
         >
           <Text className="text-base font-bold">Cancelar</Text>

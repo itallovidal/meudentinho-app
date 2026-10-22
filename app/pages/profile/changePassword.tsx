@@ -1,11 +1,14 @@
 import { changePassword } from "@/api/user/changePassword";
 import { Header } from "@/components/header";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { PasswordField } from "@/components/forms/passwordField";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
 import { errorMessage } from "@/lib/errorMessage";
+import { isApiError } from "@/types/predicates";
+import { ApiError } from "@/types/domain";
 import {
   updatePasswordSchema,
   UpdatePasswordDTO,
@@ -14,8 +17,8 @@ import { getUserIdFromToken } from "@/lib/utils";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
-import { useContext, useEffect } from "react";
-import { Alert, Image, ScrollView, View } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import { Image, ScrollView, View } from "react-native";
 import { useForm } from "react-hook-form";
 
 export function ChangePassword() {
@@ -27,6 +30,11 @@ export function ChangePassword() {
     userId: contextUserId,
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    next: "login" | "back" | null;
+  } | null>(null);
 
   const {
     control,
@@ -44,17 +52,21 @@ export function ChangePassword() {
   });
 
   useEffect(() => {
-    if (hydrated && !authToken) {
+    if (hydrated && !authToken && !feedback) {
       navigation.reset({
         index: 0,
         routes: [{ name: "Login" }],
       });
     }
-  }, [hydrated, authToken, navigation]);
+  }, [hydrated, authToken, feedback, navigation]);
 
   async function onSubmit(data: UpdatePasswordDTO) {
     if (!authToken) {
-      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+        next: "login",
+      });
       return;
     }
 
@@ -62,7 +74,11 @@ export function ChangePassword() {
       const userId =
         contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
       if (!userId) {
-        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        setFeedback({
+          title: "Sessão expirada",
+          message: "Faça login novamente.",
+          next: "login",
+        });
         return;
       }
 
@@ -72,12 +88,10 @@ export function ChangePassword() {
       });
 
       if (!session?.token) {
-        await updateAppUser(null, null);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Login" }],
-        });
-        return;
+        throw new ApiError(
+          "A senha foi atualizada, mas não foi possível iniciar uma nova sessão. Entre novamente com a nova senha.",
+          "RESPONSE_PARSE_ERROR",
+        );
       }
 
       await updateAppUser(
@@ -91,15 +105,44 @@ export function ChangePassword() {
         session.userId ?? null,
       );
 
-      Alert.alert("Senha atualizada", "Sua senha foi alterada com sucesso.", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      setFeedback({
+        title: "Senha atualizada",
+        message: "Sua senha foi alterada com sucesso.",
+        next: "back",
+      });
     } catch (error) {
-      Alert.alert(
-        "Erro",
-        errorMessage(error, "Não foi possível alterar a senha."),
-      );
+      const sessionFailed =
+        isApiError(error) &&
+        ((error.status !== undefined && error.status >= 500) ||
+          error.code === "RESPONSE_PARSE_ERROR" ||
+          error.code === "SESSION_STORAGE_ERROR");
+      setFeedback({
+        title: "Não foi possível concluir a operação",
+        message: sessionFailed
+          ? "A alteração da senha pode ter sido concluída, mas não foi possível confirmar sua nova sessão. Entre novamente; se a senha antiga não funcionar, use a nova senha."
+          : errorMessage(error, "Não foi possível alterar a senha."),
+        next: sessionFailed ? "login" : null,
+      });
     }
+  }
+
+  async function closeFeedback() {
+    if (feedback?.next === "login") {
+      try {
+        await updateAppUser(null, null);
+        navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+      } catch (error) {
+        setFeedback({
+          title: "Não foi possível encerrar a sessão",
+          message: errorMessage(error, "Tente novamente."),
+          next: "login",
+        });
+        return;
+      }
+    } else if (feedback?.next === "back") {
+      navigation.goBack();
+    }
+    setFeedback(null);
   }
 
   if (!hydrated) {
@@ -117,7 +160,7 @@ export function ChangePassword() {
     );
   }
 
-  if (!authToken) {
+  if (!authToken && !feedback) {
     return null;
   }
 
@@ -179,12 +222,17 @@ export function ChangePassword() {
 
         <Button
           onPress={() => handleSubmit(onSubmit)()}
-          disabled={isSubmitting || !isDirty}
+          disabled={isSubmitting || !isDirty || !authToken}
           className="w-full"
         >
           <Text>{isSubmitting ? "Atualizando..." : "Atualizar Senha"}</Text>
         </Button>
       </ScrollView>
+      <FeedbackSheet
+        title={feedback?.title ?? ""}
+        message={feedback?.message ?? null}
+        onClose={() => void closeFeedback()}
+      />
     </Wrapper>
   );
 }
