@@ -1,6 +1,6 @@
 <div align="center">
 
-# Meu Dentinho
+# Janelinha
 
   <p>Aplicativo mobile para acompanhamento da saúde bucal infantil: odontograma,
   previsão de erupção dentária, artigos educativos e gestão de dependentes.</p>
@@ -24,7 +24,7 @@
 
 ## Descrição
 
-O **Meu Dentinho** é o aplicativo mobile do projeto de acompanhamento da saúde bucal infantil. Ele permite que responsáveis cadastrem crianças dependentes, registrem a dentição em um odontograma interativo e recebam previsões de erupção e troca dos dentes calculadas a partir da idade e do sexo de cada criança.
+O **Janelinha** é o aplicativo mobile do projeto de acompanhamento da saúde bucal infantil. Ele permite que responsáveis cadastrem crianças dependentes, registrem a dentição em um odontograma interativo e recebam previsões de erupção e troca dos dentes calculadas a partir da idade e do sexo de cada criança.
 
 O app existe para auxiliar o acompanhamento manual feito em consultório: o histórico de nascimento dos dentes fica organizado em um só lugar, e o responsável sabe com antecedência qual dente deve nascer ou cair em seguida. O conteúdo educativo (artigos) fica disponível no próprio aplicativo, com leitura em Markdown renderizada
 nativamente.
@@ -53,7 +53,7 @@ A Arquitetura separa a integração com a API REST (`app/api`, um arquivo por en
 
 ### Autenticação e sessão
 
-Login, cadastro e logout com tratamento de expiração de sessão. O acesso é protegido por *access token* + *refresh token*: quando uma requisição falha por token expirado, o app renova a sessão em background e repete a chamada; se o refresh também falhar, a sessão é encerrada e o usuário é avisado. Tokens são migrados automaticamente do AsyncStorage para o `expo-secure-store`.
+Login, cadastro e logout com tratamento de expiração de sessão. O acesso é protegido por _access token_ + _refresh token_: quando uma requisição falha por token expirado, o app renova a sessão em background e repete a chamada; se o refresh também falhar, a sessão é encerrada e o usuário é avisado. Tokens são migrados automaticamente do AsyncStorage para o `expo-secure-store`.
 
 ### Dependentes
 
@@ -89,15 +89,15 @@ Edição de nome e e-mail com confirmação por senha em bottom sheet, troca de 
 
 ### Comandos
 
-| Comando | O que faz |
-| --- | --- |
-| `npm run web` | servidor de desenvolvimento web (Metro) |
-| `npm start` | servidor Expo (dev) |
-| `npm run android` | build/dev no device Android |
-| `npm run android:apk:preview` | APK de release local: valida o env, roda `prebuild` + `gradlew assembleRelease` — hoje assinado com a chave de debug do template Expo |
-| `npm run android:apk:preview:debug` | APK de debug local |
-| `npm run android:apk:install:preview` / `:debug` | instala o APK no device via `adb` |
-| `npm run typecheck` / `lint` / `test` | verificação do código |
+| Comando                                          | O que faz                                                                                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run web`                                    | servidor de desenvolvimento web (Metro)                                                                                               |
+| `npm start`                                      | servidor Expo (dev)                                                                                                                   |
+| `npm run android`                                | build/dev no device Android                                                                                                           |
+| `npm run android:apk:preview`                    | APK de release local: valida o env, roda `prebuild` + `gradlew assembleRelease` — hoje assinado com a chave de debug do template Expo |
+| `npm run android:apk:preview:debug`              | APK de debug local                                                                                                                    |
+| `npm run android:apk:install:preview` / `:debug` | instala o APK no device via `adb`                                                                                                     |
+| `npm run typecheck` / `lint` / `test`            | verificação do código                                                                                                                 |
 
 ### Versão
 
