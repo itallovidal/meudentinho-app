@@ -1,9 +1,5 @@
-import {
-  isInEruptionWindow,
-  toothState,
-  type ChronologyGender,
-} from "@/lib/toothChronology";
-import { ageInMonths } from "@/lib/utils";
+import { buildToothMilestones } from "@/lib/toothMilestones";
+import { toothState, type ChronologyGender } from "@/lib/toothChronology";
 import type { Arch, Side, ToothEvent, ToothType } from "@/types/teeth";
 
 const ARCHES: Arch[] = ["upper", "lower"];
@@ -31,6 +27,7 @@ export function buildSmileSummary(
   birthDate: string | null,
   events: ToothEvent[],
   gender: ChronologyGender | null = null,
+  referenceDate: Date = new Date(),
 ): SmileSummary {
   const summary: SmileSummary = {
     bornPermanent: 0,
@@ -39,20 +36,19 @@ export function buildSmileSummary(
     eruptionWindow: 0,
     registered: 0,
   };
-  const ageMonths = birthDate ? ageInMonths(birthDate) : null;
+  summary.eruptionWindow = buildToothMilestones({
+    kidId: "",
+    birthDate,
+    events,
+    gender,
+    referenceDate,
+  }).filter((milestone) => milestone.status === "current").length;
 
   for (const arch of ARCHES) {
     for (const side of SIDES) {
       for (const toothType of TOOTH_TYPES) {
         const state = toothState({ toothType, arch, side }, events);
         if (state === "unregistered") {
-          if (
-            ageMonths !== null &&
-            !Number.isNaN(ageMonths) &&
-            isInEruptionWindow(arch, toothType, ageMonths, side, gender)
-          ) {
-            summary.eruptionWindow += 1;
-          }
           continue;
         }
         summary.registered += 1;

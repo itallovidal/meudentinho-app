@@ -1,29 +1,13 @@
-import { getChronology, type ChronologyGender } from "@/lib/toothChronology";
+import { isToothEventDateUnknown } from "@/lib/toothIdentity";
+import { type ChronologyGender } from "@/lib/toothChronology";
+import { buildToothMilestones } from "@/lib/toothMilestones";
 import { archLabel, toothTypeLabel } from "@/lib/teethLabels";
-import { eventDateKey, parseLocalDate, toLocalDateKey } from "@/lib/utils";
+import { eventDateKey, toLocalDateKey } from "@/lib/utils";
 import type {
-  Arch,
-  Dentition,
-  Quadrant,
-  Side,
   ToothEvent,
   ToothPrediction,
   ToothPredictionStatus,
-  ToothType,
 } from "@/types/teeth";
-
-const ARCHES: Arch[] = ["upper", "lower"];
-const SIDES: Side[] = ["right", "left"];
-const TOOTH_TYPES: ToothType[] = [
-  "central_incisor",
-  "lateral_incisor",
-  "canine",
-  "first_premolar",
-  "second_premolar",
-  "first_molar",
-  "second_molar",
-  "third_molar",
-];
 
 const MONTH_NAMES_PT_BR = [
   "janeiro",
@@ -45,85 +29,6 @@ export const PREDICTION_STATUS_LABEL: Record<ToothPredictionStatus, string> = {
   upcoming: "Previsto",
 };
 
-interface EruptionRange {
-  dentition: Dentition;
-  start: number;
-  end: number;
-  endDays: number;
-  limit: number | null;
-  limitDays: number;
-}
-
-function rangesFor(
-  arch: Arch,
-  toothType: ToothType,
-  side: Side,
-  gender: ChronologyGender | null,
-): EruptionRange[] {
-  const chronology = getChronology(arch, toothType, side, gender);
-  if (!chronology) {
-    return [];
-  }
-  const ranges: EruptionRange[] = [];
-  if (chronology.deciduous) {
-    ranges.push({
-      dentition: "primary",
-      start: chronology.deciduous.from,
-      end: chronology.deciduous.limit,
-      endDays: chronology.deciduous.limitDays,
-      limit: chronology.deciduous.limit,
-      limitDays: chronology.deciduous.limitDays,
-    });
-  }
-  ranges.push({
-    dentition: "permanent",
-    start: chronology.permanent.from,
-    end: chronology.permanent.to,
-    endDays: 0,
-    limit: chronology.permanent.limit,
-    limitDays: 0,
-  });
-  return ranges;
-}
-
-function isSidePending(
-  events: ToothEvent[],
-  arch: Arch,
-  side: Side,
-  toothType: ToothType,
-  dentition: Dentition,
-): boolean {
-  const quadrant = `${arch}_${side}` as Quadrant;
-  const mine = events.filter(
-    (event) => event.quadrant === quadrant && event.toothType === toothType,
-  );
-  if (dentition === "permanent") {
-    return !mine.some(
-      (event) =>
-        event.eventType === "eruption" && event.dentition === "permanent",
-    );
-  }
-
-  return !mine.some(
-    (event) =>
-      event.eventType === "eruption" || event.eventType === "exfoliation",
-  );
-}
-
-function dateAtAge(birth: Date, months: number, days = 0): Date {
-  const target = new Date(birth.getFullYear(), birth.getMonth() + months, 1);
-  const lastDay = new Date(
-    target.getFullYear(),
-    target.getMonth() + 1,
-    0,
-  ).getDate();
-  return new Date(
-    target.getFullYear(),
-    target.getMonth(),
-    Math.min(birth.getDate(), lastDay) + days,
-  );
-}
-
 function keyToDate(key: string): Date {
   const [year, month, day] = key.split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -133,60 +38,42 @@ export function buildToothPredictions(
   birthDate: string | null,
   events: ToothEvent[],
   gender: ChronologyGender | null = null,
+  referenceDate: Date = new Date(),
 ): ToothPrediction[] {
-  if (!birthDate) {
-    return [];
-  }
-  const birth = parseLocalDate(birthDate);
-  const today = toLocalDateKey(new Date());
-  if (!birth || toLocalDateKey(birth) > today) {
-    return [];
-  }
-
-  const predictions: ToothPrediction[] = [];
-  for (const arch of ARCHES) {
-    for (const toothType of TOOTH_TYPES) {
-      const groups = new Map<string, { range: EruptionRange; sides: Side[] }>();
-      for (const side of SIDES) {
-        for (const range of rangesFor(arch, toothType, side, gender)) {
-          const limit = toLocalDateKey(
-            dateAtAge(birth, range.limit ?? range.end, range.limitDays),
-          );
-          if (
-            today > limit ||
-            !isSidePending(events, arch, side, toothType, range.dentition)
-          ) {
-            continue;
-          }
-          const key = `${range.dentition}:${range.start}:${range.end}:${range.endDays}`;
-          const group = groups.get(key) ?? { range, sides: [] };
-          group.sides.push(side);
-          groups.set(key, group);
-        }
-      }
-
-      for (const { range, sides } of groups.values()) {
-        predictions.push({
-          id: `${arch}:${toothType}:${range.dentition}:${range.start}-${range.end}`,
-          toothType,
-          arch,
-          dentition: range.dentition,
-          title: `${toothTypeLabel(toothType)} ${archLabel(arch)}`,
-          sides,
-          pendingSides: sides.length,
-          status:
-            today >= toLocalDateKey(dateAtAge(birth, range.start))
-              ? "current"
-              : "upcoming",
-          windowStart: toLocalDateKey(dateAtAge(birth, range.start)),
-          windowEnd: toLocalDateKey(dateAtAge(birth, range.end, range.endDays)),
-        });
-      }
+  const groups = new Map<string, ToothPrediction>();
+  const today = toLocalDateKey(referenceDate);
+  for (const milestone of buildToothMilestones({
+    kidId: "",
+    birthDate,
+    events,
+    gender,
+    referenceDate,
+  })) {
+    if (milestone.status !== "current" && milestone.status !== "upcoming")
+      continue;
+    if (milestone.limitDate === null && today > milestone.expectedEnd) continue;
+    const key = `${milestone.arch}:${milestone.toothType}:${milestone.dentition}:${milestone.windowStart}:${milestone.expectedEnd}:${milestone.limitDate}:${milestone.status}`;
+    const group = groups.get(key);
+    if (group) {
+      group.sides.push(milestone.side);
+      group.pendingSides += 1;
+    } else {
+      groups.set(key, {
+        id: key,
+        toothType: milestone.toothType,
+        arch: milestone.arch,
+        dentition: milestone.dentition,
+        title: `${toothTypeLabel(milestone.toothType)} ${archLabel(milestone.arch)}`,
+        sides: [milestone.side],
+        pendingSides: 1,
+        status: milestone.status,
+        windowStart: milestone.windowStart,
+        windowEnd: milestone.expectedEnd,
+      });
     }
   }
-
-  return predictions.sort((a, b) =>
-    a.windowStart < b.windowStart ? -1 : a.windowStart > b.windowStart ? 1 : 0,
+  return [...groups.values()].sort((a, b) =>
+    a.windowStart.localeCompare(b.windowStart),
   );
 }
 
@@ -250,6 +137,7 @@ export function buildPredictionCalendarMarks(
   }
 
   for (const event of events) {
+    if (isToothEventDateUnknown(event)) continue;
     markFor(eventDateKey(event.occurrenceDate)).registered = true;
   }
 
@@ -263,6 +151,7 @@ export function getPredictionFocusKey(
   let latest: string | null = null;
   for (const event of events) {
     if (
+      isToothEventDateUnknown(event) ||
       event.toothType !== prediction.toothType ||
       event.dentition !== prediction.dentition ||
       !prediction.sides.some(

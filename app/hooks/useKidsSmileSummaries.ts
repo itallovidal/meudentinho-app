@@ -1,3 +1,5 @@
+import { toothEventReferenceDate } from "@/lib/toothIdentity";
+import { useCurrentDate } from "@/hooks/useCurrentDate";
 import { useCallback, useContext, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { getAllToothEventsByKid } from "@/api/smile/getToothEvents";
@@ -21,7 +23,7 @@ export interface KidSmileSummary {
 function sortEvents(events: ToothEvent[]): ToothEvent[] {
   return [...events].sort(
     (a, b) =>
-      (b.occurrenceDate ?? "").localeCompare(a.occurrenceDate ?? "") ||
+      toothEventReferenceDate(b).localeCompare(toothEventReferenceDate(a)) ||
       (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
   );
 }
@@ -30,6 +32,7 @@ export function useKidsSmileSummaries(
   kids: KidResponseDTO[],
   authToken: string | null | undefined,
 ) {
+  const referenceDate = useCurrentDate();
   const { userId } = useContext(UserContext)!;
   const accountId = resolveAccountId(userId, authToken);
 
@@ -49,13 +52,18 @@ export function useKidsSmileSummaries(
         const events = sortEvents(queries[index]?.data ?? []);
         return {
           kid,
-          summary: buildSmileSummary(kid.birthDate, events, kid.gender ?? null),
+          summary: buildSmileSummary(
+            kid.birthDate,
+            events,
+            kid.gender ?? null,
+            referenceDate,
+          ),
           recentEvents: events.slice(0, RECENT_EVENTS_PER_KID),
           isPending: queries[index]?.isLoading ?? false,
           isError: queries[index]?.isLoadingError ?? false,
         };
       }),
-    [kids, queries],
+    [kids, queries, referenceDate],
   );
 
   const isLoading = queries.some((query) => query.isLoading);
