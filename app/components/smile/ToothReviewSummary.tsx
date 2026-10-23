@@ -47,12 +47,12 @@ export function ToothReviewSummary({
         {
           key: "snoozed",
           icon: TimerIcon,
-          label: `${reviewCounts.snoozed} ${reviewCounts.snoozed === 1 ? "adiado" : "adiados"}`,
+          label: `${reviewCounts.snoozed} ${reviewCounts.snoozed === 1 ? "registro adiado" : "registros adiados"}`,
         },
         {
           key: "historical",
           icon: ClockCounterClockwiseIcon,
-          label: `${reviewCounts.historical} ${reviewCounts.historical === 1 ? "incompleto" : "incompletos"}`,
+          label: `${reviewCounts.historical} ${reviewCounts.historical === 1 ? "registro incompleto" : "registros incompletos"}`,
         },
       ]
     : null;
