@@ -1,8 +1,10 @@
-import { Fragment } from "react";
+import {
+  ToothReviewSummary,
+  type ReviewCounts,
+} from "@/components/smile/ToothReviewSummary";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Wrapper } from "@/components/wrapper";
 import { THEME } from "@/lib/theme";
 import type { ToothPrediction } from "@/types/teeth";
@@ -13,17 +15,8 @@ import {
 import {
   ArrowRightIcon,
   CalendarBlankIcon,
-  ClockCountdownIcon,
-  ClockCounterClockwiseIcon,
   ClockIcon,
-  TimerIcon,
 } from "phosphor-react-native";
-
-type ReviewCounts = {
-  active: number;
-  snoozed: number;
-  historical: number;
-};
 
 type PredictionsCardProps = {
   items: ToothPrediction[];
@@ -41,25 +34,6 @@ export function PredictionsCard({
   onRetry,
 }: PredictionsCardProps) {
   const colors = THEME.light;
-  const reviews = reviewCounts
-    ? [
-        {
-          key: "active",
-          icon: ClockCountdownIcon,
-          label: `${reviewCounts.active} ${reviewCounts.active === 1 ? "registro para revisar" : "registros para revisar"}`,
-        },
-        {
-          key: "snoozed",
-          icon: TimerIcon,
-          label: `${reviewCounts.snoozed} ${reviewCounts.snoozed === 1 ? "adiado" : "adiados"}`,
-        },
-        {
-          key: "historical",
-          icon: ClockCounterClockwiseIcon,
-          label: `${reviewCounts.historical} ${reviewCounts.historical === 1 ? "incompleto" : "incompletos"}`,
-        },
-      ]
-    : null;
 
   return (
     <Wrapper
@@ -115,74 +89,12 @@ export function PredictionsCard({
 
       <View className="mt-4 w-full gap-3">
         <Separator className="bg-base-100/20" />
-        {reviews ? (
-          <View className="w-full flex-row items-center gap-2">
-            {reviews.map((review, index) => {
-              const Icon = review.icon;
-              return (
-                <Fragment key={review.key}>
-                  {index > 0 && (
-                    <Separator
-                      orientation="vertical"
-                      className="h-auto self-stretch bg-base-100/20"
-                    />
-                  )}
-                  <View
-                    accessible
-                    accessibilityLabel={review.label}
-                    className="min-w-0 flex-1 flex-row items-center gap-1.5"
-                  >
-                    <View
-                      importantForAccessibility="no-hide-descendants"
-                      accessibilityElementsHidden
-                      className="shrink-0 opacity-80"
-                    >
-                      <Icon size={14} color={colors.base100} weight="regular" />
-                    </View>
-                    <Text className="min-w-0 flex-1 text-[11px] leading-4 text-base-100/80">
-                      {review.label}
-                    </Text>
-                  </View>
-                </Fragment>
-              );
-            })}
-          </View>
-        ) : (
-          <View
-            accessibilityLabel="Carregando revisão dos registros"
-            className="w-full flex-row gap-3"
-          >
-            {[0, 1, 2].map((index) => (
-              <Skeleton
-                key={index}
-                className="h-8 flex-1 rounded-md bg-base-100/20"
-              />
-            ))}
-          </View>
-        )}
-        {reviewError && (
-          <View className="gap-2">
-            <Text
-              accessibilityRole="alert"
-              className="text-xs leading-5 text-base-100"
-            >
-              {reviewError}
-            </Text>
-            {onRetry && (
-              <Pressable
-                onPress={onRetry}
-                accessibilityRole="button"
-                accessibilityLabel="Atualizar revisão dos registros"
-                hitSlop={8}
-                className="self-start py-1"
-              >
-                <Text className="text-xs font-semibold text-base-100 underline">
-                  Tentar novamente
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        )}
+        <ToothReviewSummary
+          reviewCounts={reviewCounts}
+          reviewError={reviewError}
+          onRetry={onRetry}
+          tone="inverse"
+        />
       </View>
 
       <View

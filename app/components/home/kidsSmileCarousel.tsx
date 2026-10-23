@@ -1,14 +1,21 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useContext, useState } from "react";
 import {
   FlatList,
-  Image,
   Pressable,
   View,
   useWindowDimensions,
+  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import { PlusIcon } from "phosphor-react-native";
+import { InfoIcon, PlusIcon } from "phosphor-react-native";
+import { NoticeCard } from "@/components/noticeCard";
+import { ToothReviewSummary } from "@/components/smile/ToothReviewSummary";
+import { Separator } from "@/components/ui/separator";
+import { UserContext } from "@/contexts/UserContext";
+import { useToothEvents } from "@/hooks/useToothEvents";
+import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
+import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { SmileSummaryBadge } from "@/components/smile/smileSummaryBadge";
 import { ToothEventCard } from "@/components/smile/ToothEventCard";
 import type { ToothMapStateKey } from "@/components/smile/teeth/toothStyle";
@@ -25,9 +32,10 @@ import {
 
 const PAGE_MARGIN = 24;
 const CARD_GAP = 12;
-const CARD_PEEK = 24;
-export const SMILE_SUMMARY_BLOCK_HEIGHT = 112;
+const CARD_PEEK = 8;
+export const SMILE_SUMMARY_BLOCK_HEIGHT = 64;
 export const EVENTS_BLOCK_HEIGHT = 96;
+export const SMILE_CONTENT_MIN_HEIGHT = 144;
 
 export function kidsSmileCardWidth(
   screenWidth: number,
@@ -65,6 +73,10 @@ type KidAction = (kidId: string) => void;
 type SmileSummaryCardProps = {
   item: KidSmileSummary;
   width: number;
+  summaryHeight: number;
+  badgesHeight: number;
+  onBadgesLayout: (event: LayoutChangeEvent) => void;
+  onSummaryLayout: (event: LayoutChangeEvent) => void;
   onOpenKid: KidAction;
   onOpenHistory: KidAction;
 };
@@ -72,10 +84,34 @@ type SmileSummaryCardProps = {
 const SmileSummaryCard = memo(function SmileSummaryCard({
   item,
   width,
+  summaryHeight,
+  badgesHeight,
+  onBadgesLayout,
+  onSummaryLayout,
   onOpenKid,
   onOpenHistory,
 }: SmileSummaryCardProps) {
   const { kid, summary, recentEvents } = item;
+  const { authToken } = useContext(UserContext)!;
+  const eventsQuery = useToothEvents(kid.id, authToken);
+  const alerts = useToothPredictionAlerts({
+    kid,
+    events: eventsQuery.events,
+    eventsReady: eventsQuery.hasCompleteData,
+    eventsStale: eventsQuery.isRefetchError,
+  });
+  const reviewError = alerts.error ?? eventsQuery.error;
+  const reviewErrorMessage =
+    alerts.evaluationError ??
+    (reviewError
+      ? toothEventErrorMessage(
+          reviewError,
+          "Não foi possível carregar a revisão dos registros.",
+        )
+      : alerts.stale
+        ? "Os dados estão desatualizados. Atualize a revisão dos registros."
+        : null);
+  const colors = THEME.light;
   const initial = (kid.name.trim().charAt(0) || "?").toUpperCase();
   const age = formatAgeFromBirthDate(kid.birthDate);
   const badges = SUMMARY_BADGES.filter((badge) => summary[badge.key] > 0);
@@ -130,48 +166,69 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
         </Pressable>
       </Wrapper>
 
-      <Wrapper
-        direction="row"
-        align="center"
-        justify={badges.length === 0 ? "center" : "start"}
-        gap="gap-2"
-        className="w-full flex-wrap"
-        style={{ minHeight: SMILE_SUMMARY_BLOCK_HEIGHT }}
-      >
-        {badges.length === 0 ? (
-          <View className="w-full flex-row items-center gap-3">
-            <Image
-              source={require("../../../assets/dentalkidmap.png")}
-              resizeMode="contain"
-              accessibilityLabel="Mapa do sorriso sem registros"
-              className="h-24 w-24"
-            />
-            <View className="min-w-0 flex-1 gap-1">
-              <Text
-                className="text-sm font-bold leading-5 text-primary-800"
-                numberOfLines={2}
-              >
-                {EMPTY_MAP_TITLE}
-              </Text>
-              <Text
-                className="text-xs leading-5 text-base-500"
-                numberOfLines={3}
-              >
-                {emptyMapDescription(kid.name, kid.birthDate)}
-              </Text>
-            </View>
+      <View className="w-full" style={{ minHeight: summaryHeight }}>
+        <View className="w-full" onLayout={onSummaryLayout}>
+          <View
+            className="w-full"
+            style={badges.length > 0 ? { minHeight: badgesHeight } : undefined}
+          >
+            <Wrapper
+              direction="row"
+              align="center"
+              justify={badges.length === 0 ? "center" : "start"}
+              gap="gap-2"
+              className="w-full flex-wrap"
+              onLayout={badges.length > 0 ? onBadgesLayout : undefined}
+            >
+              {badges.length === 0 ? (
+                <NoticeCard
+                  title={EMPTY_MAP_TITLE}
+                  description={emptyMapDescription(kid.name, kid.birthDate)}
+                  icon={
+                    <InfoIcon
+                      size={17}
+                      color={colors.secondary800}
+                      weight="bold"
+                    />
+                  }
+                  className="border-secondary-200 bg-secondary-100"
+                />
+              ) : (
+                badges.map((badge) => (
+                  <SmileSummaryBadge
+                    key={badge.state}
+                    state={badge.state}
+                    value={summary[badge.key]}
+                    label={badge.label}
+                  />
+                ))
+              )}
+            </Wrapper>
           </View>
-        ) : (
-          badges.map((badge) => (
-            <SmileSummaryBadge
-              key={badge.state}
-              state={badge.state}
-              value={summary[badge.key]}
-              label={badge.label}
-            />
-          ))
-        )}
-      </Wrapper>
+
+          {badges.length > 0 && (
+            <View className="mt-3 w-full gap-3">
+              <Separator className="bg-base-200" />
+              <ToothReviewSummary
+                reviewCounts={
+                  alerts.ready
+                    ? {
+                        active: alerts.active.length,
+                        snoozed: alerts.snoozed.length,
+                        historical: alerts.historical.length,
+                      }
+                    : null
+                }
+                reviewError={reviewErrorMessage}
+                onRetry={() => {
+                  void eventsQuery.refetch();
+                  void alerts.refetch();
+                }}
+              />
+            </View>
+          )}
+        </View>
+      </View>
 
       <Wrapper
         direction="row"
@@ -196,28 +253,14 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
 
       <View className="w-full" style={{ minHeight: EVENTS_BLOCK_HEIGHT }}>
         {recentEvents.length === 0 ? (
-          <View className="w-full flex-row items-center gap-3">
-            <Image
-              source={require("../../../assets/smilehistory.png")}
-              resizeMode="contain"
-              accessibilityLabel="Histórico sem registros"
-              className="h-32 w-24"
-            />
-            <View className="min-w-0 flex-1 gap-1">
-              <Text
-                className="text-sm font-bold leading-5 text-primary-800"
-                numberOfLines={2}
-              >
-                {EMPTY_EVENTS_TITLE}
-              </Text>
-              <Text
-                className="text-xs leading-5 text-base-500"
-                numberOfLines={5}
-              >
-                {emptyEventsDescription(kid.name)}
-              </Text>
-            </View>
-          </View>
+          <NoticeCard
+            title={EMPTY_EVENTS_TITLE}
+            description={emptyEventsDescription(kid.name)}
+            icon={
+              <InfoIcon size={17} color={colors.secondary800} weight="bold" />
+            }
+            className="border-secondary-200 bg-secondary-100"
+          />
         ) : (
           <View className="w-full gap-2">
             {recentEvents.map((event) => (
@@ -251,6 +294,18 @@ export function KidsSmileCarousel({
   const { width: screenWidth } = useWindowDimensions();
   const colors = THEME.light;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [summaryHeight, setSummaryHeight] = useState(SMILE_CONTENT_MIN_HEIGHT);
+  const [badgesHeight, setBadgesHeight] = useState(SMILE_SUMMARY_BLOCK_HEIGHT);
+
+  const handleBadgesLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = Math.ceil(event.nativeEvent.layout.height);
+    setBadgesHeight((current) => Math.max(current, height));
+  }, []);
+
+  const handleSummaryLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = Math.ceil(event.nativeEvent.layout.height);
+    setSummaryHeight((current) => Math.max(current, height));
+  }, []);
 
   const hasPagination = items.length > 1;
   const cardWidth = kidsSmileCardWidth(screenWidth, items.length);
@@ -272,11 +327,23 @@ export function KidsSmileCarousel({
       <SmileSummaryCard
         item={item}
         width={cardWidth}
+        summaryHeight={summaryHeight}
+        badgesHeight={badgesHeight}
+        onBadgesLayout={handleBadgesLayout}
+        onSummaryLayout={handleSummaryLayout}
         onOpenKid={onOpenKid}
         onOpenHistory={onOpenHistory}
       />
     ),
-    [cardWidth, onOpenKid, onOpenHistory],
+    [
+      cardWidth,
+      summaryHeight,
+      badgesHeight,
+      handleBadgesLayout,
+      handleSummaryLayout,
+      onOpenKid,
+      onOpenHistory,
+    ],
   );
 
   return (

@@ -4,6 +4,7 @@ import { Wrapper } from "@/components/wrapper";
 import {
   EVENTS_BLOCK_HEIGHT,
   SMILE_SUMMARY_BLOCK_HEIGHT,
+  SMILE_CONTENT_MIN_HEIGHT,
   kidsSmileCardWidth,
 } from "@/components/home/kidsSmileCarousel";
 
@@ -42,18 +43,29 @@ export function SkeletonKidsSmileCarousel({
           <Skeleton className="h-3 w-20 rounded-md" />
         </Wrapper>
 
-        <Wrapper
-          direction="row"
-          align="center"
-          justify="start"
-          gap="gap-2"
-          className="w-full flex-wrap"
-          style={{ minHeight: SMILE_SUMMARY_BLOCK_HEIGHT }}
+        <View
+          className="w-full"
+          style={{ minHeight: SMILE_CONTENT_MIN_HEIGHT }}
         >
-          {Array.from({ length: BADGE_PLACEHOLDERS }).map((_, index) => (
-            <Skeleton key={index} className="h-7 w-28 rounded-full" />
-          ))}
-        </Wrapper>
+          <Wrapper
+            direction="row"
+            align="center"
+            justify="start"
+            gap="gap-2"
+            className="w-full flex-wrap"
+            style={{ minHeight: SMILE_SUMMARY_BLOCK_HEIGHT }}
+          >
+            {Array.from({ length: BADGE_PLACEHOLDERS }).map((_, index) => (
+              <Skeleton key={index} className="h-7 w-28 rounded-full" />
+            ))}
+          </Wrapper>
+
+          <View className="mt-3 w-full flex-row gap-3 border-t border-base-200 pt-3">
+            {[0, 1, 2].map((index) => (
+              <Skeleton key={index} className="h-8 flex-1 rounded-md" />
+            ))}
+          </View>
+        </View>
 
         <Wrapper
           direction="row"
