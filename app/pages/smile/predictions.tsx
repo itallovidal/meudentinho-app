@@ -1,3 +1,4 @@
+import { ToothTypeSVG } from "@/components/smile/teeth/ToothTypeSVG";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { ToothAlertsPanel } from "@/components/smile/ToothAlertsPanel";
 import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
@@ -6,7 +7,7 @@ import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { useContext, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { CaretDownIcon, ToothIcon } from "phosphor-react-native";
+import { CaretDownIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
@@ -359,11 +360,7 @@ export function SmilePredictions() {
                             className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
                           >
                             <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
-                              <ToothIcon
-                                size={16}
-                                color={colors.primary500}
-                                weight="bold"
-                              />
+                              <ToothTypeSVG toothType={prediction.toothType} />
                             </View>
                             <View className="flex-1 gap-1">
                               <View className="flex-row items-start justify-between gap-2">
