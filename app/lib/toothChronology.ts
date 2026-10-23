@@ -1,3 +1,4 @@
+import { normalizePrimaryToothType } from "@/lib/toothIdentity";
 import type {
   Arch,
   Dentition,
@@ -276,7 +277,7 @@ export function toothState(
 ): MapToothState {
   const key = `${position.arch}_${position.side}:${position.toothType}`;
   const mine = events.filter(
-    (event) => `${event.quadrant}:${event.toothType}` === key,
+    (event) => `${event.quadrant}:${normalizePrimaryToothType(event)}` === key,
   );
   if (mine.length === 0) {
     return "unregistered";
