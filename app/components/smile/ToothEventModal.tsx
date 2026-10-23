@@ -1,11 +1,20 @@
-import { useId, useRef, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  toothEventFormSchema,
+  type ToothEventFormValues,
+} from "@/lib/schemas/toothEventForm";
+import { useEffect, useId, useRef, useState } from "react";
 import { InfoPopover } from "@/components/infoPopover";
+import { AnimatedCheckbox } from "@/components/forms/animatedCheckbox";
+import { isToothEventDateUnknown } from "@/lib/toothIdentity";
 import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarBlankIcon, CheckIcon } from "phosphor-react-native";
 import { DatePickerSheet } from "@/components/smile/datePickerSheet";
+import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { THEME } from "@/lib/theme";
 import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
@@ -36,6 +45,7 @@ import {
   parseToothId,
   toothEventVerb,
   toothIdLabel,
+  toothDentitionLabel,
 } from "@/lib/teethLabels";
 import type {
   Dentition,
@@ -57,6 +67,9 @@ export function ToothEventModal({
   onClose,
   onSubmit,
   onDelete,
+  initialDentition,
+  initialDateUnknown = false,
+  initialHistoryIncomplete = false,
 }: {
   visible: boolean;
   toothId: string | null;
@@ -66,21 +79,65 @@ export function ToothEventModal({
   toothEvents: ToothEvent[];
   events: ToothEvent[];
   editingEvent?: ToothEvent | null;
+  initialDentition?: Dentition;
+  initialDateUnknown?: boolean;
+  initialHistoryIncomplete?: boolean;
   onClose: () => void;
   onSubmit: (payload: ToothEventRequestDTO) => Promise<void>;
   onDelete?: () => void;
 }) {
-  const [eventType, setEventType] = useState<"eruption" | "exfoliation">(
-    "eruption",
-  );
-  const [dentition, setDentition] = useState<Dentition>("primary");
-  const [note, setNote] = useState("");
-  const [date, setDate] = useState(() => toLocalDateKey(new Date()));
+  const form = useForm<ToothEventFormValues>({
+    resolver: zodResolver(toothEventFormSchema),
+    defaultValues: {
+      eventType: "eruption",
+      dentition: "primary",
+      note: "",
+      date: toLocalDateKey(new Date()),
+      dateUnknown: false,
+      historyIncomplete: false,
+    },
+  });
+  const eventType = useWatch({ control: form.control, name: "eventType" });
+  const dentition = useWatch({ control: form.control, name: "dentition" });
+  const note = useWatch({ control: form.control, name: "note" });
+  const date = useWatch({ control: form.control, name: "date" });
+  const dateUnknown = useWatch({ control: form.control, name: "dateUnknown" });
+  const historyIncomplete = useWatch({
+    control: form.control,
+    name: "historyIncomplete",
+  });
+  function setEventType(value: "eruption" | "exfoliation") {
+    form.setValue("eventType", value);
+  }
+  function setDentition(value: Dentition) {
+    form.setValue("dentition", value);
+  }
+  function setNote(value: string) {
+    form.setValue("note", value);
+  }
+  function setDate(value: string) {
+    form.setValue("date", value);
+  }
+  function setDateUnknown(value: boolean) {
+    form.setValue("dateUnknown", value, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    if (value) setPickerOpen(false);
+  }
+  function setHistoryIncomplete(value: boolean) {
+    form.setValue("historyIncomplete", value);
+  }
+  const submitError = form.formState.errors.root?.message;
+  function setSubmitError(message: string | null) {
+    if (message) form.setError("root", { message });
+    else form.clearErrors("root");
+  }
   const [pickerOpen, setPickerOpen] = useState(false);
   const deleteRequestedRef = useRef(false);
   const popoverHost = useId();
-  const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}`;
-  const [prevModalKey, setPrevModalKey] = useState<string | null>(null);
+  const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}|${initialDentition ?? ""}|${initialDateUnknown}|${initialHistoryIncomplete}`;
+  const prevModalKey = useRef<string | null>(null);
 
   const parsed = parseToothId(toothId);
   const milkAllowed =
@@ -146,26 +203,46 @@ export function ToothEventModal({
     setDate(toLocalDateKey(new Date()));
   }
 
-  if (modalKey !== prevModalKey) {
-    setPrevModalKey(modalKey);
-    if (visible) {
-      setEventType(initialEventType);
-      resetForm(
-        initialEventType === "exfoliation"
+  useEffect(() => {
+    if (modalKey === prevModalKey.current) return;
+    prevModalKey.current = modalKey;
+    if (!visible) return;
+    const fallbackEventType = initialDentition ? "eruption" : initialEventType;
+    form.reset({
+      eventType: editingEvent?.eventType ?? fallbackEventType,
+      dentition:
+        editingEvent?.dentition ??
+        initialDentition ??
+        (fallbackEventType === "exfoliation"
           ? exfoliationDentition
-          : defaultDentition,
-      );
-      if (editingEvent) {
-        setEventType(editingEvent.eventType);
-        setDentition(editingEvent.dentition);
-        setNote(editingEvent.note ?? "");
-        setDate(eventDateKey(editingEvent.occurrenceDate));
-      }
-    }
-  }
+          : defaultDentition),
+      note: editingEvent?.note ?? "",
+      date:
+        editingEvent && !isToothEventDateUnknown(editingEvent)
+          ? eventDateKey(editingEvent.occurrenceDate)
+          : toLocalDateKey(new Date()),
+      dateUnknown:
+        (!!editingEvent && isToothEventDateUnknown(editingEvent)) ||
+        (!editingEvent && initialDateUnknown),
+      historyIncomplete:
+        editingEvent?.historyIncomplete ?? initialHistoryIncomplete,
+    });
+  }, [
+    modalKey,
+    visible,
+    form,
+    initialDentition,
+    initialEventType,
+    editingEvent,
+    initialDateUnknown,
+    initialHistoryIncomplete,
+    exfoliationDentition,
+    defaultDentition,
+  ]);
 
   function changeEventType(next: "eruption" | "exfoliation") {
     setEventType(next);
+    setHistoryIncomplete(false);
     const nextDentition =
       next === "exfoliation" ? exfoliationDentition : defaultDentition;
     if (editingEvent) {
@@ -175,25 +252,33 @@ export function ToothEventModal({
     resetForm(nextDentition);
   }
 
-  const dateError = validateEventDateKey(date, kidBirthDate);
+  const dateError = dateUnknown
+    ? null
+    : validateEventDateKey(date, kidBirthDate);
   const [isSaving, setIsSaving] = useState(false);
 
   async function performSave() {
     if (!parsed || !kidId || isSaving) {
       return;
     }
-    if (dateError) {
+    if (dateError || !(await form.trigger())) {
       return;
     }
-    const occurrenceDate = localDateKeyToISO(date);
-    if (!occurrenceDate) {
+    const occurrenceDate = dateUnknown ? "" : localDateKeyToISO(date);
+    if (occurrenceDate === null) {
       return;
     }
     setIsSaving(true);
+    setSubmitError(null);
     try {
       await onSubmit({
         kidId,
         occurrenceDate,
+        recordKind: dateUnknown ? "undated" : "dated",
+        historyIncomplete:
+          eventType === "eruption" &&
+          dentition === "permanent" &&
+          historyIncomplete,
         dentition:
           editingEvent?.dentition ?? (milkAllowed ? dentition : "permanent"),
         arch: parsed.arch,
@@ -203,6 +288,13 @@ export function ToothEventModal({
         quadrant: parsed.quadrant,
         note: note.trim() ? note.trim() : undefined,
       });
+    } catch (error) {
+      setSubmitError(
+        toothEventErrorMessage(
+          error,
+          "Não foi possível salvar o registro. Tente novamente.",
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -217,9 +309,11 @@ export function ToothEventModal({
   );
 
   const editChanged = editingEvent
-    ? eventType !== editingEvent.eventType ||
+    ? dateUnknown !== isToothEventDateUnknown(editingEvent) ||
+      historyIncomplete !== !!editingEvent.historyIncomplete ||
+      eventType !== editingEvent.eventType ||
       dentition !== editingEvent.dentition ||
-      date !== eventDateKey(editingEvent.occurrenceDate) ||
+      (!dateUnknown && date !== eventDateKey(editingEvent.occurrenceDate)) ||
       note.trim() !== (editingEvent.note ?? "").trim()
     : true;
 
@@ -230,6 +324,8 @@ export function ToothEventModal({
     (!editingEvent &&
       eventType === "eruption" &&
       milkStepPending !== null &&
+      !dateUnknown &&
+      !historyIncomplete &&
       dentition === "permanent") ||
     (editingEvent !== null && !editChanged);
 
@@ -242,6 +338,8 @@ export function ToothEventModal({
         : !editingEvent &&
             eventType === "eruption" &&
             milkStepPending !== null &&
+            !dateUnknown &&
+            !historyIncomplete &&
             dentition === "permanent"
           ? "Registre primeiro o dente de leite deste local."
           : editingEvent !== null && !editChanged
@@ -264,7 +362,9 @@ export function ToothEventModal({
       header={
         <View className="flex-1">
           <Text className="text-xl font-bold text-base-900">
-            {toothIdLabel(toothId)}
+            {parsed
+              ? `${toothDentitionLabel(parsed.toothType, dentition)} · ${parsed.arch === "upper" ? "Superior" : "Inferior"} ${parsed.side === "right" ? "Direito" : "Esquerdo"}`
+              : toothIdLabel(toothId)}
           </Text>
           {editingEvent && editingState && (
             <View className="mt-1 flex-row items-center gap-2">
@@ -290,7 +390,7 @@ export function ToothEventModal({
     >
       {(dismiss) => (
         <>
-          {!editingEvent && (
+          {!editingEvent && !initialDentition && (
             <>
               <View className="gap-3">
                 <Text className="text-base text-base-500">
@@ -351,7 +451,9 @@ export function ToothEventModal({
                     disabled={
                       eventType === "exfoliation"
                         ? !permanentErupted
-                        : !editingEvent && milkStepPending !== null
+                        : milkStepPending !== null &&
+                          !dateUnknown &&
+                          !historyIncomplete
                     }
                     disabledReason={
                       eventType === "exfoliation" && !permanentErupted
@@ -367,6 +469,34 @@ export function ToothEventModal({
             </>
           )}
 
+          {initialDentition && (
+            <Text className="text-base font-bold text-primary-800">
+              {dentitionLabel(initialDentition)} · Nascimento
+            </Text>
+          )}
+          {!editingEvent &&
+            dentition === "permanent" &&
+            eventType === "eruption" &&
+            milkStepPending !== null && (
+              <View className="flex-row items-start gap-3 rounded-xl bg-base-200 p-4">
+                <AnimatedCheckbox
+                  checked={historyIncomplete}
+                  onChange={setHistoryIncomplete}
+                  accessibilityLabel="Não tenho o histórico anterior de leite"
+                />
+                <Pressable
+                  onPress={() => setHistoryIncomplete(!historyIncomplete)}
+                  className="flex-1 gap-1"
+                >
+                  <Text className="text-base-900">
+                    Não tenho o histórico anterior de leite
+                  </Text>
+                  <Text className="text-sm text-base-500">
+                    Registrar este nascimento sem inventar as datas anteriores.
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           <View className="gap-3">
             <Text className="text-base text-base-500">
               Data do acontecimento
@@ -374,20 +504,42 @@ export function ToothEventModal({
             <View className="flex-row items-center gap-2">
               <Input
                 editable={false}
-                value={formatDatePtBR(date) ?? date}
-                className="flex-1"
+                value={dateUnknown ? "" : (formatDatePtBR(date) ?? date)}
+                placeholder={dateUnknown ? "Data não informada" : undefined}
+                accessibilityLabel="Data do acontecimento"
+                accessibilityState={{ disabled: dateUnknown }}
+                className={cn("flex-1", dateUnknown && "opacity-50")}
               />
               <Pressable
                 onPress={() => setPickerOpen(true)}
+                disabled={dateUnknown}
                 accessibilityRole="button"
                 accessibilityLabel="Abrir calendário"
-                className="h-14 w-14 items-center justify-center rounded-md bg-base-200"
+                accessibilityState={{ disabled: dateUnknown }}
+                className={cn(
+                  "h-14 w-14 items-center justify-center rounded-md bg-primary-500",
+                  dateUnknown && "opacity-50",
+                )}
               >
                 <CalendarBlankIcon
                   size={22}
-                  color={colors.base600}
+                  color={colors.base200}
                   weight="regular"
                 />
+              </Pressable>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <AnimatedCheckbox
+                checked={dateUnknown}
+                onChange={setDateUnknown}
+                accessibilityLabel="Não sei informar"
+              />
+              <Pressable
+                onPress={() => setDateUnknown(!dateUnknown)}
+                hitSlop={4}
+                className="flex-1"
+              >
+                <Text className="text-sm text-base-500">Não sei informar</Text>
               </Pressable>
             </View>
             {dateError ? (
@@ -396,7 +548,6 @@ export function ToothEventModal({
               </Text>
             ) : null}
           </View>
-
           <View className="gap-3">
             <Text className="text-base text-base-500">Observação</Text>
             <Textarea
@@ -409,6 +560,11 @@ export function ToothEventModal({
             />
           </View>
 
+          {submitError && (
+            <Text accessibilityRole="alert" className="text-destructive">
+              {submitError}
+            </Text>
+          )}
           <View className="relative">
             <Pressable
               onPress={handleConfirmPress}
