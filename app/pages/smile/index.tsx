@@ -35,7 +35,7 @@ import { isApiError } from "@/types/predicates";
 import type { SmileStackParamList } from "@/navigation/SmileStack";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
-import PredictionsCard from "@/components/smile/PredictionsCard";
+import { PredictionsCard } from "@/components/smile/PredictionsCard";
 import { ApiError } from "@/types/domain";
 import { KidFormValues } from "@/lib/schemas/kid";
 import { buildKidRequest } from "@/lib/privacyPolicy";
@@ -514,10 +514,31 @@ export function Smile() {
                   description={dentalTip.description}
                 />
               )}
-              <PredictionsCard
-                items={predictions.slice(0, 3)}
-                onPress={openPredictions}
-              />
+              {selectedKidRecord && (
+                <PredictionsCard
+                  items={predictions.slice(0, 3)}
+                  reviewCounts={
+                    alerts.ready
+                      ? {
+                          active: alerts.active.length,
+                          snoozed: alerts.snoozed.length,
+                          historical: alerts.historical.length,
+                        }
+                      : null
+                  }
+                  reviewError={
+                    alerts.evaluationError ??
+                    (alerts.error
+                      ? toothEventErrorMessage(
+                          alerts.error,
+                          "Não foi possível carregar a revisão dos registros.",
+                        )
+                      : null)
+                  }
+                  onPress={openPredictions}
+                  onRetry={() => void handleRefreshKids()}
+                />
+              )}
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}
