@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { CaretRightIcon, ClockIcon } from "phosphor-react-native";
+import {
+  CaretRightIcon,
+  ClockCountdownIcon,
+  ClockCounterClockwiseIcon,
+  InfoIcon,
+  TimerIcon,
+} from "phosphor-react-native";
 import { ToothAlertsSheet } from "@/components/smile/ToothAlertsSheet";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/card";
+import { NoticeCard } from "@/components/noticeCard";
 import { Text } from "@/components/ui/text";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
@@ -20,12 +26,12 @@ type ToothAlertsPanelProps = {
   stale: boolean;
   loading: boolean;
   errorMessage?: string | null;
-  actionError?: string | null;
   busy: boolean;
   onRetry: () => void;
-  onRegister: (milestone: ToothMilestone, unknown: boolean) => void;
-  onSnooze: (id: string) => void;
+  onRegister: (milestone: ToothMilestone) => void;
 };
+
+type AlertCategory = "active" | "snoozed" | "historical";
 
 export function ToothAlertsPanel({
   active,
@@ -36,14 +42,48 @@ export function ToothAlertsPanel({
   stale,
   loading,
   errorMessage,
-  actionError,
   busy,
   onRetry,
   onRegister,
-  onSnooze,
 }: ToothAlertsPanelProps) {
-  const [open, setOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<AlertCategory | null>(null);
   const colors = THEME.light;
+  const categories = [
+    {
+      key: "active" as const,
+      title: "Registros para revisar",
+      icon: <ClockCountdownIcon size={18} color={colors.primary400} weight="regular" />,
+      description: "Registros pendentes após o limite estimado pelo app.",
+      items: active,
+      emptyTitle: "Tudo em dia por aqui!",
+      emptyDescription: "Nenhum registro pendente para conferência nesta fase.",
+    },
+    {
+      key: "snoozed" as const,
+      title: "Avisos adiados",
+      icon: <TimerIcon size={18} color={colors.primary400} weight="regular" />,
+      description: "Lembretes que você adiou para revisar depois.",
+      items: snoozed,
+      emptyTitle: "Nenhum aviso adiado",
+      emptyDescription: "Nenhum aviso postergado no momento.",
+    },
+    {
+      key: "historical" as const,
+      title: "Histórico incompleto",
+      icon: <ClockCounterClockwiseIcon size={18} color={colors.primary400} weight="regular" />,
+      description:
+        "Marcos anteriores ao acompanhamento ou à fase atual da dentição. Não indicam ausência de dentes.",
+      items: historical,
+      emptyTitle: "Histórico em dia",
+      emptyDescription:
+        "Nenhum marco anterior sem registro nas referências avaliadas.",
+    },
+  ];
+  const selected = categories.find(
+    (category) => category.key === selectedCategory,
+  );
+
   if (!ready) {
     return (
       <View className="w-full gap-3 rounded-2xl bg-base-100 p-5">
@@ -59,68 +99,73 @@ export function ToothAlertsPanel({
       </View>
     );
   }
+
   return (
     <>
       <View className="w-full gap-4 rounded-3xl border border-primary-100 bg-base-100 p-6">
         <Text variant="h4" className="text-xl font-bold text-primary-800">
-          {active.length
-            ? "Vamos revisar os dentinhos?"
-            : "Revisão dos registros"}
+          Revisar registros
         </Text>
-        <Text className="text-base-600">
-          {active.length
-            ? `${active.length} ${active.length === 1 ? "registro pendente" : "registros pendentes"} após o limite estimado pelo app.`
-            : "Nenhuma pendência atual após os limites estimados avaliados."}
-        </Text>
-        <View className="h-px w-full bg-base-200" />
-        <View className="flex-row flex-wrap items-center gap-2">
-          <View className="flex-row items-center gap-1.5">
-            <ClockIcon size={15} color={colors.primary400} />
-            <Text className="text-sm text-primary-400">
-              {snoozed.length} adiados
-            </Text>
-          </View>
-          <View className="h-1 w-1 rounded-full bg-primary-200" />
-          <Badge
-            variant="outline"
-            className="rounded-lg border-warning-200 bg-warning-100 px-2.5 py-1"
-          >
-            <Text className="text-xs font-semibold text-warning-600">
-              {historical.length} no histórico incompleto
-            </Text>
-          </Badge>
-        </View>
+        <NoticeCard
+          title="Orientações de rotina"
+          description="Se o dente já nasceu, confirme o registro. Caso o dente ainda não tenha apontado após o limite estimado, converse com o seu odontopediatra com calma."
+          icon={
+            <InfoIcon size={17} color={colors.secondary800} weight="bold" />
+          }
+          className="rounded-2xl border-secondary-200 bg-secondary-100"
+        />
         {stale && (
           <QueryWarningBanner
             message="Os dados estão desatualizados. Atualize antes de revisar os avisos."
             onRetry={onRetry}
           />
         )}
-        <Button
-          variant="outline"
-          onPress={() => setOpen(true)}
-          className="h-14 w-full justify-between rounded-2xl border-primary-100 bg-base-100 px-5"
-        >
-          <Text className="font-semibold text-primary-800">
-            Ver registros para revisar
-          </Text>
-          <CaretRightIcon size={18} color={colors.secondary800} weight="bold" />
-        </Button>
+        <View className="gap-3">
+          {categories.map((category) => (
+            <Card
+              key={category.key}
+              title={category.title}
+              titleIcon={category.icon}
+              titleClassName="text-sm font-semibold leading-5 text-primary-800"
+              className="gap-3 rounded-2xl border-base-200 shadow-none"
+              handlePress={() => setSelectedCategory(category.key)}
+              accessibilityLabel={`${category.title}: ${category.items.length}`}
+              trailing={
+                <View className="shrink-0 flex-row items-center gap-1">
+                  <Text className="text-sm font-semibold text-primary-400">
+                    {category.items.length}
+                  </Text>
+                  <CaretRightIcon
+                    size={16}
+                    color={colors.primary400}
+                    weight="bold"
+                  />
+                </View>
+              }
+            >
+              <Text className="text-xs leading-5 text-primary-400">
+                {category.description}
+              </Text>
+            </Card>
+          ))}
+        </View>
       </View>
-      <ToothAlertsSheet
-        visible={open}
-        active={active}
-        historical={historical}
-        snoozed={snoozed}
-        snoozes={snoozes}
-        stale={stale}
-        actionError={actionError}
-        busy={busy}
-        onClose={() => setOpen(false)}
-        onRetry={onRetry}
-        onRegister={onRegister}
-        onSnooze={onSnooze}
-      />
+      {selected && (
+        <ToothAlertsSheet
+          visible
+          title={selected.title}
+          description={selected.description}
+          items={selected.items}
+          emptyTitle={selected.emptyTitle}
+          emptyDescription={selected.emptyDescription}
+          snoozes={snoozes}
+          stale={stale}
+          busy={busy}
+          onClose={() => setSelectedCategory(null)}
+          onRetry={onRetry}
+          onRegister={onRegister}
+        />
+      )}
     </>
   );
 }

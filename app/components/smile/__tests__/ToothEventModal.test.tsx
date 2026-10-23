@@ -28,9 +28,14 @@ jest.mock("react-native-web/dist/exports/View", () => "View", {
 jest.mock("@/components/ui/input", () => ({ Input: "Input" }));
 jest.mock("@/components/ui/text", () => ({ Text: "Text" }));
 jest.mock("@/components/ui/textarea", () => ({ Textarea: "Textarea" }));
+jest.mock("@/components/ui/button", () => ({ Button: "Button" }));
+jest.mock("@/components/queryWarningBanner", () => ({
+  QueryWarningBanner: "QueryWarningBanner",
+}));
 jest.mock("phosphor-react-native", () => ({
   CalendarBlankIcon: "CalendarBlankIcon",
   CheckIcon: "CheckIcon",
+  ClockIcon: "ClockIcon",
 }));
 jest.mock("@/components/smile/datePickerSheet", () => ({
   DatePickerSheet: "DatePickerSheet",
@@ -43,7 +48,7 @@ jest.mock("@/components/smile/ToothEventCard", () => ({
 }));
 jest.mock("@/components/ui/bottomSheet", () => ({
   BottomSheet: ({ children }: { children: (dismiss: () => void) => unknown }) =>
-    children(() => {}),
+    children(mockDismiss),
 }));
 jest.mock("@/lib/theme", () => jest.requireActual("@/lib/themeColors"));
 
@@ -51,6 +56,7 @@ const { act, create } = jest.requireActual<{
   act: typeof import("react").act;
   create: any;
 }>("react-test-renderer");
+const mockDismiss = jest.fn();
 
 describe("ToothEventModal independent permanent teeth", () => {
   beforeEach(() => {
@@ -687,5 +693,167 @@ describe("unknown event dates", () => {
     await act(async () => {
       renderer.unmount();
     });
+  });
+});
+
+describe("snoozing from the registration sheet", () => {
+  let renderer: ReturnType<typeof create>;
+  let props: import("react").ComponentProps<typeof ToothEventModal>;
+
+  function confirmButton() {
+    return renderer.root
+      .findAllByType("Pressable")
+      .find((node: any) =>
+        node
+          .findAllByType("Text")
+          .some((text: any) => text.props.children === "Confirmar"),
+      );
+  }
+
+  beforeEach(async () => {
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    mockDismiss.mockClear();
+    props = {
+      visible: true,
+      toothId: "upper_right_central_incisor",
+      kidId: "kid",
+      kidBirthDate: "2015-01-01",
+      kidGender: null,
+      events: [],
+      toothEvents: [],
+      initialDentition: "permanent",
+      onClose: jest.fn(),
+      onSubmit: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+      onSnooze: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    await act(async () => {
+      renderer = create(<ToothEventModal {...props} />);
+    });
+  });
+
+  afterEach(async () => {
+    await act(async () => renderer.unmount());
+  });
+
+  it("lets the user choose whether the date and earlier milk history are known", async () => {
+    const history = renderer.root
+      .findAllByType("AnimatedCheckbox")
+      .find(
+        (node: any) =>
+          node.props.accessibilityLabel ===
+          "Não tenho o histórico anterior de leite",
+      );
+    const date = renderer.root
+      .findAllByType("AnimatedCheckbox")
+      .find(
+        (node: any) => node.props.accessibilityLabel === "Não sei informar",
+      );
+    expect(history.props.checked).toBe(false);
+    expect(date.props.checked).toBe(false);
+    expect(confirmButton().props.disabled).toBe(true);
+    await act(async () => history.props.onChange(true));
+    expect(confirmButton().props.disabled).toBe(false);
+    await act(async () => date.props.onChange(true));
+    await act(async () => confirmButton().props.onPress());
+    expect(props.onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        occurrenceDate: "",
+        recordKind: "undated",
+        historyIncomplete: true,
+        dentition: "permanent",
+      }),
+    );
+  });
+
+  it("snoozes without requiring a valid date or earlier milk records", async () => {
+    await act(async () =>
+      renderer.root.findByType("DatePickerSheet").props.onConfirm("invalid"),
+    );
+    expect(confirmButton().props.disabled).toBe(true);
+    const snooze = renderer.root.findByType("Button");
+    expect(snooze.props.disabled).toBe(false);
+    await act(async () => snooze.props.onPress());
+    expect(props.onSnooze).toHaveBeenCalledTimes(1);
+    expect(props.onSubmit).not.toHaveBeenCalled();
+    expect(mockDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a snooze failure in the form and allows retrying", async () => {
+    props = {
+      ...props,
+      onSnooze: jest
+        .fn<() => Promise<void>>()
+        .mockRejectedValueOnce(
+          new ApiError("Falha ao adiar o aviso.", "INTERNAL_SERVER_ERROR", 500),
+        )
+        .mockResolvedValue(undefined),
+    };
+    await act(async () => renderer.update(<ToothEventModal {...props} />));
+    await act(async () => renderer.root.findByType("Button").props.onPress());
+    expect(mockDismiss).not.toHaveBeenCalled();
+    expect(
+      renderer.root
+        .findAllByType("Text")
+        .some((node: any) => node.props.children === "Falha ao adiar o aviso."),
+    ).toBe(true);
+    expect(renderer.root.findByType("Button").props.disabled).toBe(false);
+    await act(async () => renderer.root.findByType("Button").props.onPress());
+    expect(props.onSnooze).toHaveBeenCalledTimes(2);
+    expect(mockDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks duplicate snoozes and registration while snoozing", async () => {
+    let finish!: () => void;
+    props = {
+      ...props,
+      initialHistoryIncomplete: true,
+      onSnooze: jest.fn<() => Promise<void>>().mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve;
+          }),
+      ),
+    };
+    await act(async () => renderer.update(<ToothEventModal {...props} />));
+    const snooze = renderer.root.findByType("Button");
+    await act(async () => {
+      snooze.props.onPress();
+      snooze.props.onPress();
+      confirmButton().props.onPress();
+    });
+    expect(props.onSnooze).toHaveBeenCalledTimes(1);
+    expect(props.onSubmit).not.toHaveBeenCalled();
+    expect(renderer.root.findByType("Button").props.disabled).toBe(true);
+    expect(confirmButton().props.disabled).toBe(true);
+    await act(async () => finish());
+    expect(mockDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("prevents snoozing and saving with outdated data and offers refresh", async () => {
+    const onRetry = jest.fn();
+    props = {
+      ...props,
+      initialHistoryIncomplete: true,
+      actionsDisabledReason: "Atualize os dados antes de registrar ou adiar.",
+      onRetry,
+    };
+    await act(async () => renderer.update(<ToothEventModal {...props} />));
+    expect(renderer.root.findByType("Button").props.disabled).toBe(true);
+    expect(confirmButton().props.disabled).toBe(true);
+    await act(async () => {
+      renderer.root.findByType("Button").props.onPress();
+      confirmButton().props.onPress();
+    });
+    expect(props.onSnooze).not.toHaveBeenCalled();
+    expect(props.onSubmit).not.toHaveBeenCalled();
+    renderer.root.findByType("QueryWarningBanner").props.onRetry();
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show snooze when it is not available for the selected record", async () => {
+    await act(async () =>
+      renderer.update(<ToothEventModal {...props} onSnooze={undefined} />),
+    );
+    expect(renderer.root.findAllByType("Button")).toHaveLength(0);
   });
 });

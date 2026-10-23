@@ -5,16 +5,18 @@ import { createToothEvent } from "@/api/smile/createToothEvent";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import type { ToothMilestone } from "@/lib/toothMilestones";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
-import {
-  pendingMilkStep,
-  type ChronologyGender,
-} from "@/lib/toothChronology";
+import type { ChronologyGender } from "@/lib/toothChronology";
 
 export function useToothAlertActions(
   kid:
     | { id: string; birthDate: string; gender?: ChronologyGender | null }
     | undefined,
   events: ToothEvent[],
+  options: {
+    active: ToothMilestone[];
+    onSnooze: (id: string) => Promise<unknown>;
+    disabledReason?: string | null;
+  },
 ) {
   const { userId, authToken } = useContext(UserContext)!;
   const accountId = resolveAccountId(userId, authToken);
@@ -22,7 +24,7 @@ export function useToothAlertActions(
   const scope = `${authToken ? (accountId ?? "") : "anon"}:${kid?.id ?? ""}`;
   type Selection = {
     scope: string;
-    target: { milestone: ToothMilestone; unknown: boolean } | null;
+    target: ToothMilestone | null;
   };
   const [selection, setSelection] = useState<Selection>({
     scope,
@@ -41,14 +43,13 @@ export function useToothAlertActions(
         queryKey: toothEventsQueryKey(accountId, payload.kidId),
       }),
   });
-  const selected = target?.milestone;
+  const selected = target;
   async function handleSubmit(payload: ToothEventRequestDTO) {
     await mutation.mutateAsync(payload);
     setTarget(null);
   }
   return {
-    openRegistration: (milestone: ToothMilestone, unknown: boolean) =>
-      setTarget({ milestone, unknown }),
+    openRegistration: (milestone: ToothMilestone) => setTarget(milestone),
     modalProps: {
       visible:
         !!authToken && !!accountId && !!selected && kid?.id === selected.kidId,
@@ -67,17 +68,13 @@ export function useToothAlertActions(
           )
         : [],
       initialDentition: selected?.dentition,
-      initialDateUnknown: target?.unknown ?? false,
-      initialHistoryIncomplete:
-        !!selected &&
-        !target?.unknown &&
-        selected.dentition === "permanent" &&
-        pendingMilkStep(
-          selected.arch,
-          selected.quadrant,
-          selected.toothType,
-          events,
-        ) !== null,
+      actionsDisabledReason: options.disabledReason,
+      onSnooze:
+        selected && options.active.some((item) => item.id === selected.id)
+          ? async () => {
+              await options.onSnooze(selected.id);
+            }
+          : undefined,
       onClose: () => setTarget(null),
       onSubmit: handleSubmit,
     },

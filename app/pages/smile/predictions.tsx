@@ -101,7 +101,14 @@ export function SmilePredictions() {
     eventsReady,
     eventsStale: eventsRefetchError || !!kidsRefetchError,
   });
-  const alertActions = useToothAlertActions(kid, events);
+  const alertActions = useToothAlertActions(kid, events, {
+    active: alerts.active,
+    onSnooze: alerts.snooze.mutateAsync,
+    disabledReason:
+      !alerts.ready || alerts.stale
+        ? "Atualize os dados antes de registrar ou adiar."
+        : null,
+  });
   const predictions = useMemo(
     () =>
       buildToothPredictions(birthDate, events, gender, alerts.referenceDate),
@@ -423,18 +430,9 @@ export function SmilePredictions() {
                         )
                       : null)
                   }
-                  actionError={
-                    alerts.snooze.error
-                      ? toothEventErrorMessage(
-                          alerts.snooze.error,
-                          "Não foi possível adiar o aviso.",
-                        )
-                      : null
-                  }
                   busy={alerts.snooze.isPending}
                   onRetry={() => void handleRefresh()}
                   onRegister={alertActions.openRegistration}
-                  onSnooze={(id) => alerts.snooze.mutate(id)}
                 />
 
                 <DentalProgressChart
@@ -460,7 +458,10 @@ export function SmilePredictions() {
           </Wrapper>
         </ScrollView>
       </SessionGate>
-      <ToothEventModal {...alertActions.modalProps} />
+      <ToothEventModal
+        {...alertActions.modalProps}
+        onRetry={() => void handleRefresh()}
+      />
     </Wrapper>
   );
 }

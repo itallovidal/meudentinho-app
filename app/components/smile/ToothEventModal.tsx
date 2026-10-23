@@ -12,7 +12,9 @@ import { Pressable, View } from "react-native";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarBlankIcon, CheckIcon } from "phosphor-react-native";
+import { Button } from "@/components/ui/button";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
+import { CalendarBlankIcon, CheckIcon, ClockIcon } from "phosphor-react-native";
 import { DatePickerSheet } from "@/components/smile/datePickerSheet";
 import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { THEME } from "@/lib/theme";
@@ -67,6 +69,9 @@ export function ToothEventModal({
   onClose,
   onSubmit,
   onDelete,
+  onSnooze,
+  onRetry,
+  actionsDisabledReason,
   initialDentition,
   initialDateUnknown = false,
   initialHistoryIncomplete = false,
@@ -85,6 +90,9 @@ export function ToothEventModal({
   onClose: () => void;
   onSubmit: (payload: ToothEventRequestDTO) => Promise<void>;
   onDelete?: () => void;
+  onSnooze?: () => Promise<void>;
+  onRetry?: () => void;
+  actionsDisabledReason?: string | null;
 }) {
   const form = useForm<ToothEventFormValues>({
     resolver: zodResolver(toothEventFormSchema),
@@ -256,21 +264,31 @@ export function ToothEventModal({
     ? null
     : validateEventDateKey(date, kidBirthDate);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSnoozing, setIsSnoozing] = useState(false);
+  const actionPendingRef = useRef(false);
+  const isBusy = isSaving || isSnoozing;
 
   async function performSave() {
-    if (!parsed || !kidId || isSaving) {
+    if (
+      !parsed ||
+      !kidId ||
+      actionPendingRef.current ||
+      actionsDisabledReason ||
+      dateError
+    ) {
       return;
     }
-    if (dateError || !(await form.trigger())) {
-      return;
-    }
-    const occurrenceDate = dateUnknown ? "" : localDateKeyToISO(date);
-    if (occurrenceDate === null) {
-      return;
-    }
-    setIsSaving(true);
-    setSubmitError(null);
+    actionPendingRef.current = true;
     try {
+      if (!(await form.trigger())) {
+        return;
+      }
+      const occurrenceDate = dateUnknown ? "" : localDateKeyToISO(date);
+      if (occurrenceDate === null) {
+        return;
+      }
+      setIsSaving(true);
+      setSubmitError(null);
       await onSubmit({
         kidId,
         occurrenceDate,
@@ -296,12 +314,39 @@ export function ToothEventModal({
         ),
       );
     } finally {
+      actionPendingRef.current = false;
       setIsSaving(false);
     }
   }
 
   function handleConfirmPress() {
     void performSave();
+  }
+
+  async function performSnooze(dismiss: () => void) {
+    if (!onSnooze || actionPendingRef.current || actionsDisabledReason) {
+      return;
+    }
+    actionPendingRef.current = true;
+    setIsSnoozing(true);
+    setSubmitError(null);
+    const requestKey = modalKey;
+    try {
+      await onSnooze();
+      if (prevModalKey.current === requestKey) dismiss();
+    } catch (error) {
+      if (prevModalKey.current === requestKey) {
+        setSubmitError(
+          toothEventErrorMessage(
+            error,
+            "Não foi possível adiar o aviso. Tente novamente.",
+          ),
+        );
+      }
+    } finally {
+      actionPendingRef.current = false;
+      setIsSnoozing(false);
+    }
   }
 
   const alreadyRegistered = toothEvents.some(
@@ -318,6 +363,7 @@ export function ToothEventModal({
     : true;
 
   const confirmDisabled =
+    !!actionsDisabledReason ||
     !parsed ||
     alreadyRegistered ||
     !!dateError ||
@@ -329,22 +375,24 @@ export function ToothEventModal({
       dentition === "permanent") ||
     (editingEvent !== null && !editChanged);
 
-  const confirmDisabledReason = !parsed
-    ? "Não foi possível identificar este dente."
-    : alreadyRegistered
-      ? "Este evento já está registrado para o dente."
-      : dateError
-        ? dateError
-        : !editingEvent &&
-            eventType === "eruption" &&
-            milkStepPending !== null &&
-            !dateUnknown &&
-            !historyIncomplete &&
-            dentition === "permanent"
-          ? "Registre primeiro o dente de leite deste local."
-          : editingEvent !== null && !editChanged
-            ? "Altere a data ou a observação para salvar."
-            : null;
+  const confirmDisabledReason =
+    actionsDisabledReason ??
+    (!parsed
+      ? "Não foi possível identificar este dente."
+      : alreadyRegistered
+        ? "Este evento já está registrado para o dente."
+        : dateError
+          ? dateError
+          : !editingEvent &&
+              eventType === "eruption" &&
+              milkStepPending !== null &&
+              !dateUnknown &&
+              !historyIncomplete &&
+              dentition === "permanent"
+            ? "Registre primeiro o dente de leite deste local."
+            : editingEvent !== null && !editChanged
+              ? "Altere a data ou a observação para salvar."
+              : null);
 
   const editingState = editingEvent ? eventToothState(editingEvent) : null;
 
@@ -390,6 +438,17 @@ export function ToothEventModal({
     >
       {(dismiss) => (
         <>
+          {actionsDisabledReason &&
+            (onRetry ? (
+              <QueryWarningBanner
+                message={actionsDisabledReason}
+                onRetry={onRetry}
+              />
+            ) : (
+              <Text accessibilityRole="alert" className="text-destructive">
+                {actionsDisabledReason}
+              </Text>
+            ))}
           {!editingEvent && !initialDentition && (
             <>
               <View className="gap-3">
@@ -568,12 +627,12 @@ export function ToothEventModal({
           <View className="relative">
             <Pressable
               onPress={handleConfirmPress}
-              disabled={confirmDisabled || isSaving}
+              disabled={confirmDisabled || isBusy}
               accessibilityRole="button"
               accessibilityHint={confirmDisabledReason ?? undefined}
               className={cn(
                 "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
-                (confirmDisabled || isSaving) && "opacity-50",
+                (confirmDisabled || isBusy) && "opacity-50",
               )}
             >
               <Text className="text-base font-bold text-base-100">
@@ -584,7 +643,7 @@ export function ToothEventModal({
                     : "Confirmar"}
               </Text>
             </Pressable>
-            {(confirmDisabled || isSaving) && confirmDisabledReason ? (
+            {(confirmDisabled || isBusy) && confirmDisabledReason ? (
               <View className="absolute -right-1 -top-1 z-10 rounded-full bg-base-100 shadow-sm shadow-base-400">
                 <InfoPopover
                   accessibilityLabel="Por que não posso salvar?"
@@ -595,6 +654,25 @@ export function ToothEventModal({
               </View>
             ) : null}
           </View>
+
+          {!editingEvent && (onSnooze || isSnoozing) && (
+            <Button
+              variant="ghost"
+              disabled={isBusy || !!actionsDisabledReason}
+              onPress={() => void performSnooze(dismiss)}
+              accessibilityLabel="Adiar por 7 dias"
+              accessibilityState={{
+                disabled: isBusy || !!actionsDisabledReason,
+                busy: isSnoozing,
+              }}
+              className="min-h-12 w-full gap-2 rounded-full"
+            >
+              <ClockIcon size={18} color={colors.primary400} />
+              <Text className="text-sm font-semibold text-primary-400">
+                {isSnoozing ? "Adiando..." : "Adiar por 7 dias"}
+              </Text>
+            </Button>
+          )}
 
           {editingEvent && onDelete && (
             <Pressable

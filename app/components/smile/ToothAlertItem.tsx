@@ -1,6 +1,10 @@
-import { View } from "react-native";
-import { CalendarBlankIcon, ClockIcon, ToothIcon } from "phosphor-react-native";
-import { Button } from "@/components/ui/button";
+import { Pressable, View } from "react-native";
+import {
+  CalendarBlankIcon,
+  CaretRightIcon,
+  ClockIcon,
+  ToothIcon,
+} from "phosphor-react-native";
 import { Text } from "@/components/ui/text";
 import {
   archLabel,
@@ -16,22 +20,25 @@ type ToothAlertItemProps = {
   milestone: ToothMilestone;
   snoozedUntil?: string;
   disabled: boolean;
-  busy: boolean;
-  onRegister: (unknown: boolean) => void;
-  onSnooze?: () => void;
+  onPress: () => void;
 };
 
 export function ToothAlertItem({
   milestone,
   snoozedUntil,
   disabled,
-  busy,
-  onRegister,
-  onSnooze,
+  onPress,
 }: ToothAlertItemProps) {
   const colors = THEME.light;
   return (
-    <View className="gap-3 rounded-2xl border border-base-200 bg-base-100 p-4">
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      accessibilityLabel={`Revisar ${toothDentitionLabel(milestone.toothType, milestone.dentition)}, ${dentitionLabel(milestone.dentition)}, ${archLabel(milestone.arch)}, ${sideLabel(milestone.side)}`}
+      className="gap-3 rounded-2xl border border-base-200 bg-base-100 p-4 active:opacity-70 disabled:opacity-50"
+    >
       <View className="flex-row items-start gap-3">
         <View
           importantForAccessibility="no-hide-descendants"
@@ -40,18 +47,27 @@ export function ToothAlertItem({
           <ToothIcon size={19} weight="fill" color={colors.primary400} />
         </View>
         <View className="min-w-0 flex-1 gap-1">
-          <Text className="text-sm font-semibold leading-5 text-primary-800">
-            {toothDentitionLabel(milestone.toothType, milestone.dentition)}
-          </Text>
-          <Text className="text-xs leading-[18px] text-primary-400">
-            {dentitionLabel(milestone.dentition)} · {archLabel(milestone.arch)}{" "}
-            · {sideLabel(milestone.side)}
-          </Text>
+          <View className="flex-row items-center justify-between gap-2">
+            <View className="min-w-0 flex-1">
+              <Text className="text-sm font-semibold leading-5 text-primary-800">
+                {toothDentitionLabel(milestone.toothType, milestone.dentition)}
+              </Text>
+              <Text className="text-xs leading-[18px] text-primary-400">
+                {dentitionLabel(milestone.dentition)} ·{" "}
+                {archLabel(milestone.arch)} · {sideLabel(milestone.side)}
+              </Text>
+            </View>
+            <CaretRightIcon size={16} color={colors.primary400} weight="bold" />
+          </View>
         </View>
       </View>
       <View className="gap-2 rounded-xl bg-secondary-100 px-3 py-2.5">
         <View className="flex-row items-center gap-2">
-          <CalendarBlankIcon size={15} color={colors.primary400} weight="regular"/>
+          <CalendarBlankIcon
+            size={15}
+            color={colors.primary400}
+            weight="regular"
+          />
           <Text className="flex-1 text-xs leading-[18px] text-primary-400">
             Limite estimado: {formatDatePtBR(milestone.limitDate ?? "")}
           </Text>
@@ -69,38 +85,6 @@ export function ToothAlertItem({
           </View>
         )}
       </View>
-      <Button
-        disabled={disabled}
-        onPress={() => onRegister(false)}
-        className="min-h-11 rounded-xl bg-primary-500 px-3 py-3 "
-      >
-        <Text className="shrink text-center text-xs font-semibold text-base-100">
-          Registrar nascimento com data
-        </Text>
-      </Button>
-      <Button
-        variant="outline"
-        disabled={disabled}
-        onPress={() => onRegister(true)}
-        className="min-h-11 rounded-xl border-primary-200 bg-base-100 px-3 py-3"
-      >
-        <Text className="shrink text-center text-xs font-medium text-primary-600">
-          Já nasceu, não sei a data
-        </Text>
-      </Button>
-      {onSnooze && (
-        <Button
-          variant="ghost"
-          disabled={disabled}
-          onPress={onSnooze}
-          className="min-h-10 gap-2 rounded-xl"
-        >
-          <ClockIcon size={15} color={colors.primary400} />
-          <Text className="text-xs font-medium text-primary-400">
-            {busy ? "Salvando..." : "Adiar por 7 dias"}
-          </Text>
-        </Button>
-      )}
-    </View>
+    </Pressable>
   );
 }
