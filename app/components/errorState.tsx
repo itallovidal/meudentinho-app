@@ -35,7 +35,10 @@ export function ErrorState({
           onPress={onRetry}
           className="h-14 w-full rounded-full bg-primary-800"
         >
-          <Text className="flex-1 text-center text-base font-bold">
+          <Text
+            style={{ textAlign: "center", width: "100%" }}
+            className="flex-1 text-center text-base font-bold"
+          >
             {retryLabel}
           </Text>
         </Button>
