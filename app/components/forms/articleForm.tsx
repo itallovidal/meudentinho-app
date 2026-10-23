@@ -1,17 +1,28 @@
+import { ArticleContent } from "@/components/article/articleContent";
+import { BottomSheet } from "@/components/ui/bottomSheet";
+import { MarkdownEditor } from "@/components/markdownEditor";
+import {
+  ImageUrlPreview,
+  type ImagePreviewStatus,
+} from "@/components/imageUrlPreview";
+import { SectionHeader } from "@/components/sectionHeader";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
 import { articleSchema } from "@/lib/schemas/article";
 import type { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { getAllCategories } from "@/api/article/getAllCategories";
-import { ScrollView } from "react-native";
+import { Keyboard, ScrollView, View } from "react-native";
 import { PropsBadge } from "../propsBadge";
+import { CheckIcon, EyeIcon, PencilSimpleIcon } from "phosphor-react-native";
+import { THEME } from "@/lib/themeColors";
 
 interface ArticleFormProps {
   onSubmit: (data: ArticleRequestDTO) => void | Promise<void>;
@@ -37,7 +48,9 @@ export function ArticleForm({
     handleSubmit,
     getValues,
     setValue,
-    watch,
+    setError,
+    clearErrors,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ArticleRequestDTO>({
     resolver: zodResolver(articleSchema),
@@ -53,7 +66,103 @@ export function ArticleForm({
     },
   });
 
-  const selectedCategories = watch("categories");
+  const selectedCategories = useWatch({ control, name: "categories" });
+  const imageCoverURL = useWatch({ control, name: "imageCoverURL" }).trim();
+  const imageUrlValidation =
+    articleSchema.shape.imageCoverURL.safeParse(imageCoverURL);
+  const previewUrl = imageUrlValidation.success
+    ? imageUrlValidation.data
+    : null;
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    status: ImagePreviewStatus;
+  } | null>(null);
+  const [isImageEditing, setIsImageEditing] = useState(
+    () =>
+      !articleSchema.shape.imageCoverURL.safeParse(
+        defaultValues?.imageCoverURL ?? "",
+      ).success,
+  );
+  const imageReady =
+    !isImageEditing &&
+    imagePreview?.url === imageCoverURL &&
+    imagePreview.status === "loaded";
+  const [titleHeight, setTitleHeight] = useState(64);
+  const [imageUrlHeight, setImageUrlHeight] = useState(64);
+  const isEditing = defaultValues !== undefined;
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewArticle, setPreviewArticle] = useState<
+    (ArticleRequestDTO & { readingTime: number }) | null
+  >(null);
+
+  function openPreview() {
+    Keyboard.dismiss();
+    const values = getValues();
+    const wordCount = values.content.trim()
+      ? values.content.trim().split(/\s+/).length
+      : 0;
+    setPreviewArticle({
+      ...values,
+      title: values.title.trim() || "Título do artigo",
+      content: values.content.trim()
+        ? values.content
+        : "O conteúdo do artigo aparecerá aqui quando você começar a escrever.",
+      imageCoverURL: imageReady ? imageCoverURL : "",
+      readingTime: Math.ceil(wordCount / 140),
+    });
+    setPreviewVisible(true);
+  }
+
+  const handleImageStatus = useCallback(
+    (url: string, status: ImagePreviewStatus) => {
+      if (getValues("imageCoverURL").trim() !== url) return;
+      setImagePreview({ url, status });
+      if (status === "loaded") clearErrors("imageCoverURL");
+    },
+    [getValues, clearErrors],
+  );
+
+  function editImage() {
+    setImagePreview(null);
+    setIsImageEditing(true);
+  }
+
+  async function confirmImage() {
+    if (!(await trigger("imageCoverURL"))) return;
+    const url = getValues("imageCoverURL").trim();
+    setValue("imageCoverURL", url, { shouldDirty: true, shouldValidate: true });
+    setImagePreview(null);
+    setIsImageEditing(false);
+    Keyboard.dismiss();
+  }
+
+  const ImageActionIcon = isImageEditing ? CheckIcon : PencilSimpleIcon;
+  const imageAction = (
+    <Button
+      variant="outline"
+      size="icon"
+      onPress={isImageEditing ? () => void confirmImage() : editImage}
+      disabled={isSubmitting}
+      accessibilityLabel={
+        isImageEditing ? "Confirmar URL da imagem" : "Editar imagem de capa"
+      }
+      className="h-11 w-11 shrink-0 rounded-full border-base-300 bg-base-100 shadow-sm"
+    >
+      <ImageActionIcon size={20} color={THEME.light.primary500} weight="bold" />
+    </Button>
+  );
+
+  async function submitArticle(data: ArticleRequestDTO) {
+    if (!imageReady || imagePreview?.url !== data.imageCoverURL) {
+      setError("imageCoverURL", {
+        type: "validate",
+        message:
+          "Aguarde a prévia carregar uma imagem válida antes de continuar.",
+      });
+      return;
+    }
+    await onSubmit(data);
+  }
 
   const {
     data: categoriesData,
@@ -90,7 +199,10 @@ export function ArticleForm({
         (name) => name !== category.name,
       );
 
-      setValue("categories", filtered, { shouldDirty: true });
+      setValue("categories", filtered, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     } else {
       if (currentCategories.length >= MAX_CATEGORIES) {
         return;
@@ -98,107 +210,273 @@ export function ArticleForm({
 
       setValue("categories", [...currentCategories, category.name], {
         shouldDirty: true,
+        shouldValidate: true,
       });
     }
   }
 
-  const categoriesError = useMemo(() => {
-    if (!categoriesFetchingError) return undefined;
-
-    return {
-      name: categoriesFetchingError.name,
-      cause: categoriesFetchingError.cause,
-      message: categoriesFetchingError.message,
-      stack: categoriesFetchingError.stack,
-      onPress: refetchCategories,
-    };
-  }, [categoriesFetchingError, refetchCategories]);
-
   return (
-    <ScrollView className="w-full flex-1">
-      <Wrapper
-        align="center"
-        direction="column"
-        className="mx-6 my-4"
-        gap={"gap-6"}
+    <>
+      <ScrollView
+        className="w-full flex-1"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
-        <FormInput
-          control={control}
-          errors={errors}
-          name="title"
-          label="Título do Artigo"
-          inputProps={{
-            placeholder: "Digite o título do artigo",
-            autoCorrect: false,
-            className: "bg-white",
-          }}
-        />
-
-        <Text className="w-full font-bold">Categoria</Text>
-
-        <PropsBadge
-          props={categories}
-          onPress={addCategory}
-          isLoading={isCategoriesFetching}
-          error={categoriesError}
-          wrap
-        />
-
-        <FormInput
-          control={control}
-          errors={errors}
-          name="summary"
-          label="Resumo do Artigo"
-          inputProps={{
-            placeholder: "Digite o resumo do artigo",
-            keyboardType: "default",
-            autoCapitalize: "sentences",
-            autoCorrect: true,
-            className: "bg-white",
-          }}
-        />
-
-        <FormInput
-          control={control}
-          errors={errors}
-          name="imageCoverURL"
-          label="URL da Imagem de Capa"
-          inputProps={{
-            placeholder: "Digite a URL da imagem de capa",
-            autoCapitalize: "none",
-            autoCorrect: false,
-            className: "bg-white",
-          }}
-        />
-
-        <FormInput
-          control={control}
-          errors={errors}
-          name="content"
-          label="Conteúdo do Artigo"
-          inputProps={{
-            placeholder: "Digite o conteúdo do artigo",
-            multiline: true,
-            autoCapitalize: "none",
-            autoCorrect: false,
-            className: "bg-white h-[200px]",
-          }}
-        />
-
-        {submitError && (
-          <Text className="text-red-600">{submitError.message}</Text>
-        )}
-
-        <Button
-          onPress={() => void handleSubmit(onSubmit)()}
-          disabled={isSubmitting || !isDirty}
-          className="mb-4 w-full"
+        <Wrapper
+          align="start"
+          direction="column"
+          className="mx-6 my-4 pb-6"
+          gap="gap-4"
         >
-          <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
-        </Button>
+          <View className="w-full gap-2 pb-1">
+            <Text
+              accessibilityRole="header"
+              className="text-2xl font-bold text-primary-800"
+            >
+              {isEditing ? "Editar artigo" : "Novo artigo"}
+            </Text>
+            <Text className="text-sm leading-5 text-base-500">
+              Compartilhe orientações e cuidados para acompanhar cada sorriso.
+            </Text>
+          </View>
 
-        {footer}
-      </Wrapper>
-    </ScrollView>
+          <View className="w-full gap-5 rounded-2xl bg-base-100 p-5">
+            <SectionHeader title="Informações do artigo" />
+            <FormInput
+              control={control}
+              errors={errors}
+              name="title"
+              label="Título"
+              inputProps={{
+                placeholder: "Dê um título ao artigo",
+                multiline: true,
+                numberOfLines: 2,
+                scrollEnabled: false,
+                style: { height: titleHeight },
+                onContentSizeChange: (event) =>
+                  setTitleHeight(
+                    Math.max(
+                      64,
+                      Math.ceil(event.nativeEvent.contentSize.height),
+                    ),
+                  ),
+                autoCapitalize: "sentences",
+                autoCorrect: true,
+                editable: !isSubmitting,
+                className: "rounded-xl bg-base-200",
+              }}
+            />
+            <FormInput
+              control={control}
+              errors={errors}
+              name="summary"
+              label="Resumo"
+              inputProps={{
+                placeholder:
+                  "Conte em poucas palavras o que o leitor vai encontrar",
+                multiline: true,
+                autoCapitalize: "sentences",
+                autoCorrect: true,
+                editable: !isSubmitting,
+                className: "min-h-24 rounded-xl bg-base-200",
+              }}
+            />
+            <View className="w-full gap-2">
+              <Text className="font-bold text-primary-800">Categoria</Text>
+              <Text className="text-xs leading-5 text-base-500">
+                Escolha uma categoria para o artigo.
+              </Text>
+              <View
+                pointerEvents={isSubmitting ? "none" : "auto"}
+                className="w-full"
+              >
+                <PropsBadge
+                  props={categories}
+                  onPress={addCategory}
+                  isLoading={
+                    isCategoriesFetching ||
+                    (!!categoriesFetchingError && categories.length === 0)
+                  }
+                  wrap
+                />
+              </View>
+              {categoriesFetchingError && (
+                <QueryWarningBanner
+                  message="Não foi possível atualizar as categorias."
+                  onRetry={() => void refetchCategories()}
+                />
+              )}
+              {!isCategoriesFetching &&
+                !categoriesFetchingError &&
+                categories.length === 0 && (
+                  <Text className="text-xs leading-5 text-base-500">
+                    Nenhuma categoria disponível no momento.
+                  </Text>
+                )}
+              {errors.categories && (
+                <Text
+                  accessibilityRole="alert"
+                  className="text-xs text-destructive"
+                >
+                  {errors.categories.message}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          <View className="w-full gap-4 rounded-2xl bg-base-100 p-5">
+            <SectionHeader title="Imagem de capa" />
+            {isImageEditing ? (
+              <View className="w-full gap-3 rounded-2xl border border-base-200 bg-base-200 p-4">
+                <View className="w-full flex-row items-center justify-between gap-3">
+                  <Text className="min-w-0 flex-1 text-sm font-semibold text-primary-800">
+                    Editar imagem de capa
+                  </Text>
+                  {imageAction}
+                </View>
+                <Text className="text-xs leading-5 text-base-500">
+                  Cole o link direto da imagem e toque no check para confirmar e
+                  carregar a capa.
+                </Text>
+                <FormInput
+                  control={control}
+                  errors={errors}
+                  name="imageCoverURL"
+                  label="URL da imagem"
+                  inputProps={{
+                    placeholder: "https://exemplo.com/imagem.jpg",
+                    multiline: true,
+                    numberOfLines: 2,
+                    scrollEnabled: false,
+                    style: { height: imageUrlHeight },
+                    onContentSizeChange: (event) =>
+                      setImageUrlHeight(
+                        Math.max(
+                          64,
+                          Math.ceil(event.nativeEvent.contentSize.height),
+                        ),
+                      ),
+                    keyboardType: "url",
+                    autoCapitalize: "none",
+                    autoCorrect: false,
+                    editable: !isSubmitting,
+                    className: "rounded-xl bg-base-200",
+                  }}
+                />
+                {imageCoverURL &&
+                  !imageUrlValidation.success &&
+                  !errors.imageCoverURL && (
+                    <Text
+                      accessibilityLiveRegion="polite"
+                      className="text-xs text-destructive"
+                    >
+                      {imageUrlValidation.error.issues[0]?.message}
+                    </Text>
+                  )}
+              </View>
+            ) : (
+              <ImageUrlPreview
+                key={previewUrl ?? "empty"}
+                url={previewUrl}
+                accessibilityLabel="Prévia da imagem de capa do artigo"
+                onStatusChange={handleImageStatus}
+                action={imageAction}
+              />
+            )}
+          </View>
+
+          <View className="w-full gap-4 rounded-2xl bg-base-100 p-5">
+            <SectionHeader title="Conteúdo" />
+            <Controller
+              control={control}
+              name="content"
+              render={({ field, fieldState }) => (
+                <MarkdownEditor
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  editable={!isSubmitting}
+                  label="Texto do artigo"
+                  errorMessage={fieldState.error?.message}
+                />
+              )}
+            />
+          </View>
+
+          {submitError && (
+            <Text
+              accessibilityRole="alert"
+              className="text-sm leading-5 text-destructive"
+            >
+              {submitError.message}
+            </Text>
+          )}
+          <View className="w-full gap-3 pt-2">
+            {!imageReady && (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="text-center text-xs leading-5 text-base-500"
+              >
+                {previewUrl &&
+                imagePreview?.url === previewUrl &&
+                imagePreview.status === "loading"
+                  ? "Aguarde a imagem de capa carregar para continuar."
+                  : "Adicione uma imagem de capa que carregue na prévia para continuar."}
+              </Text>
+            )}
+            <Button
+              variant="ghost"
+              onPress={openPreview}
+              disabled={isSubmitting}
+              accessibilityLabel="Visualizar prévia do artigo"
+              className="h-14 w-full rounded-full"
+            >
+              <EyeIcon size={16} color={THEME.light.primary500} weight="bold" />
+              <Text className="text-base font-bold text-primary-500">
+                Visualizar prévia
+              </Text>
+            </Button>
+            <Button
+              onPress={() => void handleSubmit(submitArticle)()}
+              disabled={isSubmitting || !isDirty || !imageReady}
+              accessibilityState={{
+                disabled: isSubmitting || !isDirty || !imageReady,
+                busy: isSubmitting,
+              }}
+              className="h-14 w-full rounded-full"
+            >
+              <Text className="text-base font-bold">
+                {isSubmitting ? submittingLabel : submitLabel}
+              </Text>
+            </Button>
+          </View>
+          {footer}
+        </Wrapper>
+      </ScrollView>
+      <BottomSheet
+        visible={previewVisible}
+        onClose={() => setPreviewVisible(false)}
+        header={
+          <Text className="text-xl font-bold text-primary-800">
+            Prévia do artigo
+          </Text>
+        }
+      >
+        {(dismiss) => (
+          <>
+            {previewArticle && <ArticleContent {...previewArticle} />}
+            <Button
+              variant="outline"
+              onPress={dismiss}
+              className="h-14 w-full rounded-full"
+            >
+              <Text className="text-base font-bold text-primary-500">
+                Voltar à edição
+              </Text>
+            </Button>
+          </>
+        )}
+      </BottomSheet>
+    </>
   );
 }
