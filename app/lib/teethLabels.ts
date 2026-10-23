@@ -1,3 +1,4 @@
+import { isToothEventDateUnknown } from "@/lib/toothIdentity";
 import type {
   Arch,
   Dentition,
@@ -55,6 +56,17 @@ const QUADRANT_LABELS: Record<Quadrant, string> = {
 
 export function toothTypeLabel(value: string): string {
   return TOOTH_TYPE_LABELS[value as ToothType] ?? value;
+}
+
+export function toothDentitionLabel(
+  toothType: ToothType,
+  dentition: Dentition,
+): string {
+  if (dentition === "primary" && toothType === "first_premolar")
+    return "Primeiro Molar de leite";
+  if (dentition === "primary" && toothType === "second_premolar")
+    return "Segundo Molar de leite";
+  return toothTypeLabel(toothType);
 }
 
 export function toothEventTypeLabel(value: string): string {
@@ -169,14 +181,21 @@ export function toothAccessibilityLabel(params: {
     return `${name}, hora de nascer, ainda sem registro`;
   }
 
-  const date = event ? formatDatePtBR(eventDateKey(event.occurrenceDate)) : null;
+  const date = event
+    ? formatDatePtBR(eventDateKey(event.occurrenceDate))
+    : null;
   const verb = event ? toothEventVerb(event.eventType).toLowerCase() : "";
   const dentition = event
     ? event.dentition === "permanent"
       ? "definitivo"
       : "de leite"
     : "";
-  const occurred = date ? ` em ${date}` : "";
+  const occurred =
+    event && isToothEventDateUnknown(event)
+      ? ", data não informada"
+      : date
+        ? ` em ${date}`
+        : "";
   return [name, dentition, `${verb}${occurred}`].filter(Boolean).join(", ");
 }
 
@@ -189,9 +208,11 @@ export function toothEventName(event: {
 }
 
 export function toothEventAccessibilityLabel(event: ToothEvent): string {
-  const name = toothEventName(event);
+  const name = `${toothDentitionLabel(event.toothType, event.dentition)} ${archLabel(event.arch)} ${sideLabel(event.side)}`;
   const verb = toothEventVerb(event.eventType).toLowerCase();
   const dentition = dentitionLabel(event.dentition).toLowerCase();
   const date = formatDatePtBR(eventDateKey(event.occurrenceDate));
-  return `Editar ${name}, ${verb} (${dentition}), em ${date}`;
+  return isToothEventDateUnknown(event)
+    ? `Editar ${name}, ${verb} (${dentition}), data não informada`
+    : `Editar ${name}, ${verb} (${dentition}), em ${date}`;
 }

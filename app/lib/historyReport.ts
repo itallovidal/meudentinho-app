@@ -1,9 +1,13 @@
 import {
+  isToothEventDateUnknown,
+  toothEventReferenceDate,
+} from "@/lib/toothIdentity";
+import {
   archLabel,
   dentitionLabel,
   sideLabel,
   toothEventTypeLabel,
-  toothTypeLabel,
+  toothDentitionLabel,
 } from "@/lib/teethLabels";
 import { THEME } from "@/lib/themeColors";
 import { eventDateKey, formatDatePtBR, toLocalDateKey } from "@/lib/utils";
@@ -49,7 +53,7 @@ export function filterEventsByPeriod(
     return [];
   }
   return events.filter((event) => {
-    const dateKey = eventDateKey(event.occurrenceDate);
+    const dateKey = eventDateKey(toothEventReferenceDate(event));
     return (
       dateKey !== "" && dateKey >= period.startDate && dateKey <= period.endDate
     );
@@ -111,8 +115,8 @@ function escapeHtml(value: string): string {
 function chronologicalEvents(events: ToothEvent[]): ToothEvent[] {
   return [...events].sort(
     (a, b) =>
-      eventDateKey(a.occurrenceDate).localeCompare(
-        eventDateKey(b.occurrenceDate),
+      eventDateKey(toothEventReferenceDate(a)).localeCompare(
+        eventDateKey(toothEventReferenceDate(b)),
       ) || (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
   );
 }
@@ -120,13 +124,14 @@ function chronologicalEvents(events: ToothEvent[]): ToothEvent[] {
 function buildEventRows(events: ToothEvent[]): string {
   return chronologicalEvents(events)
     .map((event) => {
-      const date =
-        formatDatePtBR(eventDateKey(event.occurrenceDate)) ?? "sem data";
+      const date = isToothEventDateUnknown(event)
+        ? `${event.eventType === "eruption" ? "Nascimento" : "Queda"} sem data informada`
+        : (formatDatePtBR(eventDateKey(event.occurrenceDate)) ?? "sem data");
       const position = `${archLabel(event.arch)} • ${sideLabel(event.side)}`;
       const note = event.note?.trim() ? event.note.trim() : "—";
       return `<tr>
         <td>${escapeHtml(date)}</td>
-        <td>${escapeHtml(toothTypeLabel(event.toothType))}</td>
+        <td>${escapeHtml(toothDentitionLabel(event.toothType, event.dentition))}</td>
         <td>${escapeHtml(position)}</td>
         <td>${escapeHtml(toothEventTypeLabel(event.eventType))}</td>
         <td>${escapeHtml(dentitionLabel(event.dentition))}</td>
@@ -152,6 +157,11 @@ export function buildHistoryReportHtml(input: HistoryReportInput): string {
   const prematurity = prematurityLabel(kidPrematureWeeks);
   const periodLabel = `${formatPeriodDate(period.startDate)} a ${formatPeriodDate(period.endDate)}`;
   const countLabel = `${events.length} ${events.length === 1 ? "registro" : "registros"}`;
+  const presenceExplanation = events.some((event) =>
+    isToothEventDateUnknown(event),
+  )
+    ? '<p class="meta">Confirmações sem data são incluídas pelo dia da confirmação; esse dia não representa a data do acontecimento.</p>'
+    : "";
   const rows = buildEventRows(events);
   const generatedLabel = generatedAtFormatter.format(generatedAt);
 
@@ -247,7 +257,7 @@ export function buildHistoryReportHtml(input: HistoryReportInput): string {
       <strong>Período:</strong> ${escapeHtml(periodLabel)}
     </p>
   </header>
-  <div class="summary">${escapeHtml(countLabel)} no período selecionado</div>
+  <div class="summary">${escapeHtml(countLabel)} no período selecionado</div>${presenceExplanation}
   ${
     rows
       ? `<table>

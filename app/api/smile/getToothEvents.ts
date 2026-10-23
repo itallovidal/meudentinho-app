@@ -1,3 +1,4 @@
+import { toothEventSchema } from "@/lib/schemas/toothEvent";
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { parseResponse } from "@/lib/parseResponse";
@@ -73,7 +74,20 @@ export async function getAllToothEventsByKid(
     );
   }
 
-  return payload.data?.events ?? [];
+  const events = payload.data?.events;
+  if (
+    !Array.isArray(events) ||
+    events.some(
+      (event) =>
+        !toothEventSchema.safeParse(event).success || event.kidId !== kidId,
+    )
+  ) {
+    throw new ApiError(
+      "Não foi possível validar os registros dentários. Atualize os dados para continuar.",
+      "RESPONSE_PARSE_ERROR",
+    );
+  }
+  return events;
 }
 
 function normalizeMeta(

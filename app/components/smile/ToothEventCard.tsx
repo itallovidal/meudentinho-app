@@ -1,3 +1,4 @@
+import { isToothEventDateUnknown } from "@/lib/toothIdentity";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
@@ -13,7 +14,7 @@ import {
   sideLabel,
   toothEventAccessibilityLabel,
   toothEventVerb,
-  toothTypeLabel,
+  toothDentitionLabel,
 } from "@/lib/teethLabels";
 import type { MapToothState } from "@/lib/toothChronology";
 import { cn, eventDateKey, parseLocalDate } from "@/lib/utils";
@@ -49,9 +50,11 @@ export function ToothEventCard({
   const month = date
     ?.toLocaleDateString("pt-BR", { month: "short" })
     .replace(".", "");
-  const title = toothTypeLabel(event.toothType);
+  const title = toothDentitionLabel(event.toothType, event.dentition);
   const position = `${archLabel(event.arch)} • ${sideLabel(event.side)}`;
-  const subtitle = `${toothEventVerb(event.eventType)} (${dentitionLabel(event.dentition).toLowerCase()})`;
+  const subtitle = isToothEventDateUnknown(event)
+    ? `${toothEventVerb(event.eventType)} · data não informada (${dentitionLabel(event.dentition).toLowerCase()})`
+    : `${toothEventVerb(event.eventType)} (${dentitionLabel(event.dentition).toLowerCase()})`;
 
   return (
     <Pressable
@@ -101,9 +104,7 @@ export function ToothEventCard({
             details={LEGEND_TOOTH.details}
             fill={style.fill}
             stroke={style.stroke}
-            strokeDasharray={
-              isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined
-            }
+            strokeDasharray={isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined}
             width={size === "small" ? 16 : 22}
             height={size === "small" ? 16 : 22}
           />

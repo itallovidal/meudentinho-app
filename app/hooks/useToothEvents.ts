@@ -1,3 +1,5 @@
+import { toothEventReferenceDate } from "@/lib/toothIdentity";
+import { isApiError } from "@/types/predicates";
 import { useContext, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllToothEventsByKid } from "@/api/smile/getToothEvents";
@@ -23,10 +25,26 @@ export function useToothEvents(
     const data = accountId ? (query.data ?? []) : [];
     return [...data].sort(
       (a, b) =>
-        (b.occurrenceDate ?? "").localeCompare(a.occurrenceDate ?? "") ||
+        toothEventReferenceDate(b).localeCompare(toothEventReferenceDate(a)) ||
         (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
     );
   }, [query.data, accountId]);
 
-  return { ...query, events };
+  const inaccessible =
+    isApiError(query.error) &&
+    [
+      "KID_NOT_LINKED_TO_PARENT",
+      "KID_NOT_FOUND",
+      "INVALID_CREDENTIALS",
+    ].includes(query.error.code);
+  return {
+    ...query,
+    events,
+    hasCompleteData:
+      !!kidId &&
+      !!authToken &&
+      !!accountId &&
+      query.data !== undefined &&
+      !inaccessible,
+  };
 }
