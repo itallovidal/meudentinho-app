@@ -49,7 +49,9 @@ export function ErrorState({
               weight="bold"
             />
           )}
-          <Text className="text-base font-bold">{retryLabel}</Text>
+          <Text className="flex-1 text-center text-base font-bold">
+            {retryLabel}
+          </Text>
         </Button>
       )}
     </View>
