@@ -3,8 +3,8 @@ import {
   CalendarBlankIcon,
   CaretRightIcon,
   ClockIcon,
-  ToothIcon,
 } from "phosphor-react-native";
+import { ToothTypeSVG } from "@/components/smile/teeth/ToothTypeSVG";
 import { Text } from "@/components/ui/text";
 import {
   archLabel,
@@ -44,7 +44,7 @@ export function ToothAlertItem({
           importantForAccessibility="no-hide-descendants"
           className="h-9 w-9 items-center justify-center rounded-xl bg-primary-100"
         >
-          <ToothIcon size={19} weight="fill" color={colors.primary400} />
+          <ToothTypeSVG toothType={milestone.toothType} />
         </View>
         <View className="min-w-0 flex-1 gap-1">
           <View className="flex-row items-center justify-between gap-2">
