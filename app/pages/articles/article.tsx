@@ -1,8 +1,8 @@
+import { ArticleContent } from "@/components/article/articleContent";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
-import { Text } from "@/components/ui/text";
 import { FloatingActionButton } from "@/components/ui/floatingActionButton";
 import { getArticleById } from "@/api/article/getArticleById";
 import { UserContext } from "@/contexts/UserContext";
@@ -12,10 +12,8 @@ import type {
   ArticlesNavigationProp,
   ArticlesStackParamList,
 } from "@/navigation/ArticlesStack";
-import { Badge } from "@/components/ui/badge";
-import { Image, RefreshControl, ScrollView, View } from "react-native";
-import { Markdown } from "react-native-remark";
-import { ClockIcon, PencilSimpleIcon } from "phosphor-react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
+import { PencilSimpleIcon } from "phosphor-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { retryQuery } from "@/lib/queryRetry";
 import { isApiError } from "@/types/predicates";
@@ -46,8 +44,6 @@ export function Article() {
     retry: retryQuery,
     staleTime: 1000 * 60 * 5,
   });
-
-  const categories = article?.categories.join(", ") ?? "";
 
   const articleNotFound =
     isApiError(error) && error.code === "ARTICLES_NOT_FOUND";
@@ -189,32 +185,13 @@ export function Article() {
               />
             )}
 
-            <Wrapper direction="row" align="center" gap="gap-4">
-              <Badge variant="secondary" className="">
-                <Text>{categories}</Text>
-              </Badge>
-              <Wrapper direction="row" align="center" gap="gap-1">
-                <ClockIcon size={16} color="gray" weight="regular" />
-                <Text variant="small" className="text-base-500">
-                  {article.readingTime} min de leitura
-                </Text>
-              </Wrapper>
-            </Wrapper>
-
-            <Wrapper
-              className="my-4 w-full"
-              direction="column"
-              align="center"
-              justify="start"
-              gap="gap-4"
-            >
-              <Image
-                source={{ uri: article.imageCoverURL }}
-                className="h-56 w-full rounded-2xl bg-base-200"
-              />
-
-              <Markdown markdown={article.content} />
-            </Wrapper>
+            <ArticleContent
+              title={article.title}
+              categories={article.categories}
+              readingTime={article.readingTime}
+              imageCoverURL={article.imageCoverURL}
+              content={article.content}
+            />
           </Wrapper>
         </ScrollView>
 
