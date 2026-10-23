@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
-import { Alert, ScrollView } from "react-native";
+import { Alert, RefreshControl, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
@@ -8,7 +8,6 @@ import { useKidMutations } from "@/hooks/useKidMutations";
 import { ArticleListSection } from "@/components/article/articleListSection";
 import { ErrorState } from "@/components/errorState";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
-import { RefreshControl } from "react-native-gesture-handler";
 import { useArticles } from "@/hooks/useArticles";
 import { useKids } from "@/hooks/useKids";
 import { useKidsSmileSummaries } from "@/hooks/useKidsSmileSummaries";

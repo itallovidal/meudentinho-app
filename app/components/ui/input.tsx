@@ -3,7 +3,7 @@ import { Platform, TextInput } from "react-native";
 import { forwardRef } from "react";
 
 const Input = forwardRef<
-  TextInput,
+  React.ComponentRef<typeof TextInput>,
   React.ComponentProps<typeof TextInput>
 >(function Input({ className, ...props }, ref) {
   return (

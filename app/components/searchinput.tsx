@@ -72,9 +72,8 @@ export function SearchInput({ onSearchTermChange }: SearchInputProps) {
           accessibilityLabel: "Buscar artigos e guias",
           placeholder: "Buscar artigos e guias",
           returnKeyType: "search",
-          onSubmitEditing: handleSubmit((data) =>
-            publishNow(data.query.trim()),
-          ),
+          onSubmitEditing: () =>
+            void handleSubmit((data) => publishNow(data.query.trim()))(),
           className: "bg-base-100 rounded-lg pl-4 pr-10",
         }}
       />

@@ -34,8 +34,8 @@ import { signup } from "@/api/auth/signup";
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const route = useRoute<RouteProp<ProfileRouteParams, "Signup">>();
-  const scrollViewRef = useRef<ScrollView>(null);
-  const formRef = useRef<View>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const formRef = useRef<React.ComponentRef<typeof View>>(null);
 
   const [error, setError] = useState<ApiError | null>(null);
   const { updateAppUser, user, authToken, hydrated } = useContext(UserContext)!;

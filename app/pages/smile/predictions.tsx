@@ -88,7 +88,7 @@ export function SmilePredictions() {
     refetch,
   } = useToothEvents(params.kidId, authToken);
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const kid = kids.find((item) => item.id === params.kidId);
   const birthDate = kid?.birthDate ?? null;
   const gender = kid?.gender ?? null;

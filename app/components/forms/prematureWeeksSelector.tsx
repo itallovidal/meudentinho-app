@@ -34,7 +34,7 @@ export function PrematureWeeksSelector({
   const { width: screenWidth } = useWindowDimensions();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string | undefined>(value);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   function openSheet() {
     setDraft(value);

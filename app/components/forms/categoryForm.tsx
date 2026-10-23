@@ -68,7 +68,7 @@ export function CategoryForm({
       )}
 
       <Button
-        onPress={handleSubmit(onSubmit)}
+        onPress={() => void handleSubmit(onSubmit)()}
         disabled={isSubmitting || !isDirty || disabled}
         className="mt-2 h-14 w-full rounded-full"
       >
