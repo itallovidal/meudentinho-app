@@ -10,6 +10,8 @@ type DeleteEventSheetProps = {
   title: string;
   confirmLabel: string;
   dependents: ToothEvent[];
+  errorMessage?: string | null;
+  pending?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -19,6 +21,8 @@ export function DeleteEventSheet({
   title,
   confirmLabel,
   dependents,
+  errorMessage,
+  pending = false,
   onConfirm,
   onCancel,
 }: DeleteEventSheetProps) {
@@ -26,9 +30,7 @@ export function DeleteEventSheet({
     <BottomSheet
       visible={open}
       onClose={onCancel}
-      header={
-        <Text className="text-xl font-bold text-base-900">{title}</Text>
-      }
+      header={<Text className="text-xl font-bold text-base-900">{title}</Text>}
     >
       {(dismiss) => (
         <>
@@ -53,15 +55,24 @@ export function DeleteEventSheet({
               O registro será removido do histórico.
             </Text>
           )}
+          {errorMessage && (
+            <Text accessibilityRole="alert" className="text-destructive">
+              {errorMessage}
+            </Text>
+          )}
           <Button
+            disabled={pending}
             variant="destructive"
             onPress={onConfirm}
             className="h-14 w-full rounded-full"
           >
-            <Text className="text-base font-bold">{confirmLabel}</Text>
+            <Text className="text-base font-bold">
+              {pending ? "Excluindo..." : confirmLabel}
+            </Text>
           </Button>
           <Button
             variant="outline"
+            disabled={pending}
             onPress={dismiss}
             className="h-14 w-full rounded-full"
           >
