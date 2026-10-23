@@ -232,7 +232,7 @@ export function RegisterKidForm({
       )}
 
       <Button
-        onPress={handleSubmit(onSubmit)}
+        onPress={() => void handleSubmit(onSubmit)()}
         disabled={isSubmitting || !isDirty}
         className="mt-6 h-14 w-full rounded-full"
       >

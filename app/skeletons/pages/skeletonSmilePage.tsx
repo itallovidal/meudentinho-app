@@ -5,7 +5,7 @@ import { SkeletonDentalTipCard } from "../components/skeletonDentalTipCard";
 import { SkeletonKidSelector } from "../components/skeletonKidSelector";
 import { SkeletonRecentEventsList } from "../components/skeletonRecentEventsList";
 import { SkeletonTeethExchangeCard } from "../components/skeletonTeethExchangeCard";
-import { RefreshControl, ScrollView } from "react-native-gesture-handler";
+import { RefreshControl, ScrollView } from "react-native";
 
 type SkeletonSmilePageProps = {
   refreshing?: boolean;

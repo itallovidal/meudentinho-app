@@ -168,7 +168,6 @@ export function DentalCalendar({
           onPress={() => setYear((current) => current - 1)}
           disabled={previousYearDisabled}
           hitSlop={12}
-          android_ripple={null}
           style={({ pressed }) => pressedStyle(pressed)}
           accessibilityRole="button"
           accessibilityState={{ disabled: previousYearDisabled }}
@@ -182,7 +181,6 @@ export function DentalCalendar({
           onPress={() => setYear((current) => current + 1)}
           disabled={nextYearDisabled}
           hitSlop={12}
-          android_ripple={null}
           style={({ pressed }) => pressedStyle(pressed)}
           accessibilityRole="button"
           accessibilityState={{ disabled: nextYearDisabled }}
@@ -206,7 +204,6 @@ export function DentalCalendar({
               key={label}
               onPress={() => setMonth(index)}
               disabled={disabled}
-              android_ripple={null}
               style={({ pressed }) => pressedStyle(pressed)}
               accessibilityRole="button"
               accessibilityState={{ selected, disabled }}
@@ -268,7 +265,6 @@ export function DentalCalendar({
                   <Pressable
                     onPress={() => onDayPress?.(dayKey)}
                     disabled={isDisabled}
-                    android_ripple={null}
                     style={({ pressed }) => pressedStyle(pressed)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: isSelected, disabled: isDisabled }}

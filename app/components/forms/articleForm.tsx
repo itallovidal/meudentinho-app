@@ -190,7 +190,7 @@ export function ArticleForm({
         )}
 
         <Button
-          onPress={handleSubmit(onSubmit)}
+          onPress={() => void handleSubmit(onSubmit)()}
           disabled={isSubmitting || !isDirty}
           className="mb-4 w-full"
         >

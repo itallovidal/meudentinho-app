@@ -159,7 +159,7 @@ export function ProfileForm({
       <Separator className="my-4 max-w-5" />
 
       <Button
-        onPress={handleSubmit(onSubmit)}
+        onPress={() => void handleSubmit(onSubmit)()}
         disabled={isSubmitting || !isDirty}
         className="mb-4 w-full"
       >

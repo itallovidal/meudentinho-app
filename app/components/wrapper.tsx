@@ -21,35 +21,37 @@ const justifyClassNames = {
 
 interface Args extends ViewProps {
   children: React.ReactNode;
-  className?: View["props"]["className"];
+  className?: string;
   direction?: "row" | "column";
   align?: "start" | "center" | "end";
   justify?: "start" | "center" | "end" | "between";
   gap?: `gap-${number}`;
-  style?: View["props"]["style"];
+  style?: ViewProps["style"];
 }
 
-export const Wrapper = forwardRef<View, Args>(function Wrapper(
-  {
-    children,
-    className = "",
-    direction = "row",
-    align = "start",
-    justify = "start",
-    gap = "gap-0",
-    style,
-    ...rest
+export const Wrapper = forwardRef<React.ComponentRef<typeof View>, Args>(
+  function Wrapper(
+    {
+      children,
+      className = "",
+      direction = "row",
+      align = "start",
+      justify = "start",
+      gap = "gap-0",
+      style,
+      ...rest
+    },
+    ref,
+  ) {
+    return (
+      <View
+        ref={ref}
+        className={`flex ${directionClassNames[direction]} ${alignClassNames[align]} ${justifyClassNames[justify]} ${gap} ${className}`}
+        style={style}
+        {...rest}
+      >
+        {children}
+      </View>
+    );
   },
-  ref,
-) {
-  return (
-    <View
-      ref={ref}
-      className={`flex ${directionClassNames[direction]} ${alignClassNames[align]} ${justifyClassNames[justify]} ${gap} ${className}`}
-      style={style}
-      {...rest}
-    >
-      {children}
-    </View>
-  );
-});
+);
