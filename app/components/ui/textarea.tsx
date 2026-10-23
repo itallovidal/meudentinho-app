@@ -1,19 +1,27 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { Platform, TextInput } from "react-native";
 
-function Textarea({
-  className,
-  multiline = true,
-  numberOfLines = Platform.select({ web: 2, native: 8 }),
-  placeholderClassName,
-  ...props
-}: React.ComponentProps<typeof TextInput>) {
+const Textarea = forwardRef<
+  React.ComponentRef<typeof TextInput>,
+  React.ComponentPropsWithoutRef<typeof TextInput>
+>(function Textarea(
+  {
+    className,
+    multiline = true,
+    numberOfLines = Platform.select({ web: 2, native: 8 }),
+    placeholderClassName,
+    ...props
+  },
+  ref,
+) {
   return (
     <TextInput
+      ref={ref}
       className={cn(
-        "text-foreground  flex min-h-16 w-full flex-row rounded-md  bg-transparent px-3 py-2 text-base shadow-sm shadow-black/5 md:text-sm",
+        "flex  min-h-16 w-full flex-row rounded-md bg-transparent  px-3 py-2 text-base text-foreground shadow-sm shadow-black/5 md:text-sm",
         Platform.select({
-          web: "placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive field-sizing-content resize-y outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed",
+          web: "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive field-sizing-content resize-y outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed",
         }),
         props.editable === false && "opacity-50",
         className,
@@ -25,6 +33,6 @@ function Textarea({
       {...props}
     />
   );
-}
+});
 
 export { Textarea };
