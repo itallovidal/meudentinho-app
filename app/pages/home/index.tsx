@@ -23,7 +23,7 @@ import { useToast } from "@/components/ui/toast";
 import { SessionCard } from "@/components/sessionCard";
 import { SessionNotice } from "@/components/sessionNotice";
 
-const HOME_VISIBLE_ARTICLES = 2;
+const HOME_VISIBLE_ARTICLES = 4;
 
 export function Home() {
   const navigation = useNavigation<TabNavigatorNavigationProp>();
@@ -39,12 +39,10 @@ export function Home() {
     onRefresh,
     articles,
     latestArticle,
-    categories,
-    articlesByCategory,
     isLoading,
     isError,
     refetchError: articlesRefetchError,
-  } = useArticles({ withCategories: false });
+  } = useArticles();
 
   const {
     kids,
@@ -264,8 +262,6 @@ export function Home() {
             <ArticleListSection
               articles={articles.slice(0, HOME_VISIBLE_ARTICLES)}
               latestArticle={latestArticle}
-              categories={categories}
-              articlesByCategory={articlesByCategory}
               isLoading={isLoading}
               isError={isError}
               refetchError={articlesRefetchError}

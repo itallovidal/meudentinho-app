@@ -1,4 +1,4 @@
-import type { ArticlePreviewDTO, ArticleCategory } from "@/types/dtos/article";
+import type { ArticlePreviewDTO } from "@/types/dtos/article";
 import { ArticleListRender } from "./articleListRender";
 import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
 import { ErrorState } from "../errorState";
@@ -11,11 +11,8 @@ import { useNavigation } from "@react-navigation/native";
 import type { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 
 type ArticleListSectionProps = {
-  withCategories?: boolean;
   articles?: ArticlePreviewDTO[];
   latestArticle?: ArticlePreviewDTO;
-  categories?: ArticleCategory[];
-  articlesByCategory?: Record<string, ArticlePreviewDTO[]>;
   isLoading?: boolean;
   isError?: boolean;
   refetchError?: boolean;
@@ -25,11 +22,8 @@ type ArticleListSectionProps = {
 };
 
 export function ArticleListSection({
-  withCategories = false,
   articles = [],
   latestArticle,
-  categories = [],
-  articlesByCategory = {},
   isLoading = false,
   isError = false,
   refetchError = false,
@@ -78,9 +72,6 @@ export function ArticleListSection({
       <ArticleListRender
         latestArticle={latestArticle}
         articles={articles}
-        categories={categories}
-        articlesByCategory={articlesByCategory}
-        hasCategories={withCategories}
         fromTab={fromTab}
       />
       {fromTab === "Home" && (

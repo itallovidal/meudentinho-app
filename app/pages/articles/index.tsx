@@ -1,16 +1,25 @@
-import { useCallback, useContext, useState } from "react";
+import {
+  type ComponentRef,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   View,
 } from "react-native";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
-import { useArticles } from "@/hooks/useArticles";
+import { useArticlesFeed } from "@/hooks/useArticlesFeed";
 import { useArticleSearch } from "@/hooks/useArticleSearch";
 import { errorMessage } from "@/lib/errorMessage";
 import { ArticleListSection } from "@/components/article/articleListSection";
+import { ArticleCategoriesFeed } from "@/components/article/articleCategoriesFeed";
 import { SearchInput } from "@/components/searchinput";
 import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
@@ -21,23 +30,29 @@ import { ArticlesNavigationProp } from "@/navigation/ArticlesStack";
 import { useNavigation } from "@react-navigation/native";
 import { PlusIcon } from "phosphor-react-native";
 
+const LOAD_MORE_THRESHOLD = 200;
+
 export function Index() {
   const navigation = useNavigation<ArticlesNavigationProp>();
   const { user, hydrated } = useContext(UserContext)!;
   const colors = THEME.light;
   const {
-    isRefreshing,
-    onRefresh,
-    articles,
     latestArticle,
     categories,
-    articlesByCategory,
+    selectedCategory,
+    selectCategory,
+    previews,
+    feed,
     isLoading,
     isError,
+    isRefreshing,
     refetchError,
-  } = useArticles({ withCategories: true });
+    onRefresh,
+  } = useArticlesFeed();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const {
     results: searchResults,
     isFetching: isSearching,
@@ -55,6 +70,28 @@ export function Index() {
     "Verifique sua conexão e tente novamente.",
   );
 
+  function loadMore() {
+    if (isSearchActive) {
+      return;
+    }
+    feed.fetchNextPage();
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    if (
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - LOAD_MORE_THRESHOLD
+    ) {
+      loadMore();
+    }
+  }
+
+  function handleSelectCategory(categoryId: string) {
+    selectCategory(categoryId);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }
+
   function handleCreateArticle() {
     navigation.navigate("ArticleEditor");
   }
@@ -69,11 +106,26 @@ export function Index() {
       <Header />
       <View className="relative w-full flex-1">
         <ScrollView
+          ref={scrollRef}
           className="w-full flex-1"
+          onLayout={(event) =>
+            setViewportHeight(event.nativeEvent.layout.height)
+          }
+          onContentSizeChange={(_, height) => {
+            if (
+              !isSearchActive &&
+              viewportHeight > 0 &&
+              height <= viewportHeight
+            ) {
+              loadMore();
+            }
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={200}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing && !isLoading}
-              onRefresh={onRefresh}
+              onRefresh={() => void onRefresh()}
             />
           }
         >
@@ -108,25 +160,23 @@ export function Index() {
                     {`Nenhum artigo encontrado para "${searchQuery}"`}
                   </Text>
                 ) : (
-                  <ArticleListSection
-                    withCategories={false}
-                    articles={searchResults}
-                  />
+                  <ArticleListSection articles={searchResults} />
                 )}
               </>
             )}
 
             {!isSearching && !isSearchActive && (
-              <ArticleListSection
-                withCategories
-                articles={articles}
+              <ArticleCategoriesFeed
                 latestArticle={latestArticle}
                 categories={categories}
-                articlesByCategory={articlesByCategory}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectCategory}
+                previews={previews}
+                feed={feed}
                 isLoading={isLoading}
                 isError={isError}
                 refetchError={refetchError}
-                onRetry={onRefresh}
+                onRetry={() => void onRefresh()}
               />
             )}
           </Wrapper>

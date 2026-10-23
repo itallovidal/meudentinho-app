@@ -26,6 +26,7 @@ export function SkeletonArticleListRender({
         <SkeletonArticleCard />
         <SkeletonArticleCard />
         <SkeletonArticleCard />
+        <SkeletonArticleCard />
       </Wrapper>
     </Wrapper>
   );

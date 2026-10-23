@@ -1,105 +1,32 @@
-import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ArticleCategory, ArticlePreviewDTO } from "@/types/dtos/article";
-import { getAllCategories } from "@/api/article/getAllCategories";
 import { getAllArticlePreview } from "@/api/article/getAllArticles";
 import { retryQuery } from "@/lib/queryRetry";
 
-type UseArticlesOptions = {
-  withCategories?: boolean;
-};
+export const HOME_ARTICLES_PAGE_KEY = ["articles-preview", "home"] as const;
 
-export function useArticles(options: UseArticlesOptions = {}) {
-  const { withCategories = true } = options;
+export function useArticles() {
   const queryClient = useQueryClient();
 
   const articlesQuery = useQuery({
-    queryKey: ["articles-preview"],
+    queryKey: HOME_ARTICLES_PAGE_KEY,
     queryFn: () => getAllArticlePreview().then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     retry: retryQuery,
   });
 
-  const categoriesQuery = useQuery({
-    queryKey: ["article-categories"],
-    queryFn: () => getAllCategories().then((res) => res.data),
-    enabled: withCategories,
-    staleTime: 1000 * 60 * 5,
-    retry: retryQuery,
-  });
-
-  const articlesData = articlesQuery.data;
-  const categoriesData = categoriesQuery.data;
-
-  const articles = articlesData ?? [];
-  const categories = useMemo<ArticleCategory[]>(() => {
-    if (!categoriesData) return [];
-    return categoriesData.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      isSelected: false,
-    }));
-  }, [categoriesData]);
-
-  const articlesByCategory = useMemo(() => {
-    if (!withCategories) return {};
-
-    const map: Record<string, ArticlePreviewDTO[]> = {};
-
-    categories.forEach((cat) => {
-      map[cat.name] = [];
-    });
-
-    const list = articles.slice(1);
-
-    list.forEach((article) => {
-      for (const category of article.categories ?? []) {
-        if (map[category]) {
-          map[category].push(article);
-        }
-      }
-    });
-
-    return map;
-  }, [articles, categories, withCategories]);
-
-  const latestArticle = articles.at(0);
-  const isLoading =
-    articlesQuery.isLoading || (withCategories && categoriesQuery.isLoading);
-
-  const articlesLoadError = articlesQuery.isLoadingError;
-  const categoriesLoadError = withCategories && categoriesQuery.isLoadingError;
-  const isError = articlesLoadError || categoriesLoadError;
-
-  const refetchError =
-    articlesQuery.isRefetchError ||
-    (withCategories && categoriesQuery.isRefetchError);
-
-  const isRefreshing =
-    articlesQuery.isRefetching ||
-    (withCategories && categoriesQuery.isRefetching);
+  const articles = articlesQuery.data ?? [];
 
   async function onRefresh() {
-    const jobs = [
-      queryClient.invalidateQueries({ queryKey: ["articles-preview"] }),
-    ];
-    if (withCategories) {
-      jobs.push(
-        queryClient.invalidateQueries({ queryKey: ["article-categories"] }),
-      );
-    }
-    await Promise.all(jobs);
+    await queryClient.invalidateQueries({ queryKey: ["articles-preview"] });
   }
 
   return {
     articles: articles.slice(1),
-    categories,
-    articlesByCategory,
-    latestArticle,
-    isLoading,
-    isRefreshing,
-    isError,
-    refetchError,
+    latestArticle: articles.at(0),
+    isLoading: articlesQuery.isLoading,
+    isRefreshing: articlesQuery.isRefetching,
+    isError: articlesQuery.isLoadingError,
+    refetchError: articlesQuery.isRefetchError,
     onRefresh,
   };
 }

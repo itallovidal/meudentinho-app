@@ -41,3 +41,18 @@ export function toothEventsInfiniteQueryKey(
     perPage,
   ] as const;
 }
+
+export function articlePreviewsQueryKey(
+  category: string | null | undefined,
+  page: number,
+  perPage: number,
+) {
+  return ["articles-preview", "page", category ?? "", page, perPage] as const;
+}
+
+export function articlePreviewsInfiniteQueryKey(
+  category: string,
+  perPage: number,
+) {
+  return ["articles-preview", "infinite", category, perPage] as const;
+}
