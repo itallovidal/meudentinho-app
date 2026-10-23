@@ -18,7 +18,7 @@ import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
 import { useContext, useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { Image, Keyboard, ScrollView, View } from "react-native";
 import { useForm } from "react-hook-form";
 
 export function ChangePassword() {
@@ -61,6 +61,7 @@ export function ChangePassword() {
   }, [hydrated, authToken, feedback, navigation]);
 
   async function onSubmit(data: UpdatePasswordDTO) {
+    Keyboard.dismiss();
     if (!authToken) {
       setFeedback({
         title: "Sessão expirada",

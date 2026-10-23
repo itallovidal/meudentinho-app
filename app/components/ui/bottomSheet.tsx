@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -33,6 +34,7 @@ const DISMISS_VELOCITY = 700;
 type BottomSheetProps = {
   visible: boolean;
   onClose: () => void;
+  onDismiss?: () => void;
   header: ReactNode;
   children: ReactNode | ((dismiss: () => void) => ReactNode);
   centerHeader?: boolean;
@@ -42,16 +44,33 @@ type BottomSheetProps = {
 export function BottomSheet({
   visible,
   onClose,
+  onDismiss,
   header,
   children,
   centerHeader = false,
-  portalHostName
+  portalHostName,
 }: BottomSheetProps) {
   const { height: offscreenOffset } = useWindowDimensions();
   const translateY = useSharedValue(offscreenOffset);
   const backdropOpacity = useSharedValue(0);
   const [mounted, setMounted] = useState(false);
   const mountedRef = useRef(false);
+  const hasPresentedRef = useRef(false);
+  const dismissPendingRef = useRef(false);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  function handleDismissed() {
+    if (!dismissPendingRef.current) return;
+    dismissPendingRef.current = false;
+    onDismissRef.current?.();
+  }
+
+  useEffect(() => {
+    if (!mounted && Platform.OS !== "ios") {
+      handleDismissed();
+    }
+  }, [mounted]);
 
   function animateOut(onHidden: () => void) {
     translateY.value = withTiming(
@@ -69,6 +88,7 @@ export function BottomSheet({
   }
 
   function unmountSheet() {
+    dismissPendingRef.current = true;
     mountedRef.current = false;
     setMounted(false);
   }
@@ -92,6 +112,7 @@ export function BottomSheet({
       if (mountedRef.current) {
         handleShow();
       } else {
+        hasPresentedRef.current = true;
         mountedRef.current = true;
         setMounted(true);
       }
@@ -126,7 +147,7 @@ export function BottomSheet({
     opacity: backdropOpacity.value,
   }));
 
-  if (!mounted) {
+  if (!mounted && !hasPresentedRef.current) {
     return null;
   }
 
@@ -147,7 +168,8 @@ export function BottomSheet({
 
   return (
     <Modal
-      visible
+      visible={mounted}
+      onDismiss={handleDismissed}
       transparent
       animationType="none"
       statusBarTranslucent
@@ -155,58 +177,60 @@ export function BottomSheet({
       onRequestClose={dismiss}
       onShow={handleShow}
     >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View className="flex-1 justify-end">
-          <Animated.View
-            style={backdropStyle}
-            className="absolute inset-0 bg-black/50"
-          >
-            <Pressable
-              onPress={dismiss}
-              accessibilityRole="button"
-              accessibilityLabel="Fechar"
-              className="h-full w-full"
-            />
-          </Animated.View>
-          <Animated.View
-            style={[sheetStyle, { maxHeight: "90%" }]}
-            className="w-full rounded-t-3xl bg-base-100"
-          >
-            <SafeAreaView edges={["bottom"]} className="shrink">
-              <GestureDetector gesture={pan}>
-                <View
-                  accessible
-                  accessibilityLabel="Arraste para baixo para fechar"
-                  className="items-center px-6 pb-2 pt-3"
-                >
+      {mounted ? (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View className="flex-1 justify-end">
+            <Animated.View
+              style={backdropStyle}
+              className="absolute inset-0 bg-black/50"
+            >
+              <Pressable
+                onPress={dismiss}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar"
+                className="h-full w-full"
+              />
+            </Animated.View>
+            <Animated.View
+              style={[sheetStyle, { maxHeight: "90%" }]}
+              className="w-full rounded-t-3xl bg-base-100"
+            >
+              <SafeAreaView edges={["bottom"]} className="shrink">
+                <GestureDetector gesture={pan}>
                   <View
-                    className="h-1 w-12 rounded-full bg-base-300"
-                  />
-                </View>
-              </GestureDetector>
-              <ScrollView
-                className="shrink"
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{
-                  paddingHorizontal: 24,
-                  paddingTop: 12,
-                  paddingBottom: 24,
-                  gap: 20,
-                }}
-              >
-                {sheetHeader}
-                {typeof children === "function" ? children(dismiss) : children}
-              </ScrollView>
-            </SafeAreaView>
-          </Animated.View>
-          {portalHostName && (
-            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-              <PortalHost name={portalHostName} />
-            </View>
-          )}
-        </View>
-      </GestureHandlerRootView>
+                    accessible
+                    accessibilityLabel="Arraste para baixo para fechar"
+                    className="items-center px-6 pb-2 pt-3"
+                  >
+                    <View
+                      className="h-1 w-12 rounded-full bg-base-300"
+                    />
+                  </View>
+                </GestureDetector>
+                <ScrollView
+                  className="shrink"
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{
+                    paddingHorizontal: 24,
+                    paddingTop: 12,
+                    paddingBottom: 24,
+                    gap: 20,
+                  }}
+                >
+                  {sheetHeader}
+                  {typeof children === "function" ? children(dismiss) : children}
+                </ScrollView>
+              </SafeAreaView>
+            </Animated.View>
+            {portalHostName && (
+              <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                <PortalHost name={portalHostName} />
+              </View>
+            )}
+          </View>
+        </GestureHandlerRootView>
+      ) : null}
     </Modal>
   );
 }

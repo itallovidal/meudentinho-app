@@ -2,6 +2,7 @@ import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
 import { PasswordSheetForm } from "@/components/forms/passwordSheetForm";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { useNavigation } from "@react-navigation/native";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { TrashIcon } from "phosphor-react-native";
 import { useContext, useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Keyboard, ScrollView, View } from "react-native";
 
 function getInitials(name?: string) {
   const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
@@ -41,8 +42,13 @@ export function Responsible() {
   } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<ApiError | null>(null);
+  const [emailChangeSheetMounted, setEmailChangeSheetMounted] = useState(false);
   const [emailChangeSheetOpen, setEmailChangeSheetOpen] = useState(false);
   const [emailChangeError, setEmailChangeError] = useState<ApiError | null>(
     null,
@@ -81,15 +87,22 @@ export function Responsible() {
   }, [hydrated, authToken, navigation]);
 
   async function handleUpdateResponsible(profile: UpdateProfileDTO) {
+    Keyboard.dismiss();
     if (!authToken || !user) {
-      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
       return;
     }
 
     const userId =
       contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
     if (!userId) {
-      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
       return;
     }
     const nameChanged = profile.name.trim() !== user.name;
@@ -114,27 +127,29 @@ export function Responsible() {
           name: profile.name.trim(),
           email: profile.email.trim(),
         });
-        Alert.alert(
-          "Dados atualizados",
-          "As alterações foram salvas com sucesso.",
-        );
+        setFeedback({
+          title: "Dados atualizados",
+          message: "As alterações foram salvas com sucesso.",
+        });
       } catch (error) {
-        Alert.alert(
-          "Erro",
-          error instanceof ApiError
+        setFeedback({
+          title: "Erro",
+          message: error instanceof ApiError
             ? error.message
             : "Não foi possível atualizar os dados.",
-        );
+        });
       }
       return;
     }
 
     setEmailChangeError(null);
     setPendingProfile(profile);
+    setEmailChangeSheetMounted(true);
     setEmailChangeSheetOpen(true);
   }
 
   async function handleConfirmEmailChange({ password }: ConfirmPasswordDTO) {
+    Keyboard.dismiss();
     setEmailChangeError(null);
     const profile = pendingProfile;
     if (!profile) {
@@ -142,7 +157,10 @@ export function Responsible() {
     }
     if (!authToken) {
       setEmailChangeSheetOpen(false);
-      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
       return;
     }
 
@@ -150,7 +168,10 @@ export function Responsible() {
       contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
     if (!userId) {
       setEmailChangeSheetOpen(false);
-      Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
       return;
     }
 
@@ -170,10 +191,10 @@ export function Responsible() {
       });
       setPendingProfile(null);
       setEmailChangeSheetOpen(false);
-      Alert.alert(
-        "Dados atualizados",
-        "As alterações foram salvas com sucesso.",
-      );
+      setFeedback({
+        title: "Dados atualizados",
+        message: "As alterações foram salvas com sucesso.",
+      });
     } catch (error) {
       if (error instanceof ApiError) {
         setEmailChangeError(error);
@@ -321,6 +342,7 @@ export function Responsible() {
       <BottomSheet
         visible={emailChangeSheetOpen}
         onClose={handleCloseEmailChangeSheet}
+        onDismiss={() => setEmailChangeSheetMounted(false)}
         header={
           <Text className="text-xl font-bold text-base-900">
             Alterar e-mail
@@ -338,6 +360,12 @@ export function Responsible() {
           submitError={emailChangeError}
         />
       </BottomSheet>
+
+      <FeedbackSheet
+        title={feedback?.title ?? ""}
+        message={emailChangeSheetMounted ? null : feedback?.message ?? null}
+        onClose={() => setFeedback(null)}
+      />
     </Wrapper>
   );
 }
