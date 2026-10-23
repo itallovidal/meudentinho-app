@@ -1,7 +1,9 @@
+import { CollapsibleSection } from "@/components/collapsibleSection";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrapper } from "@/components/wrapper";
 import { View } from "react-native";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { SkeletonText } from "./skeletonText";
 import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
@@ -44,34 +46,62 @@ export function SkeletonDentalMap({ error }: { error?: ReactNode }) {
 
       <SkeletonSmileHeader />
 
-      {LEGEND.map((entry) => (
-        <Wrapper
-          key={entry.key}
-          direction="row"
-          align="center"
-          justify="between"
-          className="w-full px-1"
-        >
-          <Wrapper direction="row" align="center" gap="gap-3">
-            <ToothSVG
-              viewBox={LEGEND_TOOTH.viewBox}
-              contour={LEGEND_TOOTH.contour}
-              details={LEGEND_TOOTH.details}
-              fill={TOOTH_STYLE[entry.key].fill}
-              stroke={TOOTH_STYLE[entry.key].stroke}
-              width={22}
-              height={22}
-            />
-            <View>
-              <Text className="text-sm font-semibold text-base-600">
-                {entry.label}
-              </Text>
-              <Text className="text-xs text-base-500">{entry.description}</Text>
-            </View>
-          </Wrapper>
-          <Skeleton className="h-8 w-8 rounded-full" />
-        </Wrapper>
-      ))}
+      <CollapsibleSection title="Legendas">
+        <View className="w-full gap-2">
+          {LEGEND.map((entry) => (
+            <Fragment key={entry.key}>
+              {entry.key === "review" && (
+                <Separator className="my-1 bg-base-200" />
+              )}
+              <Wrapper
+                direction="row"
+                align="center"
+                justify="between"
+                className="w-full px-1"
+              >
+                <Wrapper
+                  direction="row"
+                  align="center"
+                  gap="gap-3"
+                  className="min-w-0 flex-1"
+                >
+                  {entry.key === "review" ? (
+                    <View
+                      importantForAccessibility="no-hide-descendants"
+                      className="h-[22px] w-[22px] items-center justify-center"
+                    >
+                      <View className="h-4 w-4 items-center justify-center rounded-full bg-primary-500">
+                        <Text className="text-xs font-bold text-base-100">
+                          !
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <ToothSVG
+                      viewBox={LEGEND_TOOTH.viewBox}
+                      contour={LEGEND_TOOTH.contour}
+                      details={LEGEND_TOOTH.details}
+                      fill={TOOTH_STYLE[entry.key].fill}
+                      stroke={TOOTH_STYLE[entry.key].stroke}
+                      width={22}
+                      height={22}
+                    />
+                  )}
+                  <View className="min-w-0 flex-1">
+                    <Text className="text-sm font-semibold text-base-600">
+                      {entry.label}
+                    </Text>
+                    <Text className="text-xs text-base-500">
+                      {entry.description}
+                    </Text>
+                  </View>
+                </Wrapper>
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </Wrapper>
+            </Fragment>
+          ))}
+        </View>
+      </CollapsibleSection>
     </Wrapper>
   );
 }

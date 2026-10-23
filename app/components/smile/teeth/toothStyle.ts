@@ -21,7 +21,7 @@ export function isMilkSymbol(key: ToothMapStateKey): boolean {
 }
 
 export const LEGEND: {
-  key: ToothMapStateKey;
+  key: ToothMapStateKey | "review";
   label: string;
   description: string;
 }[] = [
@@ -49,6 +49,11 @@ export const LEGEND: {
     key: "fell",
     label: "Caiu",
     description: "Dente de leite que foi trocado",
+  },
+  {
+    key: "review",
+    label: "Registro para revisar",
+    description: "Registro pendente após o limite estimado",
   },
 ];
 

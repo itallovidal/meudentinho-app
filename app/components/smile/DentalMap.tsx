@@ -1,3 +1,5 @@
+import { CollapsibleSection } from "@/components/collapsibleSection";
+import { Separator } from "@/components/ui/separator";
 import {
   buildToothMilestones,
   type ToothMilestone,
@@ -6,7 +8,7 @@ import {
   compareToothEventProgress,
   normalizePrimaryToothType,
 } from "@/lib/toothIdentity";
-import { useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -519,49 +521,81 @@ export function DentalMap({
         {renderArchSection(arches.upperRight, arches.upperLeft, "Superior")}
         {renderArchSection(arches.lowerRight, arches.lowerLeft, "Inferior")}
 
-        <Wrapper
-          justify="center"
-          align="center"
-          direction="column"
-          gap="gap-2"
-          className="mt-1 w-full"
-        >
-          {LEGEND.map((entry) => (
-            <Wrapper
-              key={entry.key}
-              direction="row"
-              align="center"
-              justify="between"
-              className="w-full px-1"
-            >
-              <Wrapper direction="row" align="center" gap="gap-3">
-                <ToothSVG
-                  viewBox={LEGEND_TOOTH.viewBox}
-                  contour={LEGEND_TOOTH.contour}
-                  details={LEGEND_TOOTH.details}
-                  fill={TOOTH_STYLE[entry.key].fill}
-                  stroke={TOOTH_STYLE[entry.key].stroke}
-                  strokeDasharray={
-                    isMilkSymbol(entry.key) ? MILK_SYMBOL_DASH : undefined
-                  }
-                  width={22}
-                  height={22}
-                />
-                <View>
-                  <Text className="text-sm font-semibold text-base-600">
-                    {entry.label}
+        <CollapsibleSection title="Legendas">
+          <Wrapper
+            justify="center"
+            align="center"
+            direction="column"
+            gap="gap-2"
+            className="mt-1 w-full"
+          >
+            {LEGEND.map((entry) => (
+              <Fragment key={entry.key}>
+                {entry.key === "review" && (
+                  <Separator className="my-1 bg-base-200" />
+                )}
+                <Wrapper
+                  direction="row"
+                  align="center"
+                  justify="between"
+                  className="w-full px-1"
+                >
+                  <Wrapper
+                    direction="row"
+                    align="center"
+                    gap="gap-3"
+                    className="min-w-0 flex-1"
+                  >
+                    {entry.key === "review" ? (
+                      <View
+                        importantForAccessibility="no-hide-descendants"
+                        className="h-[22px] w-[22px] items-center justify-center"
+                      >
+                        <View
+                          className="items-center justify-center rounded-full bg-primary-500"
+                          style={{
+                            width: ALERT_BADGE_SIZE,
+                            height: ALERT_BADGE_SIZE,
+                          }}
+                        >
+                          <Text className="text-xs font-bold text-base-100">
+                            !
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <ToothSVG
+                        viewBox={LEGEND_TOOTH.viewBox}
+                        contour={LEGEND_TOOTH.contour}
+                        details={LEGEND_TOOTH.details}
+                        fill={TOOTH_STYLE[entry.key].fill}
+                        stroke={TOOTH_STYLE[entry.key].stroke}
+                        strokeDasharray={
+                          isMilkSymbol(entry.key) ? MILK_SYMBOL_DASH : undefined
+                        }
+                        width={22}
+                        height={22}
+                      />
+                    )}
+                    <View className="min-w-0 flex-1">
+                      <Text className="text-sm font-semibold text-base-600">
+                        {entry.label}
+                      </Text>
+                      <Text className="text-xs text-base-500">
+                        {entry.description}
+                      </Text>
+                    </View>
+                  </Wrapper>
+                  <Text className="text-sm font-bold text-base-600">
+                    {entry.key === "review"
+                      ? overduePositions.size
+                      : legendCounts[entry.key]}
                   </Text>
-                  <Text className="text-xs text-base-500">
-                    {entry.description}
-                  </Text>
-                </View>
-              </Wrapper>
-              <Text className="text-sm font-bold text-base-600">
-                {legendCounts[entry.key]}
-              </Text>
-            </Wrapper>
-          ))}
-        </Wrapper>
+                </Wrapper>
+              </Fragment>
+            ))}
+          </Wrapper>
+        </CollapsibleSection>
       </Wrapper>
 
       {kidId && (
