@@ -24,7 +24,7 @@ export function SessionCard({
 }: SessionCardProps) {
   const illustration = (
     <Image
-      source={require("../../assets/tooth.jpeg")}
+      source={require("../../assets/tooth.png")}
       className="h-32 w-32"
       resizeMode="contain"
       accessibilityLabel="Dente segurando uma escova de dentes"
