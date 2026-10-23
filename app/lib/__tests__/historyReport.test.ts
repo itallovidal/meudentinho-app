@@ -64,9 +64,9 @@ describe("resolveDefaultHistoryStartDate", () => {
   });
 
   it("clamps the day when the target month is shorter", () => {
-    expect(
-      resolveDefaultHistoryStartDate(null, new Date(2026, 6, 31)),
-    ).toBe("2026-02-28");
+    expect(resolveDefaultHistoryStartDate(null, new Date(2026, 6, 31))).toBe(
+      "2026-02-28",
+    );
   });
 
   it("ignores a future birth date", () => {
@@ -207,4 +207,42 @@ describe("buildHistoryReportHtml", () => {
 
     expect(html).toContain("<td>—</td>");
   });
+});
+
+it("includes unknown births by confirmation date and labels them distinctly", () => {
+  const presence = makeEvent({
+    recordKind: "presence",
+    occurrenceDate: "",
+    confirmedAt: "2026-01-07T12:00:00Z",
+  });
+  expect(filterEventsByPeriod([presence], PERIOD)).toEqual([presence]);
+  const html = buildHistoryReportHtml({
+    kidName: "Alice",
+    kidBirthDate: "2024-01-01",
+    kidGender: "female",
+    events: [presence],
+    period: PERIOD,
+  });
+  expect(html).toContain("Nascimento sem data informada");
+  expect(html).toContain("esse dia não representa a data do acontecimento");
+});
+
+it("reports an undated loss as a loss without fabricating an occurrence date", () => {
+  const loss = makeEvent({
+    recordKind: "undated",
+    eventType: "exfoliation",
+    occurrenceDate: "",
+    confirmedAt: "2026-01-07T12:00:00Z",
+  });
+  expect(filterEventsByPeriod([loss], PERIOD)).toEqual([loss]);
+  const html = buildHistoryReportHtml({
+    kidName: "Alice",
+    kidBirthDate: "2024-01-01",
+    kidGender: "female",
+    events: [loss],
+    period: PERIOD,
+  });
+  expect(html).toContain("Queda sem data informada");
+  expect(html).not.toContain("Nascimento sem data informada");
+  expect(html).toContain("esse dia não representa a data do acontecimento");
 });

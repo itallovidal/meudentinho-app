@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PortalHost } from "@rn-primitives/portal";
 import {
@@ -22,7 +29,6 @@ const colors = THEME.light;
 
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 700;
-const OFFSCREEN_OFFSET = 700;
 
 type BottomSheetProps = {
   visible: boolean;
@@ -39,20 +45,21 @@ export function BottomSheet({
   header,
   children,
   centerHeader = false,
-  portalHostName,
+  portalHostName
 }: BottomSheetProps) {
-  const translateY = useSharedValue(OFFSCREEN_OFFSET);
+  const { height: offscreenOffset } = useWindowDimensions();
+  const translateY = useSharedValue(offscreenOffset);
   const backdropOpacity = useSharedValue(0);
   const [mounted, setMounted] = useState(false);
   const mountedRef = useRef(false);
 
   function animateOut(onHidden: () => void) {
     translateY.value = withTiming(
-      OFFSCREEN_OFFSET,
+      offscreenOffset,
       { duration: 200 },
       (finished) => {
         if (finished) {
-          translateY.value = OFFSCREEN_OFFSET;
+          translateY.value = offscreenOffset;
           backdropOpacity.value = 0;
           runOnJS(onHidden)();
         }
@@ -74,7 +81,7 @@ export function BottomSheet({
   }
 
   function handleShow() {
-    translateY.value = OFFSCREEN_OFFSET;
+    translateY.value = offscreenOffset;
     backdropOpacity.value = 0;
     translateY.value = withTiming(0, { duration: 250 });
     backdropOpacity.value = withTiming(1, { duration: 250 });
@@ -123,6 +130,21 @@ export function BottomSheet({
     return null;
   }
 
+  const sheetHeader = (
+    <View className="flex-row items-start gap-4">
+      {centerHeader ? <View className="h-8 w-8" /> : null}
+      <View className="flex-1">{header}</View>
+      <Pressable
+        onPress={dismiss}
+        accessibilityRole="button"
+        accessibilityLabel="Fechar"
+        hitSlop={8}
+      >
+        <XIcon size={24} color={colors.base500} weight="bold" />
+      </Pressable>
+    </View>
+  );
+
   return (
     <Modal
       visible
@@ -147,20 +169,24 @@ export function BottomSheet({
             />
           </Animated.View>
           <Animated.View
-            style={sheetStyle}
+            style={[sheetStyle, { maxHeight: "90%" }]}
             className="w-full rounded-t-3xl bg-base-100"
           >
-            <SafeAreaView edges={["bottom"]}>
+            <SafeAreaView edges={["bottom"]} className="shrink">
               <GestureDetector gesture={pan}>
                 <View
                   accessible
                   accessibilityLabel="Arraste para baixo para fechar"
                   className="items-center px-6 pb-2 pt-3"
                 >
-                  <View className="h-1 w-12 rounded-full bg-base-300" />
+                  <View
+                    className="h-1 w-12 rounded-full bg-base-300"
+                  />
                 </View>
               </GestureDetector>
               <ScrollView
+                className="shrink"
+                showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{
                   paddingHorizontal: 24,
@@ -169,19 +195,7 @@ export function BottomSheet({
                   gap: 20,
                 }}
               >
-                <View className="flex-row items-start gap-4">
-                  {centerHeader ? <View className="h-8 w-8" /> : null}
-                  <View className="flex-1">{header}</View>
-                  <Pressable
-                    onPress={dismiss}
-                    accessibilityRole="button"
-                    accessibilityLabel="Fechar"
-                    hitSlop={8}
-                    className="h-8 w-8 items-end justify-start"
-                  >
-                    <XIcon size={24} color={colors.base500} weight="bold" />
-                  </Pressable>
-                </View>
+                {sheetHeader}
                 {typeof children === "function" ? children(dismiss) : children}
               </ScrollView>
             </SafeAreaView>

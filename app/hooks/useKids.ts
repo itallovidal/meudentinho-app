@@ -89,6 +89,7 @@ export function useKids(authToken: string | null | undefined) {
     isFetching: query.isFetching,
     failure,
     refetchError: query.isRefetchError,
+    error: query.error,
     refetch: query.refetch,
   };
 }

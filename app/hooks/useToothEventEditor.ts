@@ -1,5 +1,5 @@
+import { getToothEventDependents } from "@/lib/toothEventDependents";
 import { useContext, useState } from "react";
-import { Alert } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteToothEvent } from "@/api/smile/deleteToothEvent";
 import { updateToothEvent } from "@/api/smile/updateToothEvent";
@@ -8,33 +8,6 @@ import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { UserContext } from "@/contexts/UserContext";
 import type { ChronologyGender } from "@/lib/toothChronology";
 import type { ToothEvent, ToothEventRequestDTO } from "@/types/teeth";
-
-function lifecycleStage(event: ToothEvent): number {
-  return (
-    (event.dentition === "permanent" ? 2 : 0) +
-    (event.eventType === "exfoliation" ? 1 : 0)
-  );
-}
-
-function getDeleteDependents(
-  event: ToothEvent | null,
-  events: ToothEvent[],
-): ToothEvent[] {
-  if (!event) {
-    return [];
-  }
-  return events.filter(
-    (other) =>
-      other.id !== event.id &&
-      other.quadrant === event.quadrant &&
-      other.toothType === event.toothType &&
-      (!(
-        event.toothType === "first_molar" || event.toothType === "second_molar"
-      ) ||
-        other.dentition === event.dentition) &&
-      lifecycleStage(other) > lifecycleStage(event),
-  );
-}
 
 export function useToothEventEditor({
   kidId,
@@ -52,8 +25,21 @@ export function useToothEventEditor({
   const queryClient = useQueryClient();
   const { userId } = useContext(UserContext)!;
   const accountId = resolveAccountId(userId, authToken);
+  const [deleteError, setDeleteError] = useState<{
+    id: string;
+    message: string;
+  } | null>(null);
   const [editingEvent, setEditingEvent] = useState<ToothEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<ToothEvent | null>(null);
+
+  const scope = `${authToken ? (accountId ?? "") : "anon"}:${kidId ?? ""}`;
+  const [previousScope, setPreviousScope] = useState(scope);
+  if (scope !== previousScope) {
+    setPreviousScope(scope);
+    setEditingEvent(null);
+    setDeletingEvent(null);
+    setDeleteError(null);
+  }
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -63,17 +49,17 @@ export function useToothEventEditor({
       id: string;
       payload: ToothEventRequestDTO;
     }) => updateToothEvent(id, authToken ?? "", payload),
-    onSuccess: () =>
+    onSuccess: (_data, { payload }) =>
       queryClient.invalidateQueries({
-        queryKey: toothEventsQueryKey(accountId, kidId),
+        queryKey: toothEventsQueryKey(accountId, payload.kidId),
       }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteToothEvent(id, authToken ?? ""),
-    onSettled: () =>
+    onSettled: (_data, _error, id) =>
       queryClient.invalidateQueries({
-        queryKey: toothEventsQueryKey(accountId, kidId),
+        queryKey: toothEventsQueryKey(accountId, id.split("|")[0]),
       }),
   });
 
@@ -92,18 +78,9 @@ export function useToothEventEditor({
     if (!editingEvent) {
       return;
     }
-    try {
-      await updateMutation.mutateAsync({ id: editingEvent.id, payload });
-      setEditingEvent(null);
-    } catch (error) {
-      Alert.alert(
-        "Erro",
-        toothEventErrorMessage(
-          error,
-          "Não foi possível salvar as alterações. Tente novamente.",
-        ),
-      );
-    }
+    const target = editingEvent;
+    await updateMutation.mutateAsync({ id: target.id, payload });
+    setEditingEvent((current) => (current?.id === target.id ? null : current));
   }
 
   async function handleConfirmDelete() {
@@ -111,24 +88,35 @@ export function useToothEventEditor({
     if (!target) {
       return;
     }
-    setDeletingEvent(null);
+    if (deleteMutation.isPending) return;
+    setDeleteError(null);
     try {
       await deleteMutation.mutateAsync(target.id);
+      setDeletingEvent((current) =>
+        current?.id === target.id ? null : current,
+      );
     } catch (error) {
-      Alert.alert(
-        "Erro",
-        toothEventErrorMessage(
+      setDeletingEvent((current) =>
+        current && current.id !== target.id ? current : target,
+      );
+      setDeleteError({
+        id: target.id,
+        message: toothEventErrorMessage(
           error,
           "Não foi possível excluir o registro. Tente novamente.",
         ),
-      );
+      });
     }
   }
 
   return {
     openEditor: (event: ToothEvent) => setEditingEvent(event),
     modalProps: {
-      visible: editingEvent !== null,
+      visible:
+        !!authToken &&
+        editingEvent !== null &&
+        editingEvent.kidId === kidId &&
+        editingEvent.parentId === accountId,
       toothId: editingEvent
         ? `${editingEvent.arch}_${editingEvent.side}_${editingEvent.toothType}`
         : null,
@@ -143,14 +131,22 @@ export function useToothEventEditor({
       onDelete: () => {
         const target = editingEvent;
         setEditingEvent(null);
+        setDeleteError(null);
         setDeletingEvent(target);
       },
     },
     confirmProps: {
-      open: deletingEvent !== null,
+      open:
+        !!authToken &&
+        deletingEvent !== null &&
+        deletingEvent.kidId === kidId &&
+        deletingEvent.parentId === accountId,
       title: "Excluir registro?",
       confirmLabel: "Excluir",
-      dependents: getDeleteDependents(deletingEvent, events),
+      dependents: getToothEventDependents(deletingEvent, events),
+      errorMessage:
+        deleteError?.id === deletingEvent?.id ? deleteError?.message : null,
+      pending: deleteMutation.isPending,
       onConfirm: () => void handleConfirmDelete(),
       onCancel: () => setDeletingEvent(null),
     },

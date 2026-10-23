@@ -1,10 +1,11 @@
+import { ToothEventModal } from "@/components/smile/ToothEventModal";
+import { ToothAlertsPanel } from "@/components/smile/ToothAlertsPanel";
+import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
+import { useToothAlertActions } from "@/hooks/useToothAlertActions";
+import { toothEventErrorMessage } from "@/lib/toothEventError";
 import { useContext, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { CaretDownIcon, ToothIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
@@ -74,17 +75,18 @@ export function SmilePredictions() {
   const {
     kids,
     isLoading: kidsPending,
-    isFetching: kidsFetching,
     failure: kidsFailure,
+    error: kidsError,
     refetchError: kidsRefetchError,
     refetch: refetchKids,
   } = useKids(authToken);
   const {
     events,
+    error: eventsError,
+    hasCompleteData: eventsReady,
     isPending,
     isLoadingError: eventsLoadingError,
     isRefetchError: eventsRefetchError,
-    isFetching,
     refetch,
   } = useToothEvents(params.kidId, authToken);
 
@@ -93,9 +95,24 @@ export function SmilePredictions() {
   const birthDate = kid?.birthDate ?? null;
   const gender = kid?.gender ?? null;
 
+  const alerts = useToothPredictionAlerts({
+    kid,
+    events,
+    eventsReady,
+    eventsStale: eventsRefetchError || !!kidsRefetchError,
+  });
+  const alertActions = useToothAlertActions(kid, events, {
+    active: alerts.active,
+    onSnooze: alerts.snooze.mutateAsync,
+    disabledReason:
+      !alerts.ready || alerts.stale
+        ? "Atualize os dados antes de registrar ou adiar."
+        : null,
+  });
   const predictions = useMemo(
-    () => buildToothPredictions(birthDate, events, gender),
-    [birthDate, gender, events],
+    () =>
+      buildToothPredictions(birthDate, events, gender, alerts.referenceDate),
+    [birthDate, gender, events, alerts.referenceDate],
   );
 
   const marks = useMemo(
@@ -168,12 +185,17 @@ export function SmilePredictions() {
     });
   }
 
-  function handleRefresh() {
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+  async function handleRefresh() {
     if (!authToken) {
       return;
     }
-    void refetchKids();
-    void refetch();
+    setManualRefreshing(true);
+    try {
+      await Promise.all([refetchKids(), refetch(), alerts.refetch()]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }
 
   return (
@@ -218,196 +240,228 @@ export function SmilePredictions() {
           </Wrapper>
         }
       >
-      <ScrollView
-        ref={scrollRef}
-        className="w-full"
-        refreshControl={
-          <RefreshControl
-            refreshing={kidsFetching || isFetching}
-            onRefresh={handleRefresh}
-          />
-        }
-      >
-        <Wrapper
-          className="mx-6 my-4"
-          direction="column"
-          align="center"
-          justify="start"
-          gap="gap-4"
+        <ScrollView
+          ref={scrollRef}
+          className="w-full"
+          refreshControl={
+            <RefreshControl
+              refreshing={manualRefreshing}
+              onRefresh={handleRefresh}
+            />
+          }
         >
-          {isLoading && (
-            <Text className="text-base-500">Calculando previsões...</Text>
-          )}
+          <Wrapper
+            className="mx-6 my-4"
+            direction="column"
+            align="center"
+            justify="start"
+            gap="gap-4"
+          >
+            {isLoading && (
+              <View className="w-full gap-3">
+                <SkeletonText />
+                <SkeletonText />
+                <SkeletonText />
+              </View>
+            )}
 
-          {hasError && !isLoading && (
-            <ErrorState
-              title="Não foi possível carregar as previsões"
-              message="Verifique sua conexão e tente novamente."
-              onRetry={handleRefresh}
-            />
-          )}
+            {hasError && !isLoading && (
+              <View className="w-full gap-3">
+                <SkeletonText />
+                <SkeletonText />
+                <ErrorState
+                  title="Não foi possível carregar as previsões"
+                  message={toothEventErrorMessage(
+                    eventsError ?? kidsError,
+                    "Não foi possível carregar os dados. Tente novamente.",
+                  )}
+                  onRetry={handleRefresh}
+                />
+              </View>
+            )}
 
-          {refetchError && !isLoading && (
-            <QueryWarningBanner
-              message="Não foi possível atualizar os dados. Mostrando as previsões calculadas anteriormente."
-              onRetry={handleRefresh}
-            />
-          )}
+            {refetchError && !isLoading && (
+              <QueryWarningBanner
+                message="Não foi possível atualizar os dados. Mostrando as previsões calculadas anteriormente."
+                onRetry={handleRefresh}
+              />
+            )}
 
-          {kidMissing && !isLoading && (
-            <Wrapper
-              className="w-full rounded-xl bg-base-100 p-6"
-              direction="column"
-              align="center"
-              justify="center"
-            >
-              <Text className="text-center text-base-500">
-                Este dependente não foi encontrado na sua conta.
-              </Text>
-            </Wrapper>
-          )}
+            {kidMissing && !isLoading && (
+              <Wrapper
+                className="w-full rounded-xl bg-base-100 p-6"
+                direction="column"
+                align="center"
+                justify="center"
+              >
+                <Text className="text-center text-base-500">
+                  Este dependente não foi encontrado na sua conta.
+                </Text>
+              </Wrapper>
+            )}
 
-          {!isLoading && !hasError && kid && (
-            <>
-              {predictions.length === 0 ? (
-                <Wrapper
-                  className="w-full rounded-xl bg-base-100 p-6"
-                  direction="column"
-                  align="center"
-                  justify="center"
-                >
-                  <Text className="text-center text-base-500">
-                    {birthDate
-                      ? "Nenhuma previsão pendente. Os dentes esperados para a idade já foram registrados."
-                      : "Informe a data de nascimento do dependente para calcular as previsões."}
-                  </Text>
-                </Wrapper>
-              ) : (
-                <>
+            {!isLoading && !hasError && kid && (
+              <>
+                {predictions.length === 0 ? (
                   <Wrapper
-                    className="w-full rounded-xl bg-base-100 p-4"
+                    className="w-full rounded-xl bg-base-100 p-6"
                     direction="column"
                     align="center"
-                    justify="start"
+                    justify="center"
                   >
-                    <DentalCalendar
-                      key={kid.id}
-                      marks={marks}
-                      initialDate={defaultFocus?.date ?? new Date()}
-                      focusRequest={focusRequest}
-                    />
+                    <Text className="text-center text-base-500">
+                      {birthDate
+                        ? "Nenhuma previsão futura nas referências avaliadas. Consulte os registros para revisar e o histórico incompleto."
+                        : "Informe a data de nascimento do dependente para calcular as previsões."}
+                    </Text>
                   </Wrapper>
+                ) : (
+                  <>
+                    <Wrapper
+                      className="w-full rounded-xl bg-base-100 p-4"
+                      direction="column"
+                      align="center"
+                      justify="start"
+                    >
+                      <DentalCalendar
+                        key={kid.id}
+                        marks={marks}
+                        initialDate={defaultFocus?.date ?? new Date()}
+                        focusRequest={focusRequest}
+                      />
+                    </Wrapper>
 
-                  <Wrapper
-                    className="w-full rounded-xl bg-base-100 p-5"
-                    direction="column"
-                    align="start"
-                    justify="start"
-                    gap="gap-3"
-                  >
-                    <View className="w-full gap-2 px-4">
-                      <Text variant="h4" className="text-primary-500">
-                        Próximos marcos
-                      </Text>
-                      <Text className="text-sm text-base-500">
-                        Estas datas são estimativas com base na idade e na
-                        cronologia média de erupção. Elas não substituem a
-                        avaliação de um dentista.
-                      </Text>
-                    </View>
-                    {visiblePredictions.map((prediction) => {
-                      const focused = prediction.id === focusedPredictionId;
-                      return (
-                        <Pressable
-                          key={prediction.id}
-                          onPress={() => handleSelectPrediction(prediction)}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Ver ${prediction.title} no calendário`}
-                          className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
-                        >
-                          <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-100">
-                            <ToothIcon
-                              size={26}
-                              color={colors.primary500}
-                              weight="bold"
-                            />
-                          </View>
-                          <View className="flex-1 gap-1">
-                            <View className="flex-row items-start justify-between gap-2">
-                              <Text className="flex-1 text-base font-bold leading-5 text-primary-800">
-                                {prediction.title}
-                              </Text>
-                              <View
-                                className={`rounded-full px-2 py-0.5 ${prediction.status === "current" ? "bg-primary-100" : "bg-base-200"}`}
-                              >
-                                <Text
-                                  className={`text-[10px] font-bold uppercase tracking-wide ${prediction.status === "current" ? "text-primary-800" : "text-base-500"}`}
-                                >
-                                  {PREDICTION_STATUS_LABEL[prediction.status]}
-                                </Text>
-                              </View>
-                            </View>
-                            <Text className="text-xs font-medium text-primary-400">
-                              {`${formatMonthWindow(prediction.windowStart, prediction.windowEnd)} · ${prediction.pendingSides === 1 ? "1 lado pendente" : `${prediction.pendingSides} lados pendentes`}`}
-                            </Text>
-                            <Text
-                              className="text-xs leading-4 text-base-400"
-                              numberOfLines={2}
-                            >
-                              {prediction.status === "current"
-                                ? "Período provável para a erupção deste dente."
-                                : "Estimativa baseada na cronologia média de erupção."}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                    {shownCount < predictions.length && (
-                      <Pressable
-                        onPress={() =>
-                          setVisibleCount(shownCount + PREDICTIONS_PAGE_SIZE)
-                        }
-                        accessibilityRole="button"
-                        accessibilityLabel="Ver mais marcos"
-                        className="w-full flex-row items-center justify-center gap-2 py-2"
-                      >
-                        <Text className="text-sm font-bold text-primary-500">
-                          Ver mais
+                    <Wrapper
+                      className="w-full rounded-xl bg-base-100 p-5"
+                      direction="column"
+                      align="start"
+                      justify="start"
+                      gap="gap-3"
+                    >
+                      <View className="w-full gap-2 px-4">
+                        <Text variant="h4" className="text-primary-500">
+                          Próximos marcos
                         </Text>
-                        <CaretDownIcon
-                          size={18}
-                          color={colors.primary500}
-                          weight="bold"
-                        />
-                      </Pressable>
-                    )}
-                  </Wrapper>
-                </>
-              )}
+                        <Text className="text-sm text-base-500">
+                          Estas datas são estimativas com base na idade e na
+                          cronologia média de erupção. Elas não substituem a
+                          avaliação de um dentista.
+                        </Text>
+                      </View>
+                      {visiblePredictions.map((prediction) => {
+                        const focused = prediction.id === focusedPredictionId;
+                        return (
+                          <Pressable
+                            key={prediction.id}
+                            onPress={() => handleSelectPrediction(prediction)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Ver ${prediction.title} no calendário`}
+                            className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
+                          >
+                            <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
+                              <ToothIcon
+                                size={16}
+                                color={colors.primary500}
+                                weight="bold"
+                              />
+                            </View>
+                            <View className="flex-1 gap-1">
+                              <View className="flex-row items-start justify-between gap-2">
+                                <Text className="flex-1 text-base font-bold leading-5 text-primary-800">
+                                  {prediction.title}
+                                </Text>
+                                <View
+                                  className={`rounded-full px-2 py-0.5 ${prediction.status === "current" ? "bg-primary-100" : "bg-base-200"}`}
+                                >
+                                  <Text
+                                    className={`text-[10px] font-bold uppercase tracking-wide ${prediction.status === "current" ? "text-primary-800" : "text-base-500"}`}
+                                  >
+                                    {PREDICTION_STATUS_LABEL[prediction.status]}
+                                  </Text>
+                                </View>
+                              </View>
+                              <Text className="text-xs font-medium text-primary-400">
+                                {`${formatMonthWindow(prediction.windowStart, prediction.windowEnd)} · ${prediction.pendingSides === 1 ? "1 lado pendente" : `${prediction.pendingSides} lados pendentes`}`}
+                              </Text>
+                              <Text
+                                className="text-xs leading-4 text-base-400"
+                                numberOfLines={2}
+                              >
+                                {prediction.status === "current"
+                                  ? "Período provável para a erupção deste dente."
+                                  : "Estimativa baseada na cronologia média de erupção."}
+                              </Text>
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                      {shownCount < predictions.length && (
+                        <Pressable
+                          onPress={() =>
+                            setVisibleCount(shownCount + PREDICTIONS_PAGE_SIZE)
+                          }
+                          accessibilityRole="button"
+                          accessibilityLabel="Ver mais marcos"
+                          className="w-full flex-row items-center justify-center gap-2 py-2"
+                        >
+                          <Text className="text-sm font-bold text-primary-500">
+                            Ver mais
+                          </Text>
+                          <CaretDownIcon
+                            size={18}
+                            color={colors.primary500}
+                            weight="bold"
+                          />
+                        </Pressable>
+                      )}
+                    </Wrapper>
+                  </>
+                )}
 
-              <DentalProgressChart
-                title="Troca de Dentes"
-                description={`${kidName} já trocou ${progress.milkExchanged} de ${TOTAL_MILK_TEETH} dentinhos de leite e tem ${progress.permanentErupted} de ${TOTAL_PERMANENT_TEETH} dentes permanentes.`}
-                items={[
-                  {
-                    label: "Dentinhos de leite",
-                    value: progress.milkExchanged,
-                    total: TOTAL_MILK_TEETH,
-                    tone: "milk",
-                  },
-                  {
-                    label: "Dentes permanentes",
-                    value: progress.permanentErupted,
-                    total: TOTAL_PERMANENT_TEETH,
-                    tone: "permanent",
-                  },
-                ]}
-              />
-            </>
-          )}
-        </Wrapper>
-      </ScrollView>
+                <ToothAlertsPanel
+                  key={kid.id}
+                  {...alerts}
+                  errorMessage={
+                    alerts.evaluationError ??
+                    (alerts.error
+                      ? toothEventErrorMessage(
+                          alerts.error,
+                          "Não foi possível carregar os avisos.",
+                        )
+                      : null)
+                  }
+                  busy={alerts.snooze.isPending}
+                  onRetry={() => void handleRefresh()}
+                  onRegister={alertActions.openRegistration}
+                />
+
+                <DentalProgressChart
+                  title="Troca de Dentes"
+                  description={`${kidName} já trocou ${progress.milkExchanged} de ${TOTAL_MILK_TEETH} dentinhos de leite e tem ${progress.permanentErupted} de ${TOTAL_PERMANENT_TEETH} dentes permanentes.`}
+                  items={[
+                    {
+                      label: "Dentinhos de leite",
+                      value: progress.milkExchanged,
+                      total: TOTAL_MILK_TEETH,
+                      tone: "milk",
+                    },
+                    {
+                      label: "Dentes permanentes",
+                      value: progress.permanentErupted,
+                      total: TOTAL_PERMANENT_TEETH,
+                      tone: "permanent",
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </Wrapper>
+        </ScrollView>
       </SessionGate>
+      <ToothEventModal
+        {...alertActions.modalProps}
+        onRetry={() => void handleRefresh()}
+      />
     </Wrapper>
   );
 }

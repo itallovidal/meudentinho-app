@@ -19,6 +19,9 @@ export type ToothType =
 export type ToothEventType = "eruption" | "exfoliation";
 
 export interface ToothEvent {
+  recordKind?: "dated" | "presence" | "undated";
+  historyIncomplete?: boolean;
+  confirmedAt?: string;
   id: string;
   parentId: string;
   kidId: string;
@@ -35,6 +38,8 @@ export interface ToothEvent {
 }
 
 export interface ToothEventRequestDTO {
+  recordKind?: "dated" | "presence" | "undated";
+  historyIncomplete?: boolean;
   kidId: string;
   occurrenceDate: string;
   dentition: Dentition;

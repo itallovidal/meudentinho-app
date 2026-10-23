@@ -1,8 +1,15 @@
+import {
+  buildToothMilestones,
+  type ToothMilestone,
+} from "@/lib/toothMilestones";
+import {
+  compareToothEventProgress,
+  normalizePrimaryToothType,
+} from "@/lib/toothIdentity";
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Alert,
   Pressable,
   TouchableOpacity,
   View,
@@ -24,16 +31,13 @@ import {
 import { Text } from "@/components/ui/text";
 import { InfoPopover } from "@/components/infoPopover";
 import { ToothEventModal } from "./ToothEventModal";
-import { ageInMonths } from "@/lib/utils";
 import { parseToothId, toothAccessibilityLabel } from "@/lib/teethLabels";
 import {
-  isInEruptionWindow,
   toothState,
   type ChronologyGender,
   type MapToothState,
 } from "@/lib/toothChronology";
 import { isApiError } from "@/types/predicates";
-import { toothEventErrorMessage } from "@/lib/toothEventError";
 import type {
   Arch,
   Quadrant,
@@ -84,6 +88,8 @@ const FDI_UNIT: Record<ToothType, string> = {
 type LegendCounts = Record<MapToothState, number> & { eruptionWindow: number };
 
 const OPEN_TOOTH_SIZE = 28;
+const ALERT_BADGE_SIZE = 16;
+const ALERT_BADGE_DISTANCE = OPEN_TOOTH_SIZE / 2 + ALERT_BADGE_SIZE / 2;
 const OPEN_ARCH_HEIGHT = 190;
 const GUM_COLOR = "#F4A3A6";
 const GUM_EDGE_COLOR = "#C2555F";
@@ -120,6 +126,8 @@ type DentalMapProps = {
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
   onMissingKid?: () => void;
+  pendingMilestones?: ToothMilestone[];
+  referenceDate?: Date;
 };
 
 export function DentalMap({
@@ -129,6 +137,8 @@ export function DentalMap({
   events,
   onRegisterEvent,
   onMissingKid,
+  pendingMilestones = [],
+  referenceDate = new Date(),
 }: DentalMapProps) {
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -152,9 +162,28 @@ export function DentalMap({
     [],
   );
 
-  const ageMonths = useMemo(
-    () => (kidBirthDate ? ageInMonths(kidBirthDate) : null),
-    [kidBirthDate],
+  const milestones = useMemo(
+    () =>
+      buildToothMilestones({
+        kidId: kidId ?? "",
+        birthDate: kidBirthDate,
+        events,
+        gender: kidGender,
+        referenceDate,
+      }),
+    [kidId, kidBirthDate, events, kidGender, referenceDate],
+  );
+  const currentPositions = useMemo(
+    () =>
+      new Set(
+        milestones
+          .filter((item) => item.status === "current")
+          .map((item) => `${item.quadrant}:${item.toothType}`),
+      ),
+    [milestones],
+  );
+  const overduePositions = new Set(
+    pendingMilestones.map((item) => `${item.quadrant}:${item.toothType}`),
   );
 
   const states = useMemo(() => {
@@ -173,12 +202,9 @@ export function DentalMap({
   const latestEventByTooth = useMemo(() => {
     const map = new Map<string, ToothEvent>();
     for (const event of events) {
-      const key = `${event.quadrant}:${event.toothType}`;
+      const key = `${event.quadrant}:${normalizePrimaryToothType(event)}`;
       const current = map.get(key);
-      if (
-        !current ||
-        (event.occurrenceDate ?? "").localeCompare(current.occurrenceDate) > 0
-      ) {
+      if (!current || compareToothEventProgress(event, current) > 0) {
         map.set(key, event);
       }
     }
@@ -193,22 +219,18 @@ export function DentalMap({
       bornMilk: 0,
       bornPermanent: 0,
       fell: 0,
-      eruptionWindow: 0,
+      eruptionWindow: currentPositions.size,
     };
     for (const positions of Object.values(arches)) {
       for (const position of positions) {
         const state =
           states.get(`${position.quadrant}:${position.toothType}`) ??
           "unregistered";
-        if (state === "unregistered" && eruptionWindowOf(position)) {
-          counts.eruptionWindow += 1;
-        } else {
-          counts[state] += 1;
-        }
+        counts[state] += 1;
       }
     }
     return counts;
-  }, [arches, states, ageMonths]);
+  }, [arches, states, currentPositions]);
 
   const onToothPress = useCallback(
     (toothId: string) => {
@@ -236,13 +258,7 @@ export function DentalMap({
           showToast("Este evento já estava registrado.");
           return;
         }
-        Alert.alert(
-          "Erro",
-          toothEventErrorMessage(
-            error,
-            "Não foi possível registrar o evento. Verifique sua conexão e tente novamente.",
-          ),
-        );
+        throw error;
       }
     },
     [onRegisterEvent, queryClient, showToast],
@@ -258,13 +274,7 @@ export function DentalMap({
     : [];
 
   function eruptionWindowOf(position: ToothPosition): boolean {
-    return isInEruptionWindow(
-      position.arch,
-      position.toothType,
-      ageMonths,
-      position.side,
-      kidGender,
-    );
+    return currentPositions.has(`${position.quadrant}:${position.toothType}`);
   }
 
   function stateOf(position: ToothPosition): MapToothState {
@@ -328,6 +338,16 @@ export function DentalMap({
       const milk = isMilkSymbol(key);
       const event = eventOf(position);
       const isSelected = selectedTooth === position.id;
+      const theta = (curveIndex / 7) * (Math.PI / 2);
+      const indicatorX = -sign * Math.sin(theta);
+      const indicatorY = upper ? Math.cos(theta) : -Math.cos(theta);
+      const rotationRadians = (rotation * Math.PI) / 180;
+      const localIndicatorX =
+        indicatorX * Math.cos(rotationRadians) +
+        indicatorY * Math.sin(rotationRadians);
+      const localIndicatorY =
+        -indicatorX * Math.sin(rotationRadians) +
+        indicatorY * Math.cos(rotationRadians);
       return (
         <TouchableOpacity
           key={position.id}
@@ -338,7 +358,11 @@ export function DentalMap({
             state: key,
             event,
           })}
-          accessibilityHint="Abre o registro deste dente"
+          accessibilityHint={
+            overduePositions.has(`${position.quadrant}:${position.toothType}`)
+              ? "Há um registro pendente após o limite estimado. Abre o registro deste dente."
+              : "Abre o registro deste dente"
+          }
           accessibilityState={{ selected: isSelected }}
           style={{
             position: "absolute",
@@ -357,6 +381,29 @@ export function DentalMap({
             width={OPEN_TOOTH_SIZE}
             height={OPEN_TOOTH_SIZE}
           />
+          {overduePositions.has(
+            `${position.quadrant}:${position.toothType}`,
+          ) && (
+            <View
+              className="items-center justify-center rounded-full bg-primary-500"
+              style={{
+                position: "absolute",
+                left:
+                  OPEN_TOOTH_SIZE / 2 +
+                  localIndicatorX * ALERT_BADGE_DISTANCE -
+                  ALERT_BADGE_SIZE / 2,
+                top:
+                  OPEN_TOOTH_SIZE / 2 +
+                  localIndicatorY * ALERT_BADGE_DISTANCE -
+                  ALERT_BADGE_SIZE / 2,
+                width: ALERT_BADGE_SIZE,
+                height: ALERT_BADGE_SIZE,
+                transform: [{ rotate: `${-rotation}deg` }],
+              }}
+            >
+              <Text className="text-xs font-bold text-base-100">!</Text>
+            </View>
+          )}
         </TouchableOpacity>
       );
     }
@@ -520,15 +567,15 @@ export function DentalMap({
       {kidId && (
         <ToothEventModal
           visible={modalVisible}
-        toothId={selectedTooth}
-        kidId={kidId}
-        kidBirthDate={kidBirthDate}
-        kidGender={kidGender}
-        toothEvents={selectedToothEvents}
-        events={events}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleRegister}
-      />
+          toothId={selectedTooth}
+          kidId={kidId}
+          kidBirthDate={kidBirthDate}
+          kidGender={kidGender}
+          toothEvents={selectedToothEvents}
+          events={events}
+          onClose={() => setModalVisible(false)}
+          onSubmit={handleRegister}
+        />
       )}
     </Wrapper>
   );

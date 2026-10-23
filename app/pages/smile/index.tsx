@@ -1,3 +1,4 @@
+import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
 import { useContext, useMemo, useState } from "react";
 import { RefreshControl, ScrollView } from "react-native";
 import {
@@ -26,12 +27,15 @@ import { useToothEvents } from "@/hooks/useToothEvents";
 import { useToothEventEditor } from "@/hooks/useToothEventEditor";
 import { resolveAccountId, toothEventsQueryKey } from "@/lib/queryKeys";
 import { errorMessage } from "@/lib/errorMessage";
-import { KID_NOT_LINKED_MESSAGE } from "@/lib/toothEventError";
+import {
+  KID_NOT_LINKED_MESSAGE,
+  toothEventErrorMessage,
+} from "@/lib/toothEventError";
 import { isApiError } from "@/types/predicates";
 import type { SmileStackParamList } from "@/navigation/SmileStack";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { createToothEvent } from "@/api/smile/createToothEvent";
-import PredictionsCard from "@/components/smile/PredictionsCard";
+import { PredictionsCard } from "@/components/smile/PredictionsCard";
 import { ApiError } from "@/types/domain";
 import { KidFormValues } from "@/lib/schemas/kid";
 import { buildKidRequest } from "@/lib/privacyPolicy";
@@ -67,6 +71,7 @@ export function Smile() {
     kids: kidsList,
     isLoading: kidsInitialLoading,
     failure: kidsFailure,
+    error: kidsError,
     refetchError: kidsRefetchError,
     refetch: refetchKids,
   } = useKids(authToken);
@@ -116,11 +121,10 @@ export function Smile() {
   const registerMutation = useMutation({
     mutationFn: (request: ToothEventRequestDTO) =>
       createToothEvent(request, authToken ?? null),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: toothEventsQueryKey(accountId, selectedKidId),
-      });
-    },
+    onSuccess: (_data, request) =>
+      queryClient.invalidateQueries({
+        queryKey: toothEventsQueryKey(accountId, request.kidId),
+      }),
   });
 
   async function handleRegisterEvent(payload: ToothEventRequestDTO) {
@@ -210,9 +214,21 @@ export function Smile() {
     };
   }, [stats.exchanged, kidAgeMonths]);
 
+  const alerts = useToothPredictionAlerts({
+    kid: selectedKidRecord,
+    events,
+    eventsReady: eventsQuery.hasCompleteData,
+    eventsStale: eventsRefetchError || !!kidsRefetchError,
+  });
   const predictions = useMemo(
-    () => buildToothPredictions(kidBirthDate, events, kidGender),
-    [kidBirthDate, kidGender, events],
+    () =>
+      buildToothPredictions(
+        kidBirthDate,
+        events,
+        kidGender,
+        alerts.referenceDate,
+      ),
+    [kidBirthDate, kidGender, events, alerts.referenceDate],
   );
 
   const editor = useToothEventEditor({
@@ -377,7 +393,15 @@ export function Smile() {
           >
             <SkeletonKidSelector />
             <SkeletonDentalMap
-              error={<ErrorState onRetry={() => void refetchKids()} />}
+              error={
+                <ErrorState
+                  message={toothEventErrorMessage(
+                    kidsError,
+                    "Não foi possível carregar os dependentes.",
+                  )}
+                  onRetry={() => void refetchKids()}
+                />
+              }
             />
             <SkeletonDentalTipCard />
             <SkeletonRecentEventsList />
@@ -441,7 +465,10 @@ export function Smile() {
                     message={
                       kidUnlinked
                         ? KID_NOT_LINKED_MESSAGE
-                        : "Não foi possível carregar os eventos. Verifique sua conexão."
+                        : toothEventErrorMessage(
+                            eventsQuery.error,
+                            "Não foi possível carregar os eventos. Tente novamente.",
+                          )
                     }
                     onRetry={() =>
                       kidUnlinked
@@ -474,6 +501,10 @@ export function Smile() {
                 kidBirthDate={kidBirthDate}
                 kidGender={kidGender}
                 events={events}
+                referenceDate={alerts.referenceDate}
+                pendingMilestones={
+                  alerts.ready && !alerts.stale ? alerts.active : []
+                }
                 onRegisterEvent={handleRegisterEvent}
                 onMissingKid={() => setAddDependentVisible(true)}
               />
@@ -483,10 +514,31 @@ export function Smile() {
                   description={dentalTip.description}
                 />
               )}
-              <PredictionsCard
-                items={predictions.slice(0, 3)}
-                onPress={openPredictions}
-              />
+              {selectedKidRecord && (
+                <PredictionsCard
+                  items={predictions.slice(0, 3)}
+                  reviewCounts={
+                    alerts.ready
+                      ? {
+                          active: alerts.active.length,
+                          snoozed: alerts.snoozed.length,
+                          historical: alerts.historical.length,
+                        }
+                      : null
+                  }
+                  reviewError={
+                    alerts.evaluationError ??
+                    (alerts.error
+                      ? toothEventErrorMessage(
+                          alerts.error,
+                          "Não foi possível carregar a revisão dos registros.",
+                        )
+                      : null)
+                  }
+                  onPress={openPredictions}
+                  onRetry={() => void handleRefreshKids()}
+                />
+              )}
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}

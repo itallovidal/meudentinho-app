@@ -1,4 +1,5 @@
 import { Pressable, View } from "react-native";
+import { QuestionMarkIcon } from "phosphor-react-native";
 import { Text } from "@/components/ui/text";
 import { ToothSVG } from "@/components/smile/teeth/ToothSVG";
 import {
@@ -13,9 +14,10 @@ import {
   sideLabel,
   toothEventAccessibilityLabel,
   toothEventVerb,
-  toothTypeLabel,
+  toothDentitionLabel,
 } from "@/lib/teethLabels";
 import type { MapToothState } from "@/lib/toothChronology";
+import { THEME } from "@/lib/theme";
 import { cn, eventDateKey, parseLocalDate } from "@/lib/utils";
 import type { ToothEvent } from "@/types/teeth";
 
@@ -49,7 +51,7 @@ export function ToothEventCard({
   const month = date
     ?.toLocaleDateString("pt-BR", { month: "short" })
     .replace(".", "");
-  const title = toothTypeLabel(event.toothType);
+  const title = toothDentitionLabel(event.toothType, event.dentition);
   const position = `${archLabel(event.arch)} • ${sideLabel(event.side)}`;
   const subtitle = `${toothEventVerb(event.eventType)} (${dentitionLabel(event.dentition).toLowerCase()})`;
 
@@ -65,25 +67,35 @@ export function ToothEventCard({
         tone === "muted" ? "bg-base-200" : "bg-base-100",
       )}
     >
-      {date && month ? (
-        <View
-          className={cn(
-            "shrink-0 items-center justify-center",
-            size === "small" ? "h-12 w-12 rounded-xl" : "h-16 w-16 rounded-2xl",
-            tone === "muted" ? "bg-base-100" : "bg-base-200",
-          )}
-        >
-          <Text
-            className={cn(
-              "font-bold leading-none text-primary-800",
-              size === "small" ? "text-lg" : "text-2xl",
-            )}
-          >
-            {String(date.getDate()).padStart(2, "0")}
-          </Text>
-          <Text className="mt-1 text-xs uppercase text-base-500">{month}</Text>
-        </View>
-      ) : null}
+      <View
+        className={cn(
+          "shrink-0 items-center justify-center",
+          size === "small" ? "h-12 w-12 rounded-xl" : "h-16 w-16 rounded-2xl",
+          tone === "muted" ? "bg-base-100" : "bg-base-200",
+        )}
+      >
+        {date && month ? (
+          <>
+            <Text
+              className={cn(
+                "font-bold leading-none text-primary-800",
+                size === "small" ? "text-lg" : "text-2xl",
+              )}
+            >
+              {String(date.getDate()).padStart(2, "0")}
+            </Text>
+            <Text className="mt-1 text-xs uppercase text-base-500">
+              {month}
+            </Text>
+          </>
+        ) : (
+          <QuestionMarkIcon
+            size={size === "small" ? 24 : 32}
+            color={THEME.light.primary800}
+            weight="bold"
+          />
+        )}
+      </View>
       <View className="flex-1 gap-1">
         <Text
           className={cn(
@@ -101,9 +113,7 @@ export function ToothEventCard({
             details={LEGEND_TOOTH.details}
             fill={style.fill}
             stroke={style.stroke}
-            strokeDasharray={
-              isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined
-            }
+            strokeDasharray={isMilkSymbol(state) ? MILK_SYMBOL_DASH : undefined}
             width={size === "small" ? 16 : 22}
             height={size === "small" ? 16 : 22}
           />

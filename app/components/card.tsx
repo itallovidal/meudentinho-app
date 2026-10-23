@@ -47,6 +47,9 @@ type CardProps = VariantProps<typeof cardVariants> &
   React.ComponentPropsWithoutRef<typeof View> & {
     icon?: React.ReactNode;
     title: string;
+    titleIcon?: React.ReactNode;
+    titleClassName?: string;
+    trailing?: React.ReactNode;
     children: React.ReactNode;
     className?: string;
     variant?: "default" | "destructive";
@@ -57,6 +60,9 @@ type CardProps = VariantProps<typeof cardVariants> &
 export function Card({
   icon,
   title,
+  titleIcon,
+  titleClassName,
+  trailing,
   children,
   className = "",
   variant = "default",
@@ -86,11 +92,26 @@ export function Card({
         align="start"
         gap={"gap-2"}
       >
-        <Text variant={"h4"} className={textVariants({ variant })}>
-          {title}
-        </Text>
+        <View className="w-full flex-row items-center gap-2">
+          {titleIcon && (
+            <View
+              className="shrink-0"
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
+              {titleIcon}
+            </View>
+          )}
+          <Text
+            variant={"h4"}
+            className={cn(textVariants({ variant }), "shrink", titleClassName)}
+          >
+            {title}
+          </Text>
+        </View>
         <Text>{children}</Text>
       </Wrapper>
+      {trailing}
     </>
   );
 

@@ -7,6 +7,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        warning: {
+          100: "hsl(var(--warning-100))",
+          200: "hsl(var(--warning-200))",
+          600: "hsl(var(--warning-600))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
