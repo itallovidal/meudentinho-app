@@ -351,9 +351,9 @@ export function SmilePredictions() {
                             accessibilityLabel={`Ver ${prediction.title} no calendário`}
                             className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
                           >
-                            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary-100">
+                            <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
                               <ToothIcon
-                                size={26}
+                                size={16}
                                 color={colors.primary500}
                                 weight="bold"
                               />

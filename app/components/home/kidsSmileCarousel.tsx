@@ -57,7 +57,7 @@ function emptyMapDescription(name: string, birthDate: string): string {
 }
 
 function emptyEventsDescription(name: string): string {
-  return `Cada conquista do ${name} ficará registrada neste espaço. Toque em '+ registrar evento' ali embaixo para começar!`;
+  return `Cada conquista do ${name} ficará registrada neste espaço. Toque em '+ novo registro' ali embaixo para começar!`;
 }
 
 type KidAction = (kidId: string) => void;
@@ -337,12 +337,12 @@ export function KidsSmileCarousel({
           disabled={!activeKidId}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Registrar evento dentário"
+          accessibilityLabel="Novo registro dentário"
         >
           <Wrapper direction="row" align="center" gap="gap-1">
             <PlusIcon size={16} color={colors.primary400} weight="bold" />
             <Text className="text-sm font-bold text-primary-400">
-              registrar evento
+              novo registro
             </Text>
           </Wrapper>
         </Pressable>

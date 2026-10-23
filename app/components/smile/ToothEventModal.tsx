@@ -478,7 +478,7 @@ export function ToothEventModal({
             dentition === "permanent" &&
             eventType === "eruption" &&
             milkStepPending !== null && (
-              <View className="flex-row items-start gap-3 rounded-xl bg-base-200 p-4">
+              <View className="flex-row items-start gap-3 rounded-xl border border-base-200 bg-base-100 p-4">
                 <AnimatedCheckbox
                   checked={historyIncomplete}
                   onChange={setHistoryIncomplete}
@@ -488,7 +488,7 @@ export function ToothEventModal({
                   onPress={() => setHistoryIncomplete(!historyIncomplete)}
                   className="flex-1 gap-1"
                 >
-                  <Text className="text-base-900">
+                  <Text className="text-base-600">
                     Não tenho o histórico anterior de leite
                   </Text>
                   <Text className="text-sm text-base-500">
