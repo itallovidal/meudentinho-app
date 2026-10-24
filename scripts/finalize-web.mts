@@ -26,6 +26,10 @@ await copyFile(
   resolve(outputRoot, "404.html"),
 );
 await copyFile(
+  resolve(projectRoot, "web/public-site/politica-de-privacidade.html"),
+  resolve(outputRoot, "politica-de-privacidade.html"),
+);
+await copyFile(
   resolve(projectRoot, "assets/new-icon.png"),
   resolve(outputRoot, "site-icon.png"),
 );

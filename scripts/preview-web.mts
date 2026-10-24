@@ -20,9 +20,13 @@ const contentTypes: Record<string, string> = {
 
 try {
   await Promise.all(
-    ["index.html", "app-shell.html", "404.html", "site.css"].map((file) =>
-      readFile(resolve(outputRoot, file)),
-    ),
+    [
+      "index.html",
+      "app-shell.html",
+      "404.html",
+      "politica-de-privacidade.html",
+      "site.css",
+    ].map((file) => readFile(resolve(outputRoot, file))),
   );
 } catch {
   console.error(
@@ -37,15 +41,25 @@ const server = createServer(async function servePreview(request, response) {
     return;
   }
   try {
-    const pathname = decodeURIComponent(
-      new URL(request.url ?? "/", "http://localhost").pathname,
-    );
+    const url = new URL(request.url ?? "/", "http://localhost");
+    const pathname = decodeURIComponent(url.pathname);
+    if (
+      pathname === "/politica-de-privacidade.html" ||
+      pathname === "/politica-de-privacidade/"
+    ) {
+      response
+        .writeHead(308, { Location: `/politica-de-privacidade${url.search}` })
+        .end();
+      return;
+    }
     const destination =
       pathname === "/"
         ? "/index.html"
-        : pathname === "/app" || pathname.startsWith("/app/")
-          ? "/app-shell.html"
-          : pathname;
+        : pathname === "/politica-de-privacidade"
+          ? "/politica-de-privacidade.html"
+          : pathname === "/app" || pathname.startsWith("/app/")
+            ? "/app-shell.html"
+            : pathname;
     const filePath = resolve(outputRoot, `.${destination}`);
     if (!filePath.startsWith(`${outputRoot}${sep}`)) {
       response.writeHead(404).end();
@@ -74,5 +88,8 @@ const server = createServer(async function servePreview(request, response) {
 });
 
 server.listen(port, "127.0.0.1", function announcePreview() {
-  console.log(`Janelinha: http://localhost:${port}/`);
+  const address = server.address();
+  if (address && typeof address !== "string") {
+    console.log(`Janelinha: http://localhost:${address.port}/`);
+  }
 });
