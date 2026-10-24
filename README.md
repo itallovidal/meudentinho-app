@@ -2,14 +2,14 @@
 
 # Janelinha
 
-  <p>Aplicativo mobile para acompanhamento da saúde bucal infantil: odontograma,
+  <p>Aplicativo para Android, iOS e Web para acompanhamento da saúde bucal infantil: odontograma,
   previsão de erupção dentária, artigos educativos e gestão de dependentes.</p>
   <div>
-    <img src="https://img.shields.io/badge/Expo-SDK%2057-000020.svg?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57"/>
-    <img src="https://img.shields.io/badge/React%20Native-0.86.3-20232a.svg?style=flat-square&logo=react&logoColor=61dafb" alt="React Native 0.86.3"/>
-    <img src="https://img.shields.io/badge/React-19.2.3-61dafb.svg?style=flat-square&logo=react&logoColor=white" alt="React 19.2.3"/>
+    <img src="https://img.shields.io/badge/Expo-SDK%2058-000020.svg?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 58"/>
+    <img src="https://img.shields.io/badge/React%20Native-0.88.0-20232a.svg?style=flat-square&logo=react&logoColor=61dafb" alt="React Native 0.88.0"/>
+    <img src="https://img.shields.io/badge/React-19.3.0-61dafb.svg?style=flat-square&logo=react&logoColor=white" alt="React 19.3.0"/>
     <img src="https://img.shields.io/badge/TypeScript-6.0.3-3178c6.svg?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6.0.3"/>
-    <img src="https://img.shields.io/badge/Node-%3E%3D22-339933.svg?style=flat-square&logo=node.js&logoColor=white" alt="Node >= 22"/>
+    <img src="https://img.shields.io/badge/Node-24-339933.svg?style=flat-square&logo=node.js&logoColor=white" alt="Node 24"/>
     <img src="https://img.shields.io/badge/Licen%C3%AAncia-indefinida-lightgrey.svg?style=flat-square" alt="Licença: indefinida"/>
   </div>
   <br>
@@ -24,7 +24,7 @@
 
 ## Descrição
 
-O **Janelinha** é o aplicativo mobile do projeto de acompanhamento da saúde bucal infantil. Ele permite que responsáveis cadastrem crianças dependentes, registrem a dentição em um odontograma interativo e recebam previsões de erupção e troca dos dentes calculadas a partir da idade e do sexo de cada criança.
+O **Janelinha** é o aplicativo para dispositivos móveis e navegador do projeto de acompanhamento da saúde bucal infantil. Ele permite que responsáveis cadastrem crianças dependentes, registrem a dentição em um odontograma interativo e recebam previsões de erupção e troca dos dentes calculadas a partir da idade e do sexo de cada criança.
 
 O app existe para auxiliar o acompanhamento manual feito em consultório: o histórico de nascimento dos dentes fica organizado em um só lugar, e o responsável sabe com antecedência qual dente deve nascer ou cair em seguida. O conteúdo educativo (artigos) fica disponível no próprio aplicativo, com leitura em Markdown renderizada
 nativamente.
@@ -35,14 +35,14 @@ A Arquitetura separa a integração com a API REST (`app/api`, um arquivo por en
 
 ## Tecnologias
 
-- **Expo SDK 57 / React Native 0.86.3** — base do app, com build Android via `expo prebuild` + Gradle.
-- **React 19.2.3** — camada de UI, com contexto para sessão do usuário.
+- **Expo SDK 58 / React Native 0.88.0** — base do app, com build Android via `expo prebuild` + Gradle.
+- **React 19.3.0** — camada de UI, com contexto para sessão do usuário.
 - **TypeScript 6.0.3** — tipagem estrita em todo o código.
 - **NativeWind 4.2.3 + Tailwind CSS 3.4.19** — estilização via `className` com tokens definidos em `app/lib/theme.ts`.
 - **React Navigation 7** — navegação por stacks e abas, usando a API estática (`createStaticNavigation`).
 - **TanStack React Query 5.100.10** — estado de servidor: queries e mutations com invalidação de cache.
 - **React Hook Form 7.75 + Zod 4.4.3** — formulários e validação com schemas centralizados em `app/lib/schemas`.
-- **react-native-reanimated 4.5.1** — animações e gestos.
+- **react-native-reanimated 4.7.1** — animações e gestos.
 - **phosphor-react-native** — biblioteca de ícones.
 - **react-native-remark** — renderização de Markdown nos artigos.
 - **react-native-calendars** — calendário de previsões e seleção de datas.
@@ -83,7 +83,7 @@ Edição de nome e e-mail com confirmação por senha em bottom sheet, troca de 
 
 ### Pré-requisitos
 
-- Node >= 22 (ver `engines` no `package.json`).
+- Node 24.3 ou superior dentro da linha 24 (ver `.nvmrc` e `engines` no `package.json`).
 - JDK 21 e Android SDK (platform + build-tools) para build nativo local.
 - `.env` a partir do `.env.example`; builds de release passam antes por `npm run env:check -- --release`.
 
@@ -98,6 +98,27 @@ Edição de nome e e-mail com confirmação por senha em bottom sheet, troca de 
 | `npm run android:apk:preview:debug`              | APK de debug local                                                                                                                    |
 | `npm run android:apk:install:preview` / `:debug` | instala o APK no device via `adb`                                                                                                     |
 | `npm run typecheck` / `lint` / `test`            | verificação do código                                                                                                                 |
+
+### Versão web
+
+A versão web mantém React Navigation e compartilha telas, formulários, regras e integração com a API com o app nativo. Em desenvolvimento, `npm run web` inicia o Expo; a aplicação usa caminhos sob `/app`.
+
+Para gerar e conferir a saída publicada:
+
+```bash
+nvm use
+npm ci
+npm run build:web
+npm run preview:web
+```
+
+O preview abre em `http://localhost:4173/`, com uma página de apresentação em `/` e o aplicativo em `/app`. `npm run build:web` valida as variáveis, exporta o Expo e reúne o shell do app, a página pública, o CSS e os assets em `dist/`. A pasta é gerada e não deve ser versionada.
+
+No navegador, a sessão usa `sessionStorage`, é separada por origem/aba e sobrevive ao recarregamento da página. Esse armazenamento é acessível a JavaScript da mesma origem e não equivale ao SecureStore; Android/iOS continuam usando o armazenamento seguro nativo. Abas duplicadas podem compartilhar a sessão inicial e devem refazer login se a rotação do refresh token a invalidar.
+
+O histórico web é aberto em um documento próprio de impressão, permitindo escolher salvar como PDF.
+
+Após gerar o build, executar `npm run test:web` para verificar o bundle de produção em DOM simulado, com API de teste. Esses testes verificam inicialização, login, sessão, links profundos e tratamento de falhas; não substituem a validação visual e a integração com CORS em navegadores reais. `npm test` mantém a suíte unitária. O CI executa os dois conjuntos e o build web usando Node 24.
 
 ### Versão
 
