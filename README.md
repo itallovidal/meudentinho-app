@@ -123,6 +123,14 @@ npm run preview:web
 
 Esse build usa o modo de desenvolvimento e aceita HTTP; a publicação continua usando `npm run build:web`, que exige HTTPS. O preview serve os arquivos de `dist/`: após alterar o `.env` do frontend, gere o build novamente. Na API, autorize a origem exata do navegador em `CORS_ALLOWED_ORIGINS`, por exemplo `http://localhost:4173`, sem `/app` nem barra final. Após alterar o `.env` da API, reinicie o processo; com Docker Compose, recrie o serviço para atualizar as variáveis do container.
 
+A Política de Privacidade fica em `/politica-de-privacidade`, fora do aplicativo, e pode ser lida sem login ou JavaScript. Seu HTML-fonte está em `web/public-site/politica-de-privacidade.html` e é copiado pelo build. O preview e a Vercel entregam o documento na URL sem extensão; o endereço `.html` redireciona para ela.
+
+Na web, os links do perfil e dos formulários usam a origem atual, inclusive `http://localhost:4173`. No aplicativo instalado, usam `EXPO_PUBLIC_PRIVACY_POLICY_URL`, que deve continuar sendo uma URL HTTPS válida para a página publicada. Alterar essa variável exige gerar um novo bundle; a validação HTTPS permanece ativa também no preview.
+
+A política inicial é a versão `1.0`, com vigência a partir da publicação do aplicativo na web. Ela identifica os autores e desenvolvedores pelo projeto Janelinha, de iniciação científica da Universidade Veiga de Almeida (UVA), e informa `suporte.janelinha@gmail.com` como canal de atendimento. Os dados dos usuários não são usados em pesquisa; Analytics é uma possibilidade futura e não está integrado na versão atual. Alterações relevantes devem ser acompanhadas de aviso no aplicativo antes de entrarem em vigor.
+
+A exclusão de conta preserva registros técnicos de auditoria, substituindo o identificador do responsável e removendo identificadores de entidades pessoais nas categorias previstas. O backend grava expiração de 180 dias, mas a limpeza depende de uma política TTL ativa no Firestore. Como essa configuração não foi confirmada, o texto não promete exclusão automática nesse prazo. Antes de disponibilizar dados reais, conferir o TTL de `auditLogs.ExpiresAt` no projeto correto e as configurações de logs e backups dos prestadores. A API também limpa tokens de renovação vencidos na inicialização e a cada 24 horas. Ao definir o subdomínio público definitivo, configurar a URL HTTPS de privacidade e, se adotado, o canonical correspondente.
+
 No navegador, a sessão usa `sessionStorage`, é separada por origem/aba e sobrevive ao recarregamento da página. Esse armazenamento é acessível a JavaScript da mesma origem e não equivale ao SecureStore; Android/iOS continuam usando o armazenamento seguro nativo. Abas duplicadas podem compartilhar a sessão inicial e devem refazer login se a rotação do refresh token a invalidar.
 
 O histórico web é aberto em um documento próprio de impressão, permitindo escolher salvar como PDF.
