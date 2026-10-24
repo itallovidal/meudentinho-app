@@ -21,10 +21,10 @@ export function CategoryCard({ category, onPress }: Props) {
       accessibilityHint="Abre o formulário de edição"
       className="w-full flex-row items-center gap-4 rounded-2xl bg-base-100 px-5 py-4 shadow-md shadow-base-300"
     >
-      <View className="h-14 w-14 items-center justify-center rounded-full bg-primary-100">
+      <View className="h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-100">
         <TagSimpleIcon size={26} color={colors.primary400} weight="fill" />
       </View>
-      <View className="flex-1">
+      <View className="min-w-0 flex-1">
         <Text className="text-lg font-bold text-primary-500" numberOfLines={1}>
           {category.name}
         </Text>

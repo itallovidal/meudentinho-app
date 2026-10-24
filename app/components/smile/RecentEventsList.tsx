@@ -6,7 +6,7 @@ import { ClockCounterClockwiseIcon } from "phosphor-react-native";
 import { THEME } from "@/lib/theme";
 import { ToothEventCard } from "@/components/smile/ToothEventCard";
 
-export default function RecentEventsList({
+export function RecentEventsList({
   items,
   onHistoryPress,
   onItemPress,
@@ -23,16 +23,17 @@ export default function RecentEventsList({
 
   return (
     <Wrapper
+      testID="recent-events"
       direction="column"
       align="center"
       justify="start"
-      className="w-full flex-1 rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
+      className="w-full flex-none rounded-xl bg-base-100 p-5 shadow-sm shadow-base-300"
     >
       <Wrapper
         direction="row"
         align="center"
         justify="between"
-        className="mb-3 w-full flex-1"
+        className="mb-3 w-full flex-none"
       >
         <Text variant="h4" className="flex-1 text-primary-500">
           Últimos Registros

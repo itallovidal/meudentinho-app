@@ -1,9 +1,9 @@
 import { memo, useCallback, useContext, useState } from "react";
 import {
   FlatList,
+  Platform,
   Pressable,
   View,
-  useWindowDimensions,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -24,6 +24,7 @@ import { Wrapper } from "@/components/wrapper";
 import type { KidSmileSummary } from "@/hooks/useKidsSmileSummaries";
 import type { SmileSummary } from "@/lib/smileSummary";
 import { THEME } from "@/lib/theme";
+import { useContainerWidth } from "@/hooks/useContainerWidth";
 import {
   cn,
   formatAgeFromBirthDate,
@@ -118,8 +119,8 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
 
   return (
     <View
-      style={{ width, marginRight: CARD_GAP }}
-      className="rounded-2xl bg-base-100 p-5"
+      style={{ width }}
+      className="shrink-0 rounded-2xl bg-base-100 p-5 web:snap-start web:snap-always"
     >
       <Pressable
         onPress={() => onOpenKid(kid.id)}
@@ -285,13 +286,19 @@ type KidsSmileCarouselProps = {
   onRegisterEvent: KidAction;
 };
 
+function CarouselSeparator() {
+  return <View style={{ width: CARD_GAP }} />;
+}
+
 export function KidsSmileCarousel({
   items,
   onOpenKid,
   onOpenHistory,
   onRegisterEvent,
 }: KidsSmileCarouselProps) {
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: containerWidth, onLayout } = useContainerWidth(
+    PAGE_MARGIN * 2,
+  );
   const colors = THEME.light;
   const [activeIndex, setActiveIndex] = useState(0);
   const [summaryHeight, setSummaryHeight] = useState(SMILE_CONTENT_MIN_HEIGHT);
@@ -308,13 +315,16 @@ export function KidsSmileCarousel({
   }, []);
 
   const hasPagination = items.length > 1;
-  const cardWidth = kidsSmileCardWidth(screenWidth, items.length);
+  const cardWidth = kidsSmileCardWidth(
+    containerWidth + PAGE_MARGIN * 2,
+    items.length,
+  );
   const step = cardWidth + CARD_GAP;
   const lastIndex = Math.max(items.length - 1, 0);
   const currentIndex = Math.min(activeIndex, lastIndex);
   const activeKidId = items[currentIndex]?.kid.id ?? null;
 
-  const handleScrollEnd = useCallback(
+  const handleScrollIndex = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const nextIndex = Math.round(event.nativeEvent.contentOffset.x / step);
       setActiveIndex(Math.min(Math.max(nextIndex, 0), lastIndex));
@@ -347,19 +357,26 @@ export function KidsSmileCarousel({
   );
 
   return (
-    <View className="mt-2 w-full">
+    <View className="mt-2 w-full" onLayout={onLayout}>
       <FlatList
+        testID="kids-smile-carousel"
         data={items}
         keyExtractor={(item) => item.kid.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="bg-base-200"
+        className="bg-base-200 web:snap-x web:snap-mandatory"
+        contentContainerStyle={{
+          paddingRight: hasPagination ? CARD_GAP + CARD_PEEK : 0,
+        }}
+        ItemSeparatorComponent={CarouselSeparator}
         snapToInterval={step}
         snapToAlignment="start"
         decelerationRate="fast"
         disableIntervalMomentum
-        onMomentumScrollEnd={handleScrollEnd}
-        onScrollEndDrag={handleScrollEnd}
+        onMomentumScrollEnd={handleScrollIndex}
+        onScrollEndDrag={handleScrollIndex}
+        onScroll={Platform.OS === "web" ? handleScrollIndex : undefined}
+        scrollEventThrottle={16}
         getItemLayout={(_, index) => ({
           length: step,
           offset: step * index,

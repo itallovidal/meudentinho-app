@@ -5,14 +5,14 @@ import { View } from "react-native";
 export function SkeletonArticleCard() {
   return (
     <Wrapper
-      className="rounded-lg border border-base-200 bg-base-100 p-3"
+      className="w-full rounded-lg border border-base-200 bg-base-100 p-3"
       direction="row"
       align="center"
       justify="start"
       gap="gap-3"
     >
-      <Skeleton className="h-24 w-24 rounded-lg" />
-      <Wrapper direction="column" className="flex-1">
+      <Skeleton className="h-24 w-24 shrink-0 rounded-lg" />
+      <Wrapper direction="column" className="min-w-0 flex-1">
         <Skeleton className="h-4 w-3/4" />
         <View className="mt-3 flex-row items-center gap-2">
           <Skeleton className="h-4 w-4 rounded-full" />

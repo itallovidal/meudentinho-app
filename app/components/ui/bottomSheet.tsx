@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { ComponentRef, ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Modal,
   Platform,
@@ -25,6 +25,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { THEME } from "@/lib/theme";
+import { PopoverPortalContext } from "@/contexts/PopoverPortalContext";
 
 const colors = THEME.light;
 
@@ -54,6 +55,17 @@ export function BottomSheet({
   const translateY = useSharedValue(offscreenOffset);
   const backdropOpacity = useSharedValue(0);
   const [mounted, setMounted] = useState(false);
+  const [popoverContainer, setPopoverContainer] = useState<HTMLElement | null>(
+    null,
+  );
+  const capturePopoverContainer = useCallback(
+    (node: ComponentRef<typeof View> | null) => {
+      if (Platform.OS === "web") {
+        setPopoverContainer(node as unknown as HTMLElement | null);
+      }
+    },
+    [],
+  );
   const mountedRef = useRef(false);
   const hasPresentedRef = useRef(false);
   const dismissPendingRef = useRef(false);
@@ -167,70 +179,74 @@ export function BottomSheet({
   );
 
   return (
-    <Modal
-      visible={mounted}
-      onDismiss={handleDismissed}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={dismiss}
-      onShow={handleShow}
-    >
-      {mounted ? (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View className="flex-1 justify-end">
-            <Animated.View
-              style={backdropStyle}
-              className="absolute inset-0 bg-black/50"
-            >
-              <Pressable
-                onPress={dismiss}
-                accessibilityRole="button"
-                accessibilityLabel="Fechar"
-                className="h-full w-full"
-              />
-            </Animated.View>
-            <Animated.View
-              style={[sheetStyle, { maxHeight: "90%" }]}
-              className="w-full rounded-t-3xl bg-base-100"
-            >
-              <SafeAreaView edges={["bottom"]} className="shrink">
-                <GestureDetector gesture={pan}>
-                  <View
-                    accessible
-                    accessibilityLabel="Arraste para baixo para fechar"
-                    className="items-center px-6 pb-2 pt-3"
-                  >
+    <PopoverPortalContext.Provider value={popoverContainer}>
+      <Modal
+        visible={mounted}
+        onDismiss={handleDismissed}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        navigationBarTranslucent
+        onRequestClose={dismiss}
+        onShow={handleShow}
+      >
+        {mounted ? (
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <View ref={capturePopoverContainer} className="flex-1 justify-end">
+              <Animated.View
+                testID="bottom-sheet-backdrop"
+                style={backdropStyle}
+                className="absolute inset-0 bg-black/50"
+              >
+                <Pressable
+                  onPress={dismiss}
+                  accessibilityRole="button"
+                  accessibilityLabel="Fechar"
+                  className="h-full w-full"
+                />
+              </Animated.View>
+              <Animated.View
+                testID="bottom-sheet-surface"
+                style={[sheetStyle, { maxHeight: "90%" }]}
+                className="w-full rounded-t-3xl bg-base-100 web:max-w-2xl web:self-center"
+              >
+                <SafeAreaView edges={["bottom"]} className="shrink">
+                  <GestureDetector gesture={pan}>
                     <View
-                      className="h-1 w-12 rounded-full bg-base-300"
-                    />
-                  </View>
-                </GestureDetector>
-                <ScrollView
-                  className="shrink"
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  contentContainerStyle={{
-                    paddingHorizontal: 24,
-                    paddingTop: 12,
-                    paddingBottom: 24,
-                    gap: 20,
-                  }}
-                >
-                  {sheetHeader}
-                  {typeof children === "function" ? children(dismiss) : children}
-                </ScrollView>
-              </SafeAreaView>
-            </Animated.View>
-            {portalHostName && (
-              <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-                <PortalHost name={portalHostName} />
-              </View>
-            )}
-          </View>
-        </GestureHandlerRootView>
-      ) : null}
-    </Modal>
+                      accessible
+                      accessibilityLabel="Arraste para baixo para fechar"
+                      className="items-center px-6 pb-2 pt-3"
+                    >
+                      <View className="h-1 w-12 rounded-full bg-base-300" />
+                    </View>
+                  </GestureDetector>
+                  <ScrollView
+                    className="shrink"
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{
+                      paddingHorizontal: 24,
+                      paddingTop: 12,
+                      paddingBottom: 24,
+                      gap: 20,
+                    }}
+                  >
+                    {sheetHeader}
+                    {typeof children === "function"
+                      ? children(dismiss)
+                      : children}
+                  </ScrollView>
+                </SafeAreaView>
+              </Animated.View>
+              {portalHostName && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                  <PortalHost name={portalHostName} />
+                </View>
+              )}
+            </View>
+          </GestureHandlerRootView>
+        ) : null}
+      </Modal>
+    </PopoverPortalContext.Provider>
   );
 }

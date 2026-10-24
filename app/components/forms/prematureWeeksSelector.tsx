@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { useContainerWidth } from "@/hooks/useContainerWidth";
 import { CaretDownIcon, CheckIcon } from "phosphor-react-native";
 import { Button } from "../ui/button";
 import { BottomSheet } from "../ui/bottomSheet";
@@ -31,7 +32,7 @@ export function PrematureWeeksSelector({
   error,
 }: PrematureWeeksSelectorProps) {
   const colors = THEME.light;
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: containerWidth, onLayout } = useContainerWidth();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string | undefined>(value);
   const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
@@ -71,7 +72,7 @@ export function PrematureWeeksSelector({
     closeSheet();
   }
 
-  const sidePadding = (screenWidth - CARD_WIDTH) / 2;
+  const sidePadding = Math.max(0, (containerWidth - CARD_WIDTH) / 2);
 
   return (
     <Wrapper direction="column" className="w-full" gap="gap-2">
@@ -121,6 +122,7 @@ export function PrematureWeeksSelector({
       >
         <ScrollView
           ref={scrollRef}
+          onLayout={onLayout}
           horizontal
           onContentSizeChange={handleContentSizeChange}
           snapToOffsets={SNAP_OFFSETS}
@@ -133,66 +135,66 @@ export function PrematureWeeksSelector({
             gap: CARD_GAP,
           }}
         >
-                {WEEKS_OPTIONS.map((weeks, index) => {
-                  const isSelected = weeks === draft;
-                  const isLast = index === WEEKS_OPTIONS.length - 1;
-                  return (
-                    <Pressable
-                      key={weeks}
-                      onPress={() => chooseWeeks(index)}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: isSelected }}
-                      accessibilityLabel={`${weeks} semanas`}
-                      style={({ pressed }) => ({
-                        width: CARD_WIDTH,
-                        height: CARD_HEIGHT,
-                        flexGrow: 0,
-                        flexShrink: 0,
-                        marginRight: isLast ? 0 : CARD_GAP,
-                        transform: [{ scale: pressed ? 0.96 : 1 }],
-                      })}
-                      className={cn(
-                        "items-center justify-center rounded-2xl p-5",
-                        isSelected ? "bg-primary-500" : "bg-base-200",
-                      )}
-                    >
-                      {isSelected ? (
-                        <View className="absolute -right-2 -top-2 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
-                          <CheckIcon
-                            size={14}
-                            color={colors.primary500}
-                            weight="bold"
-                          />
-                        </View>
-                      ) : null}
-                      <Text
-                        className={cn(
-                          "text-4xl font-bold",
-                          isSelected ? "text-base-100" : "text-base-400",
-                        )}
-                      >
-                        {weeks}
-                      </Text>
-                      <Text
-                        className={cn(
-                          "mt-1 text-base font-medium",
-                          isSelected ? "text-base-100" : "text-base-400",
-                        )}
-                      >
-                        semanas
-                      </Text>
-                    </Pressable>
-                  );
+          {WEEKS_OPTIONS.map((weeks, index) => {
+            const isSelected = weeks === draft;
+            const isLast = index === WEEKS_OPTIONS.length - 1;
+            return (
+              <Pressable
+                key={weeks}
+                onPress={() => chooseWeeks(index)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`${weeks} semanas`}
+                style={({ pressed }) => ({
+                  width: CARD_WIDTH,
+                  height: CARD_HEIGHT,
+                  flexGrow: 0,
+                  flexShrink: 0,
+                  marginRight: isLast ? 0 : CARD_GAP,
+                  transform: [{ scale: pressed ? 0.96 : 1 }],
                 })}
-              </ScrollView>
-
-              <Button
-                onPress={confirmChoice}
-                disabled={!draft}
-                className="h-14 w-full rounded-full"
+                className={cn(
+                  "items-center justify-center rounded-2xl p-5",
+                  isSelected ? "bg-primary-500" : "bg-base-200",
+                )}
               >
-                <Text>Confirmar</Text>
-              </Button>
+                {isSelected ? (
+                  <View className="absolute -right-2 -top-2 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
+                    <CheckIcon
+                      size={14}
+                      color={colors.primary500}
+                      weight="bold"
+                    />
+                  </View>
+                ) : null}
+                <Text
+                  className={cn(
+                    "text-4xl font-bold",
+                    isSelected ? "text-base-100" : "text-base-400",
+                  )}
+                >
+                  {weeks}
+                </Text>
+                <Text
+                  className={cn(
+                    "mt-1 text-base font-medium",
+                    isSelected ? "text-base-100" : "text-base-400",
+                  )}
+                >
+                  semanas
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        <Button
+          onPress={confirmChoice}
+          disabled={!draft}
+          className="h-14 w-full rounded-full"
+        >
+          <Text>Confirmar</Text>
+        </Button>
       </BottomSheet>
     </Wrapper>
   );

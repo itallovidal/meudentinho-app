@@ -7,6 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
+import { cn } from "@/lib/utils";
 
 type GenderSelectionProps = {
   gender?: "male" | "female";
@@ -40,7 +41,7 @@ export function GenderSelector({
   }));
 
   return (
-    <Wrapper direction="column" className={className} gap="gap-2">
+    <Wrapper direction="column" className={cn("w-full", className)} gap="gap-2">
       <Text className="text-xs font-semibold uppercase tracking-wide text-primary-400">
         Sexo
       </Text>
@@ -49,7 +50,7 @@ export function GenderSelector({
         accessibilityRole="radiogroup"
         accessibilityLabel="Sexo"
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-        className="relative flex-row rounded-lg bg-base-200 p-1"
+        className="relative w-full flex-row rounded-lg bg-base-200 p-1"
       >
         {gender ? (
           <Animated.View
@@ -63,7 +64,8 @@ export function GenderSelector({
             key={option.value}
             onPress={() => onChange(option.value)}
             accessibilityRole="radio"
-            accessibilityState={{ selected: gender === option.value }}
+            accessibilityState={{ checked: gender === option.value }}
+            aria-checked={gender === option.value}
             accessibilityLabel={option.a11yLabel}
             className="flex-1 items-center py-2"
           >

@@ -37,10 +37,11 @@ export function PredictionsCard({
 
   return (
     <Wrapper
+      testID="tooth-predictions"
       direction="column"
       align="center"
       justify="start"
-      className="w-full flex-1 overflow-hidden rounded-2xl bg-primary-500 p-5"
+      className="w-full flex-none overflow-hidden rounded-2xl bg-primary-500 p-5"
     >
       <Wrapper
         direction="row"
