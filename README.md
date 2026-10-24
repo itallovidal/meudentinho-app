@@ -114,6 +114,15 @@ npm run preview:web
 
 O preview abre em `http://localhost:4173/`, com uma página de apresentação em `/` e o aplicativo em `/app`. `npm run build:web` valida as variáveis, exporta o Expo e reúne o shell do app, a página pública, o CSS e os assets em `dist/`. A pasta é gerada e não deve ser versionada.
 
+Para conferir a landing e o aplicativo com uma API local HTTP configurada em `EXPO_PUBLIC_API_BASE_URL`, use:
+
+```bash
+npm run build:web:preview
+npm run preview:web
+```
+
+Esse build usa o modo de desenvolvimento e aceita HTTP; a publicação continua usando `npm run build:web`, que exige HTTPS. O preview serve os arquivos de `dist/`: após alterar o `.env` do frontend, gere o build novamente. Na API, autorize a origem exata do navegador em `CORS_ALLOWED_ORIGINS`, por exemplo `http://localhost:4173`, sem `/app` nem barra final. Após alterar o `.env` da API, reinicie o processo; com Docker Compose, recrie o serviço para atualizar as variáveis do container.
+
 No navegador, a sessão usa `sessionStorage`, é separada por origem/aba e sobrevive ao recarregamento da página. Esse armazenamento é acessível a JavaScript da mesma origem e não equivale ao SecureStore; Android/iOS continuam usando o armazenamento seguro nativo. Abas duplicadas podem compartilhar a sessão inicial e devem refazer login se a rotação do refresh token a invalidar.
 
 O histórico web é aberto em um documento próprio de impressão, permitindo escolher salvar como PDF.

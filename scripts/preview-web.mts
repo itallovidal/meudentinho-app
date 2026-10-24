@@ -18,7 +18,18 @@ const contentTypes: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-await readFile(resolve(outputRoot, "app-shell.html"));
+try {
+  await Promise.all(
+    ["index.html", "app-shell.html", "404.html", "site.css"].map((file) =>
+      readFile(resolve(outputRoot, file)),
+    ),
+  );
+} catch {
+  console.error(
+    "Build web ausente ou incompleto. Execute npm run build:web:preview e aguarde concluir antes de iniciar o preview.",
+  );
+  process.exit(1);
+}
 
 const server = createServer(async function servePreview(request, response) {
   if (request.method !== "GET" && request.method !== "HEAD") {

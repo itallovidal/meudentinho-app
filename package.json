@@ -17,6 +17,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:web": "npm run env:check -- --release && expo export --platform web && node scripts/finalize-web.mts && tailwindcss -i ./global.css -o ./dist/site.css --minify",
+    "build:web:preview": "npm run env:check -- --dev && expo export --platform web --dev && node scripts/finalize-web.mts && tailwindcss -i ./global.css -o ./dist/site.css --minify",
     "preview:web": "node scripts/preview-web.mts",
     "test:web": "TZ=America/Sao_Paulo jest --config jest.web.config.js --runInBand"
   },
