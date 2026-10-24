@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { KidCard } from "@/components/dependents/kidCard";
 import { KidsListStatus } from "@/components/dependents/kidsListStatus";
 import { Header } from "@/components/header";
@@ -28,20 +29,20 @@ export function Dependents() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.replace("Login");
+      navigation.replace("Login", { returnTo: loginReturnPath() });
     }
   }, [hydrated, authToken, navigation]);
 
   function handleLoginAgain() {
-    navigation.replace("Login");
+    navigation.replace("Login", { returnTo: loginReturnPath() });
   }
 
   function handleSelectKid(kid: KidResponseDTO) {
-    navigation.navigate("EditDependent", { kid });
+    navigation.navigate("EditDependent", { kidId: kid.id });
   }
 
   function handleCreateKid() {
-    navigation.navigate("EditDependent");
+    navigation.navigate("NewDependent");
   }
 
   if (!hydrated) {
@@ -75,9 +76,11 @@ export function Dependents() {
 
       <View className="relative w-full flex-1">
         <ScrollView
-          className="w-full px-6"
+          testID="dependents-list"
+          className="w-full flex-1"
           contentContainerStyle={{
             flexGrow: 1,
+            paddingHorizontal: 24,
             paddingTop: 16,
             paddingBottom: 104,
           }}

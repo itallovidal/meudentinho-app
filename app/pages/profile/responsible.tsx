@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { deleteUser } from "@/api/user/deleteUser";
 import { patchUser } from "@/api/user/patchUser";
 import { PasswordSheetForm } from "@/components/forms/passwordSheetForm";
@@ -81,7 +82,7 @@ export function Responsible() {
     if (hydrated && !authToken) {
       navigation.reset({
         index: 0,
-        routes: [{ name: "Login" }],
+        routes: [{ name: "Login", params: { returnTo: loginReturnPath() } }],
       });
     }
   }, [hydrated, authToken, navigation]);
@@ -134,9 +135,10 @@ export function Responsible() {
       } catch (error) {
         setFeedback({
           title: "Erro",
-          message: error instanceof ApiError
-            ? error.message
-            : "Não foi possível atualizar os dados.",
+          message:
+            error instanceof ApiError
+              ? error.message
+              : "Não foi possível atualizar os dados.",
         });
       }
       return;
@@ -363,7 +365,7 @@ export function Responsible() {
 
       <FeedbackSheet
         title={feedback?.title ?? ""}
-        message={emailChangeSheetMounted ? null : feedback?.message ?? null}
+        message={emailChangeSheetMounted ? null : (feedback?.message ?? null)}
         onClose={() => setFeedback(null)}
       />
     </Wrapper>

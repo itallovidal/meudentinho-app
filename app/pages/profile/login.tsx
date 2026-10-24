@@ -7,6 +7,7 @@ import {
   useFocusEffect,
   useNavigation,
   useRoute,
+  useLinkTo,
 } from "@react-navigation/native";
 import { LoginForm } from "@/components/forms/loginForm";
 import {
@@ -18,27 +19,49 @@ import { useCallback, useContext, useState } from "react";
 import type { LoginRequest } from "@/types/dtos/user";
 import { UserContext } from "@/contexts/UserContext";
 import { errorMessage } from "@/lib/errorMessage";
+import { safeReturnPath } from "@/navigation/linking";
 import { login } from "@/api/auth/login";
 
 export function Login() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const route = useRoute<RouteProp<ProfileRouteParams, "Login">>();
+  const linkTo = useLinkTo();
   const [error, setError] = useState<ApiError | null>(null);
-  const { updateAppUser, user, authToken, hydrated, sessionExpired, clearSessionExpired } = useContext(UserContext)!;
+  const {
+    updateAppUser,
+    user,
+    authToken,
+    hydrated,
+    sessionExpired,
+    clearSessionExpired,
+  } = useContext(UserContext)!;
 
   useFocusEffect(
     useCallback(() => {
       if (hydrated && user && authToken) {
+        const returnTo = safeReturnPath(route.params?.returnTo);
+        if (returnTo) {
+          linkTo(returnTo);
+          return;
+        }
         navigation.reset({
           index: 0,
-          routes: [{ name: "Index", params: { payload: user } }],
+          routes: [{ name: "Index" }],
         });
         const origin = route.params?.fromTab;
         if (origin) {
           navigation.getParent()?.navigate(origin);
         }
       }
-    }, [hydrated, user, authToken, navigation, route.params?.fromTab]),
+    }, [
+      hydrated,
+      user,
+      authToken,
+      navigation,
+      route.params?.fromTab,
+      route.params?.returnTo,
+      linkTo,
+    ]),
   );
 
   async function onLogin(LoginRequest: LoginRequest) {
@@ -61,16 +84,6 @@ export function Login() {
         data.refreshToken ?? null,
         data.userId ?? null,
       );
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Index", params: { payload: basicUser } }],
-      });
-
-      const origin = route.params?.fromTab;
-      if (origin) {
-        navigation.getParent()?.navigate(origin);
-      }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err);
@@ -103,41 +116,42 @@ export function Login() {
         align="center"
         justify="center"
       >
-      <Wrapper className="w-full" direction="column" gap={"gap-0"}>
-        <Text className="mb-0" variant={"h2"}>
-          Bem vindo de volta!
-        </Text>
-        <Text className="mb-6 mt-0 text-muted">
-          Por favor, faça login para continuar
-        </Text>
-      </Wrapper>
-
-      {sessionExpired && !error && (
-        <Wrapper
-          className="mb-4 w-full rounded-xl bg-base-200 p-3"
-          direction="column"
-          align="center"
-          justify="center"
-        >
-          <Text className="text-center text-destructive">
-            Sessão expirada. Faça login novamente.
+        <Wrapper className="w-full" direction="column" gap={"gap-0"}>
+          <Text className="mb-0" variant={"h2"}>
+            Bem vindo de volta!
+          </Text>
+          <Text className="mb-6 mt-0 text-muted">
+            Por favor, faça login para continuar
           </Text>
         </Wrapper>
-      )}
 
-      <LoginForm submitError={error} onSubmit={onLogin} />
+        {sessionExpired && !error && (
+          <Wrapper
+            className="mb-4 w-full rounded-xl bg-base-200 p-3"
+            direction="column"
+            align="center"
+            justify="center"
+          >
+            <Text className="text-center text-destructive">
+              Sessão expirada. Faça login novamente.
+            </Text>
+          </Wrapper>
+        )}
 
-      <Text variant={"small"}>Não possui uma conta?</Text>
-      <Button
-        onPress={() =>
-          navigation.navigate("Signup", {
-            fromTab: route.params?.fromTab,
-          })
-        }
-        variant={"ghost"}
-      >
-        <Text>Registrar-se</Text>
-      </Button>
+        <LoginForm submitError={error} onSubmit={onLogin} />
+
+        <Text variant={"small"}>Não possui uma conta?</Text>
+        <Button
+          onPress={() =>
+            navigation.navigate("Signup", {
+              fromTab: route.params?.fromTab,
+              returnTo: route.params?.returnTo,
+            })
+          }
+          variant={"ghost"}
+        >
+          <Text>Registrar-se</Text>
+        </Button>
       </Wrapper>
     </Wrapper>
   );

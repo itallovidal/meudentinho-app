@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
-import { Alert, RefreshControl, ScrollView } from "react-native";
+import { RefreshControl, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
@@ -80,7 +80,12 @@ export function Home() {
     }
     try {
       if (!authToken) {
-        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        setRegisterKidError(
+          new ApiError(
+            "Sessão expirada. Faça login novamente.",
+            "INVALID_CREDENTIALS",
+          ),
+        );
         return;
       }
 
@@ -151,7 +156,7 @@ export function Home() {
       direction="column"
       align="start"
       justify="start"
-      className="flex-1"
+      className="flex-1 bg-base-200"
     >
       <Header />
       <ScrollView

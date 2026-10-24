@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { ToothTypeSVG } from "@/components/smile/teeth/ToothTypeSVG";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { ToothAlertsPanel } from "@/components/smile/ToothAlertsPanel";
@@ -182,7 +183,7 @@ export function SmilePredictions() {
     navigation.getParent<TabNavigatorNavigationProp>()?.navigate("Profile", {
       screen: "Login",
       initial: false,
-      params: { fromTab: "Smile" },
+      params: { fromTab: "Smile", returnTo: loginReturnPath() },
     });
   }
 

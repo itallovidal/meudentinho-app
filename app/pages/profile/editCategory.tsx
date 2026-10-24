@@ -1,4 +1,7 @@
 import { CategoryForm } from "@/components/forms/categoryForm";
+import { FormLoadState } from "@/components/forms/formLoadState";
+import { useCategories } from "@/hooks/useCategories";
+import { loginReturnPath } from "@/navigation/linking";
 import { ErrorState } from "@/components/errorState";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
@@ -22,9 +25,12 @@ import { ScrollView, View } from "react-native";
 export function EditCategory() {
   const { authToken, hydrated, user } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
-  const { params } = useRoute<RouteProp<ProfileRouteParams, "EditCategory">>();
-  const category = params?.category;
-  const isEditing = category !== undefined;
+  const route =
+    useRoute<RouteProp<ProfileRouteParams, "EditCategory" | "NewCategory">>();
+  const categoryId = route.params?.categoryId;
+  const { categories, isLoading, isError, refetch } = useCategories();
+  const category = categories.find((item) => item.id === categoryId);
+  const isEditing = route.name === "EditCategory";
   const { showToast } = useToast();
   const {
     createCategoryMutation,
@@ -39,7 +45,7 @@ export function EditCategory() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.replace("Login");
+      navigation.replace("Login", { returnTo: loginReturnPath() });
     }
   }, [hydrated, authToken, navigation]);
 
@@ -170,6 +176,24 @@ export function EditCategory() {
     );
   }
 
+  if (isEditing && (isLoading || isError || !category)) {
+    return (
+      <View className="flex-1 bg-base-100">
+        <Header hasBackButton />
+        <FormLoadState
+          message={
+            isLoading
+              ? undefined
+              : isError
+                ? "Não foi possível carregar a categoria. Tente novamente."
+                : "Esta categoria não está mais disponível."
+          }
+          onRetry={() => void refetch()}
+        />
+      </View>
+    );
+  }
+
   return (
     <Wrapper
       className="flex-1 bg-base-200"
@@ -199,6 +223,7 @@ export function EditCategory() {
 
           <View className="w-full rounded-2xl bg-base-100 p-5 shadow-sm shadow-base-300">
             <CategoryForm
+              key={category?.id ?? "new"}
               onSubmit={handleSubmit}
               defaultValues={category ? { name: category.name } : undefined}
               submitError={submitError}

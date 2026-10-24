@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
 import { useContext, useMemo, useState } from "react";
 import { RefreshControl, ScrollView } from "react-native";
@@ -17,7 +18,7 @@ import { DentalMap } from "@/components/smile/DentalMap";
 import DentalTipCard from "@/components/smile/DentalTipCard";
 
 import { KidSelector } from "@/components/smile/KidSelector";
-import RecentEventsList from "@/components/smile/RecentEventsList";
+import { RecentEventsList } from "@/components/smile/RecentEventsList";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
@@ -170,7 +171,7 @@ export function Smile() {
     navigation.navigate("Profile", {
       screen: "EditDependent",
       initial: false,
-      params: { kid: kidRecord, fromTab: "Smile" },
+      params: { kidId: kidRecord.id, fromTab: "Smile" },
     });
   }
 
@@ -277,7 +278,7 @@ export function Smile() {
     navigation.navigate("Profile", {
       screen: "Login",
       initial: false,
-      params: { fromTab: "Smile" },
+      params: { fromTab: "Smile", returnTo: loginReturnPath() },
     });
   }
 
@@ -285,7 +286,7 @@ export function Smile() {
     navigation.navigate("Profile", {
       screen: "Signup",
       initial: false,
-      params: { fromTab: "Smile" },
+      params: { fromTab: "Smile", returnTo: loginReturnPath() },
     });
   }
 

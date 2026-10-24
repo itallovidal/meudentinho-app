@@ -41,6 +41,8 @@ export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
           keyboardType: "email-address",
           autoCapitalize: "none",
           autoCorrect: false,
+          autoComplete: "email",
+          returnKeyType: "next",
         }}
       />
 
@@ -54,6 +56,9 @@ export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
           secureTextEntry: true,
           autoCapitalize: "none",
           autoCorrect: false,
+          autoComplete: "current-password",
+          returnKeyType: "go",
+          onSubmitEditing: () => void handleSubmit(onSubmit)(),
         }}
       />
 

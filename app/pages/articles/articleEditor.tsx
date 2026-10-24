@@ -1,4 +1,9 @@
 import { ArticleForm } from "@/components/forms/articleForm";
+import { FormLoadState } from "@/components/forms/formLoadState";
+import { FeedbackSheet } from "@/components/feedbackSheet";
+import { getArticleById } from "@/api/article/getArticleById";
+import { useQuery } from "@tanstack/react-query";
+import { retryQuery } from "@/lib/queryRetry";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
 import { BottomSheet } from "@/components/ui/bottomSheet";
@@ -17,22 +22,34 @@ import type {
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { TrashIcon } from "phosphor-react-native";
 import { useContext, useState } from "react";
-import { Alert } from "react-native";
+import { View } from "react-native";
 import { ApiError } from "@/types/domain";
 import type { ArticleRequestDTO } from "@/types/dtos/article";
 import { isApiError } from "@/types/predicates";
 
 type ArticleEditorRouteProp = RouteProp<
   ArticlesStackParamList,
-  "ArticleEditor"
+  "ArticleEditor" | "NewArticle"
 >;
 
 export function ArticleEditor() {
   const { authToken, hydrated, user } = useContext(UserContext)!;
   const navigation = useNavigation<ArticlesNavigationProp>();
-  const { params } = useRoute<ArticleEditorRouteProp>();
-  const article = params?.article;
-  const isEditing = article !== undefined;
+  const route = useRoute<ArticleEditorRouteProp>();
+  const articleId = route.params?.articleId;
+  const isEditing = route.name === "ArticleEditor";
+  const {
+    data: article,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["article", articleId],
+    queryFn: () => getArticleById(articleId!).then((response) => response.data),
+    enabled: !!articleId && hydrated && !!authToken && !!user?.isAdmin,
+    retry: retryQuery,
+  });
+  const [operationError, setOperationError] = useState<string | null>(null);
   const { showToast } = useToast();
   const colors = THEME.light;
   const [submitError, setSubmitError] = useState<ApiError | null>(null);
@@ -104,8 +121,7 @@ export function ArticleEditor() {
       }
     } catch (error) {
       setConfirmingDelete(false);
-      Alert.alert(
-        "Erro",
+      setOperationError(
         errorMessage(error, "Não foi possível excluir o artigo."),
       );
     }
@@ -154,6 +170,22 @@ export function ArticleEditor() {
     );
   }
 
+  if (isEditing && (isPending || isError || !article)) {
+    return (
+      <View className="flex-1 bg-base-100">
+        <Header hasBackButton />
+        <FormLoadState
+          message={
+            isPending
+              ? undefined
+              : "Não foi possível carregar este artigo. Verifique o endereço e tente novamente."
+          }
+          onRetry={() => void refetch()}
+        />
+      </View>
+    );
+  }
+
   return (
     <Wrapper
       direction="column"
@@ -165,6 +197,7 @@ export function ArticleEditor() {
       <Header hasBackButton />
 
       <ArticleForm
+        key={article?.id ?? "new"}
         onSubmit={handleSubmit}
         submitError={submitError}
         defaultValues={
@@ -229,6 +262,11 @@ export function ArticleEditor() {
           <Text className="text-base font-bold">Cancelar</Text>
         </Button>
       </BottomSheet>
+      <FeedbackSheet
+        title="Não foi possível excluir o artigo"
+        message={operationError}
+        onClose={() => setOperationError(null)}
+      />
     </Wrapper>
   );
 }

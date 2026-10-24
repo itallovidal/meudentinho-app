@@ -21,12 +21,15 @@ export const SmileStack = createNativeStackNavigator<SmileStackParamList>({
   screens: {
     SmileHome: {
       screen: Smile,
+      linking: "",
     },
     SmileHistory: {
       screen: SmileHistory,
+      linking: ":kidId/historico",
     },
     SmilePredictions: {
       screen: SmilePredictions,
+      linking: ":kidId/previsoes",
     },
   },
   screenOptions: {

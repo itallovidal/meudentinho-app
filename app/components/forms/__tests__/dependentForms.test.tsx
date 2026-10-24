@@ -61,8 +61,20 @@ jest.mock("@/contexts/UserContext", () => ({
   UserContext: jest.requireActual("react").createContext(null),
 }));
 jest.mock("@react-navigation/native", () => ({
-  useRoute: () => ({ params: mockParams }),
-  useNavigation: () => ({ goBack: jest.fn() }),
+  useRoute: () => ({ name: mockRouteName, params: mockParams }),
+  useNavigation: () => ({
+    goBack: jest.fn(),
+    canGoBack: () => false,
+    navigate: jest.fn(),
+  }),
+}));
+jest.mock("@/hooks/useKids", () => ({
+  useKids: () => ({
+    kids: mockKids,
+    isLoading: false,
+    failure: null,
+    refetch: jest.fn(),
+  }),
 }));
 jest.mock("@/hooks/useKidMutations", () => ({
   useKidMutations: () => ({
@@ -85,7 +97,9 @@ const valid = {
   gender: "female" as const,
   accepted: true,
 };
-let mockParams: { kid?: KidResponseDTO } = {};
+let mockParams: { kidId?: string } = {};
+let mockRouteName = "NewDependent";
+let mockKids: KidResponseDTO[] = [];
 const mockSave = jest.fn(async () => ({}));
 
 beforeEach(() => {
@@ -93,6 +107,9 @@ beforeEach(() => {
   jest.setSystemTime(new Date("2026-10-22T09:00:00-03:00"));
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   mockSave.mockClear();
+  mockParams = {};
+  mockRouteName = "NewDependent";
+  mockKids = [];
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -268,11 +285,13 @@ it("reinitializes the actual edit form from A to B and then to creation", async 
     );
   }
   let renderer: ReturnType<typeof create>;
-  mockParams = { kid: a };
+  mockKids = [a, b];
+  mockRouteName = "EditDependent";
+  mockParams = { kidId: a.id };
   await act(async () => {
     renderer = create(screen());
   });
-  mockParams = { kid: b };
+  mockParams = { kidId: b.id };
   await act(async () => {
     renderer.update(screen());
   });
@@ -314,6 +333,7 @@ it("reinitializes the actual edit form from A to B and then to creation", async 
     }),
   );
   mockParams = {};
+  mockRouteName = "NewDependent";
   await act(async () => {
     renderer.update(screen());
   });

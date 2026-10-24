@@ -1,9 +1,11 @@
 import { kidSchema, kidEditSchema, KidFormValues } from "@/lib/schemas/kid";
-import { openPrivacyPolicy } from "@/lib/privacyPolicy";
+import { ENV } from "@/lib/env";
+import { ExternalLink } from "@/components/externalLink";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { ApiError } from "@/types/domain";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ReactNode, useEffect } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { ReactNode, useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
 import { Wrapper } from "../wrapper";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
@@ -102,12 +104,7 @@ export function RegisterKidForm({
     });
   }
 
-  async function handleOpenPolicy() {
-    const opened = await openPrivacyPolicy();
-    if (!opened) {
-      Alert.alert("Erro", "Não foi possível abrir a Política de Privacidade.");
-    }
-  }
+  const [policyError, setPolicyError] = useState<string | null>(null);
 
   return (
     <Wrapper align="start" direction="column" gap="gap-4">
@@ -131,14 +128,14 @@ export function RegisterKidForm({
       />
 
       <View className="w-full flex-row gap-3">
-        <View className="flex-1">
+        <View className="min-w-0 flex-1">
           <BirthDateInput
             value={birthDate}
             onChange={chooseBirthDate}
             error={errors.birthDate?.message as string | undefined}
           />
         </View>
-        <View className="flex-1">
+        <View className="min-w-0 flex-1">
           <GenderSelector gender={gender} onChange={changeGender} />
           {errors.gender ? (
             <Text className="text-destructive" variant="small">
@@ -209,12 +206,17 @@ export function RegisterKidForm({
             </View>
             <Text className="flex-1 text-sm">
               Li e aceito a{" "}
-              <Text
-                onPress={() => void handleOpenPolicy()}
+              <ExternalLink
+                href={ENV.PRIVACY_POLICY_URL}
+                onError={() =>
+                  setPolicyError(
+                    "Não foi possível abrir a Política de Privacidade.",
+                  )
+                }
                 className="font-bold text-primary-500 underline"
               >
                 Política de Privacidade
-              </Text>{" "}
+              </ExternalLink>{" "}
               em nome desta criança.
             </Text>
           </View>
@@ -240,6 +242,13 @@ export function RegisterKidForm({
       </Button>
 
       {footer}
+      {policyError ? (
+        <FeedbackSheet
+          title="Não foi possível abrir o link"
+          message={policyError}
+          onClose={() => setPolicyError(null)}
+        />
+      ) : null}
     </Wrapper>
   );
 }

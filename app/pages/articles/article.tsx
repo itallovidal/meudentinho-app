@@ -56,7 +56,7 @@ export function Article() {
     if (!article) {
       return;
     }
-    navigation.navigate("ArticleEditor", { article });
+    navigation.navigate("ArticleEditor", { articleId: article.id });
   }
 
   if (!id) {
