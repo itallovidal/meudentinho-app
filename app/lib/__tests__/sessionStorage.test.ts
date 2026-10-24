@@ -1,4 +1,7 @@
-import { readSessionStorage, writeSessionStorage } from "@/lib/sessionStorage";
+import {
+  readSessionStorage,
+  writeSessionStorage,
+} from "@/lib/sessionStorage.native";
 import {
   getSecureItem,
   setSecureItem,

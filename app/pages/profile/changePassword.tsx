@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { changePassword } from "@/api/user/changePassword";
 import { Header } from "@/components/header";
 import { FeedbackSheet } from "@/components/feedbackSheet";
@@ -55,7 +56,7 @@ export function ChangePassword() {
     if (hydrated && !authToken && !feedback) {
       navigation.reset({
         index: 0,
-        routes: [{ name: "Login" }],
+        routes: [{ name: "Login", params: { returnTo: loginReturnPath() } }],
       });
     }
   }, [hydrated, authToken, feedback, navigation]);

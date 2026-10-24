@@ -5,7 +5,10 @@ import {
   setSecureItem,
   removeSecureItem,
 } from "@/lib/secureStorage";
-import { readSessionStorage, writeSessionStorage } from "@/lib/sessionStorage";
+import {
+  readSessionStorage,
+  writeSessionStorage,
+} from "@/lib/sessionStorage.native";
 
 jest.mock("@/lib/env", () => ({
   ENV: { LOCAL_STORAGE_KEY_PREFIX: "@janelinha" },

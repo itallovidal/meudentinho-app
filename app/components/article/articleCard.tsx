@@ -1,4 +1,4 @@
-import { Image, TouchableNativeFeedback } from "react-native";
+import { Image, Pressable } from "react-native";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 import { useNavigation } from "@react-navigation/native";
@@ -26,7 +26,12 @@ export function ArticleCard({
   const colors = THEME.light;
 
   return (
-    <TouchableNativeFeedback
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Ler artigo: ${title}`}
+      className="w-full overflow-hidden rounded-lg"
+      android_ripple={{ color: colors.base200 }}
+      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
@@ -36,17 +41,22 @@ export function ArticleCard({
       }
     >
       <Wrapper
-        className={`rounded-lg border border-base-200 bg-base-100 p-3 shadow-sm shadow-base-300 ${className}`}
+        className={`w-full rounded-lg border border-base-200 bg-base-100 p-3 shadow-sm shadow-base-300 ${className}`}
         direction="row"
         align="center"
         justify="start"
         gap="gap-3"
       >
         <Image
-          className="h-24 w-24 rounded-lg bg-base-200"
+          className="h-24 w-24 shrink-0 rounded-lg bg-base-200"
           source={{ uri: imageCoverURL }}
+          accessibilityLabel={`Capa do artigo: ${title}`}
         />
-        <Wrapper className="flex-1" direction="column" justify="between">
+        <Wrapper
+          className="min-w-0 flex-1"
+          direction="column"
+          justify="between"
+        >
           <Text className="mb-3 font-bold" numberOfLines={2}>
             {title}
           </Text>
@@ -58,6 +68,6 @@ export function ArticleCard({
           </Wrapper>
         </Wrapper>
       </Wrapper>
-    </TouchableNativeFeedback>
+    </Pressable>
   );
 }

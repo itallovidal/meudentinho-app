@@ -1,4 +1,5 @@
 import { CollapsibleSection } from "@/components/collapsibleSection";
+import { useContainerWidth } from "@/hooks/useContainerWidth";
 import { Separator } from "@/components/ui/separator";
 import {
   buildToothMilestones,
@@ -11,12 +12,7 @@ import {
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Pressable,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Platform, Pressable, TouchableOpacity, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Wrapper } from "@/components/wrapper";
 import { useToast } from "@/components/ui/toast";
@@ -146,7 +142,7 @@ export function DentalMap({
   const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: containerWidth, onLayout } = useContainerWidth(48);
 
   useFocusEffect(
     useCallback(() => {
@@ -213,7 +209,7 @@ export function DentalMap({
     return map;
   }, [events]);
 
-  const archWidth = Math.max(300, screenWidth - 100);
+  const archWidth = Math.max(240, containerWidth - 40);
 
   const legendCounts = useMemo(() => {
     const counts: LegendCounts = {
@@ -368,6 +364,8 @@ export function DentalMap({
           accessibilityState={{ selected: isSelected }}
           style={{
             position: "absolute",
+            width: OPEN_TOOTH_SIZE,
+            height: OPEN_TOOTH_SIZE,
             left: x - OPEN_TOOTH_SIZE / 2,
             top: y - OPEN_TOOTH_SIZE / 2,
             transform: [{ rotate: `${rotation}deg` }],
@@ -439,35 +437,37 @@ export function DentalMap({
         </Svg>
         {right.map((position, index) => renderPlaced(position, -1, 7 - index))}
         {left.map((position, index) => renderPlaced(position, 1, index))}
-        <Pressable
-          accessible={false}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: archWidth,
-            height: OPEN_ARCH_HEIGHT,
-          }}
-          onPress={(event) => {
-            const { locationX, locationY } = event.nativeEvent;
-            const points = [
-              ...right.map((position, index) => ({
-                id: position.id,
-                ...place(-1, 7 - index),
-              })),
-              ...left.map((position, index) => ({
-                id: position.id,
-                ...place(1, index),
-              })),
-            ];
-            const nearest = nearestPosition(points, locationX, locationY);
-            if (nearest) {
-              onToothPress(nearest.id);
-            }
-          }}
-        />
+        {Platform.OS !== "web" && (
+          <Pressable
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: archWidth,
+              height: OPEN_ARCH_HEIGHT,
+            }}
+            onPress={(event) => {
+              const { locationX, locationY } = event.nativeEvent;
+              const points = [
+                ...right.map((position, index) => ({
+                  id: position.id,
+                  ...place(-1, 7 - index),
+                })),
+                ...left.map((position, index) => ({
+                  id: position.id,
+                  ...place(1, index),
+                })),
+              ];
+              const nearest = nearestPosition(points, locationX, locationY);
+              if (nearest) {
+                onToothPress(nearest.id);
+              }
+            }}
+          />
+        )}
       </View>
     );
   }
@@ -494,7 +494,12 @@ export function DentalMap({
   }
 
   return (
-    <Wrapper direction="column" align="center" className="w-full">
+    <Wrapper
+      direction="column"
+      align="center"
+      className="w-full"
+      onLayout={onLayout}
+    >
       <Wrapper
         direction="column"
         align="start"

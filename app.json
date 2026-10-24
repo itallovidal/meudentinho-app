@@ -23,12 +23,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
-    "plugins": [
-      "expo-secure-store",
-      "expo-sharing",
-      "expo-status-bar"
-    ]
+    "plugins": ["expo-secure-store", "expo-sharing", "expo-status-bar"]
   }
 }

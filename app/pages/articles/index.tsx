@@ -93,7 +93,7 @@ export function Index() {
   }
 
   function handleCreateArticle() {
-    navigation.navigate("ArticleEditor");
+    navigation.navigate("NewArticle");
   }
 
   return (
@@ -101,7 +101,7 @@ export function Index() {
       direction="column"
       align="start"
       justify="start"
-      className="flex-1"
+      className="flex-1 bg-base-200"
     >
       <Header />
       <View className="relative w-full flex-1">

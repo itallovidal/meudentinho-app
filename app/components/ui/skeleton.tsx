@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, Platform, View } from "react-native";
 
 function Skeleton({
   className,
@@ -14,12 +14,12 @@ function Skeleton({
         Animated.timing(opacity, {
           toValue: 1,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         }),
         Animated.timing(opacity, {
           toValue: 0.5,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         }),
       ]),
     );
@@ -32,7 +32,7 @@ function Skeleton({
   return (
     <Animated.View
       style={{ opacity }}
-      className={cn("bg-accent rounded-md", className)}
+      className={cn("rounded-md bg-accent", className)}
       {...props}
     />
   );

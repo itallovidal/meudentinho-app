@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -32,7 +32,17 @@ jobs:
         run: npm test
 
       - name: Expo doctor
-        run: npx expo-doctor
+        run: npx --yes expo-doctor
+
+      - name: Web production build
+        run: npm run build:web
+        env:
+          EXPO_NO_DOTENV: 1
+          EXPO_PUBLIC_API_BASE_URL: https://api.example.com
+          EXPO_PUBLIC_PRIVACY_POLICY_URL: https://example.com/politica-de-privacidade
+
+      - name: Web bundle smoke tests
+        run: npm run test:web
 
       - name: Lint (non blocking, tracked debt)
         run: npm run lint

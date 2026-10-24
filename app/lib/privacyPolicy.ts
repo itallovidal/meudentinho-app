@@ -1,4 +1,4 @@
-import { Linking } from "react-native";
+import { Linking, Platform } from "react-native";
 import * as Crypto from "expo-crypto";
 import { ENV } from "@/lib/env";
 import type { KidFormValues } from "@/lib/schemas/kid";
@@ -12,7 +12,7 @@ export async function openPrivacyPolicy(): Promise<boolean> {
     return false;
   }
   try {
-    const supported = await Linking.canOpenURL(url);
+    const supported = Platform.OS === "web" || (await Linking.canOpenURL(url));
     if (!supported) {
       return false;
     }

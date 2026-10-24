@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { CategoriesListStatus } from "@/components/categories/categoriesListStatus";
 import { CategoryCard } from "@/components/categories/categoryCard";
 import { ErrorState } from "@/components/errorState";
@@ -35,16 +36,16 @@ export function Categories() {
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.replace("Login");
+      navigation.replace("Login", { returnTo: loginReturnPath() });
     }
   }, [hydrated, authToken, navigation]);
 
   function handleSelectCategory(category: ArticleCategoryDTO) {
-    navigation.navigate("EditCategory", { category });
+    navigation.navigate("EditCategory", { categoryId: category.id });
   }
 
   function handleCreateCategory() {
-    navigation.navigate("EditCategory");
+    navigation.navigate("NewCategory");
   }
 
   function handleGoBack() {
@@ -114,8 +115,14 @@ export function Categories() {
 
       <View className="relative w-full flex-1">
         <ScrollView
-          className="w-full px-6"
-          contentContainerStyle={{ flexGrow: 1, paddingVertical: 16 }}
+          testID="categories-list"
+          className="w-full flex-1"
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 24,
+            paddingTop: 16,
+            paddingBottom: 104,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}

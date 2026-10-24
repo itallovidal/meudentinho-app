@@ -77,7 +77,14 @@ export function buildEnv(
   return { env: parsed.data, issues: [] };
 }
 
-const envResult = buildEnv(process.env, { requireHttps: !__DEV__ });
+const envResult = buildEnv(
+  {
+    EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+    EXPO_PUBLIC_PRIVACY_POLICY_URL: process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL,
+    EXPO_PUBLIC_LOCAL_STORAGE_KEY: process.env.EXPO_PUBLIC_LOCAL_STORAGE_KEY,
+  },
+  { requireHttps: !__DEV__ },
+);
 
 export const ENV = envResult.env;
 export const envIssues = envResult.issues;

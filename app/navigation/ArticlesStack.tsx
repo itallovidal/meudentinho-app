@@ -5,13 +5,13 @@ import {
 import { Index } from "@/pages/articles/index";
 import { Article } from "@/pages/articles/article";
 import { ArticleEditor } from "@/pages/articles/articleEditor";
-import type { Article as ArticleEntity } from "@/types/domain";
 import type { CrossTabOrigin } from "./types";
 
 export type ArticlesStackParamList = {
   ArticlesList: undefined;
   Article: { id: string } & CrossTabOrigin;
-  ArticleEditor: { article?: ArticleEntity } | undefined;
+  NewArticle: undefined;
+  ArticleEditor: { articleId: string };
 };
 
 export type ArticlesNavigationProp =
@@ -23,12 +23,19 @@ export const ArticlesStack = createNativeStackNavigator<ArticlesStackParamList>(
     screens: {
       ArticlesList: {
         screen: Index,
+        linking: "",
       },
       Article: {
         screen: Article,
+        linking: ":id",
+      },
+      NewArticle: {
+        screen: ArticleEditor,
+        linking: "novo",
       },
       ArticleEditor: {
         screen: ArticleEditor,
+        linking: ":articleId/editar",
       },
     },
     screenOptions: {

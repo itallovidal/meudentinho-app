@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AnimatedCheckbox } from "./animatedCheckbox";
 import { BirthDateInput } from "./birthDateInput";
-import { openPrivacyPolicy } from "@/lib/privacyPolicy";
+import { ENV } from "@/lib/env";
+import { ExternalLink } from "@/components/externalLink";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { signupSchema, SignupFormValues } from "@/lib/schemas/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
+import { useState } from "react";
 
 interface ProfileFormProps {
   onSubmit: (data: SignupFormValues) => void | Promise<void>;
@@ -46,12 +49,7 @@ export function ProfileForm({
     },
   });
 
-  async function handleOpenPolicy() {
-    const opened = await openPrivacyPolicy();
-    if (!opened) {
-      Alert.alert("Erro", "Não foi possível abrir a Política de Privacidade.");
-    }
-  }
+  const [policyError, setPolicyError] = useState<string | null>(null);
 
   return (
     <Wrapper align="center" direction="column" className="w-full" gap={"gap-6"}>
@@ -136,12 +134,17 @@ export function ProfileForm({
         </View>
         <Text className="flex-1 text-sm">
           Li e aceito a{" "}
-          <Text
-            onPress={() => void handleOpenPolicy()}
+          <ExternalLink
+            href={ENV.PRIVACY_POLICY_URL}
+            onError={() =>
+              setPolicyError(
+                "Não foi possível abrir a Política de Privacidade.",
+              )
+            }
             className="font-bold text-primary-500 underline"
           >
             Política de Privacidade
-          </Text>{" "}
+          </ExternalLink>{" "}
           e declaro ser responsável legal pelas crianças que cadastrar.
         </Text>
       </View>
@@ -165,6 +168,13 @@ export function ProfileForm({
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>
+      {policyError ? (
+        <FeedbackSheet
+          title="Não foi possível abrir o link"
+          message={policyError}
+          onClose={() => setPolicyError(null)}
+        />
+      ) : null}
     </Wrapper>
   );
 }

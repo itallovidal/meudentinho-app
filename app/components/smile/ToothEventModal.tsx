@@ -644,7 +644,7 @@ export function ToothEventModal({
               </Text>
             </Pressable>
             {(confirmDisabled || isBusy) && confirmDisabledReason ? (
-              <View className="absolute -right-1 -top-1 z-10 rounded-full bg-base-100 shadow-sm shadow-base-400">
+              <View className="absolute -right-1 -top-1 z-10 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
                 <InfoPopover
                   accessibilityLabel="Por que não posso salvar?"
                   message={confirmDisabledReason}
@@ -750,7 +750,7 @@ function Chip({
         </Text>
       </Pressable>
       {disabled && disabledReason ? (
-        <View className="absolute -right-1 -top-1 z-10 rounded-full bg-base-100 shadow-sm shadow-base-400">
+        <View className="absolute -right-1 -top-1 z-10 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
           <InfoPopover
             accessibilityLabel={`Por que "${label}" está indisponível?`}
             message={disabledReason}

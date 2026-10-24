@@ -29,9 +29,10 @@ export function KidSelector({
 
   return (
     <ScrollView
+      testID="kid-selector"
       horizontal
       showsHorizontalScrollIndicator={false}
-      className="w-full"
+      className="w-full flex-none"
       contentContainerStyle={{ flexGrow: 1, alignItems: "center" }}
     >
       <View className="flex-row items-center gap-2 pr-1">
@@ -109,9 +110,7 @@ export function KidSelector({
             <View className="flex flex-row items-center justify-center gap-2 px-2">
               <PlusIcon size={20} weight="bold" color={colors.base700} />
               {kids.length === 0 && (
-                <Text variant="small">
-                  Cadastrar dependente
-                </Text>
+                <Text variant="small">Cadastrar dependente</Text>
               )}
             </View>
           </TouchableOpacity>

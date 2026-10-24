@@ -1,4 +1,5 @@
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
+import { useContainerWidth } from "@/hooks/useContainerWidth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrapper } from "@/components/wrapper";
 import {
@@ -16,11 +17,11 @@ export function SkeletonKidsSmileCarousel({
 }: {
   itemCount?: number;
 }) {
-  const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = kidsSmileCardWidth(screenWidth, itemCount);
+  const { width, onLayout } = useContainerWidth(48);
+  const cardWidth = kidsSmileCardWidth(width + 48, itemCount);
 
   return (
-    <View className="w-full">
+    <View className="w-full" onLayout={onLayout}>
       <View
         style={{ width: cardWidth }}
         className="rounded-2xl bg-base-100 p-5 shadow-md shadow-base-300"

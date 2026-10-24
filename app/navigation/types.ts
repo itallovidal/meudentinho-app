@@ -29,7 +29,8 @@ export function rootScreenForRoute(routeName: string): string | null {
   if (
     routeName === "Article" ||
     routeName === "ArticlesList" ||
-    routeName === "ArticleEditor"
+    routeName === "ArticleEditor" ||
+    routeName === "NewArticle"
   ) {
     return "ArticlesList";
   }
@@ -41,8 +42,10 @@ export function rootScreenForRoute(routeName: string): string | null {
     routeName === "ChangePassword" ||
     routeName === "Dependents" ||
     routeName === "EditDependent" ||
+    routeName === "NewDependent" ||
     routeName === "Categories" ||
-    routeName === "EditCategory"
+    routeName === "EditCategory" ||
+    routeName === "NewCategory"
   ) {
     return "Index";
   }
@@ -62,7 +65,8 @@ export function rootScreenForRoute(routeName: string): string | null {
 declare global {
   namespace ReactNavigation {
     interface RootParamList
-      extends ArticlesStackParamList,
+      extends
+        ArticlesStackParamList,
         HomeStackParamList,
         ProfileRouteParams,
         SmileStackParamList {}

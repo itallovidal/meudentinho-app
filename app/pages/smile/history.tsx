@@ -1,3 +1,4 @@
+import { loginReturnPath } from "@/navigation/linking";
 import { useContext, useState } from "react";
 import {
   NativeScrollEvent,
@@ -7,11 +8,7 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { ExportIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
@@ -110,7 +107,7 @@ export function SmileHistory() {
     navigation.getParent<TabNavigatorNavigationProp>()?.navigate("Profile", {
       screen: "Login",
       initial: false,
-      params: { fromTab: "Smile" },
+      params: { fromTab: "Smile", returnTo: loginReturnPath() },
     });
   }
 
@@ -186,7 +183,9 @@ export function SmileHistory() {
           >
             <SessionNotice
               title={
-                sessionExpired ? "Sessão expirada" : "Entre para ver o histórico"
+                sessionExpired
+                  ? "Sessão expirada"
+                  : "Entre para ver o histórico"
               }
               message={
                 sessionExpired
@@ -199,124 +198,130 @@ export function SmileHistory() {
           </Wrapper>
         }
       >
-      <ScrollView
-        className="w-full"
-        onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
-        onContentSizeChange={(_, height) => {
-          if (viewportHeight > 0 && height <= viewportHeight) {
-            loadMore();
+        <ScrollView
+          className="w-full"
+          onLayout={(event) =>
+            setViewportHeight(event.nativeEvent.layout.height)
           }
-        }}
-        onScroll={handleScroll}
-        scrollEventThrottle={200}
-        refreshControl={
-          <RefreshControl
-            refreshing={manualRefreshing}
-            onRefresh={() => void handleRefresh()}
-          />
-        }
-      >
-        <Wrapper
-          className="mx-6 my-4"
-          direction="column"
-          align="center"
-          justify="start"
-          gap="gap-4"
+          onContentSizeChange={(_, height) => {
+            if (viewportHeight > 0 && height <= viewportHeight) {
+              loadMore();
+            }
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={200}
+          refreshControl={
+            <RefreshControl
+              refreshing={manualRefreshing}
+              onRefresh={() => void handleRefresh()}
+            />
+          }
         >
           <Wrapper
-            direction="row"
+            className="mx-6 my-4"
+            direction="column"
             align="center"
-            justify="between"
-            className="w-full"
+            justify="start"
+            gap="gap-4"
           >
-            <Wrapper direction="column" gap="gap-1" className="flex-1">
-              <Text variant="h3" className="text-primary-500">
-                Histórico de registros
-              </Text>
-              {!isPending && !isLoadingError && (
-                <Text className="text-sm text-base-500">
-                  {total === 1 ? "1 registro" : `${total} registros`}
-                </Text>
-              )}
-            </Wrapper>
-            <Pressable
-              onPress={() => setExportVisible(true)}
-              disabled={!canExport}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Exportar histórico em PDF"
-              accessibilityState={{ disabled: !canExport }}
-              className={cn("p-1", !canExport && "opacity-40")}
-            >
-              <ExportIcon size={24} color={colors.primary500} weight="regular" />
-            </Pressable>
-          </Wrapper>
-
-          {isPending && (
-            <View className="w-full gap-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <SkeletonToothEventCard key={index} />
-              ))}
-            </View>
-          )}
-
-          {isLoadingError && (
-            <View className="w-full gap-3">
-              <ErrorState
-                title="Não foi possível carregar os registros"
-                message={
-                  kidUnlinked
-                    ? KID_NOT_LINKED_MESSAGE
-                    : "Verifique sua conexão e tente novamente."
-                }
-                onRetry={() => void refetch()}
-                retryLabel={kidUnlinked ? "Atualizar" : "Tentar novamente"}
-              />
-              {Array.from({ length: 3 }).map((_, index) => (
-                <SkeletonToothEventCard key={index} />
-              ))}
-            </View>
-          )}
-
-          {!isPending && !isLoadingError && events.length === 0 && (
             <Wrapper
-              className="w-full rounded-xl bg-base-100 p-6"
-              direction="column"
+              direction="row"
               align="center"
-              justify="center"
+              justify="between"
+              className="w-full"
             >
-              <Text className="text-center text-base-500">
-                Nenhum registro ainda. Os eventos aparecem aqui conforme forem
-                cadastrados no mapa.
-              </Text>
+              <Wrapper direction="column" gap="gap-1" className="flex-1">
+                <Text variant="h3" className="text-primary-500">
+                  Histórico de registros
+                </Text>
+                {!isPending && !isLoadingError && (
+                  <Text className="text-sm text-base-500">
+                    {total === 1 ? "1 registro" : `${total} registros`}
+                  </Text>
+                )}
+              </Wrapper>
+              <Pressable
+                onPress={() => setExportVisible(true)}
+                disabled={!canExport}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Exportar histórico em PDF"
+                accessibilityState={{ disabled: !canExport }}
+                className={cn("p-1", !canExport && "opacity-40")}
+              >
+                <ExportIcon
+                  size={24}
+                  color={colors.primary500}
+                  weight="regular"
+                />
+              </Pressable>
             </Wrapper>
-          )}
 
-          {!isPending && !isLoadingError && events.length > 0 && (
-            <View className="w-full gap-3">
-              {isRefetchError && (
-                <QueryWarningBanner
+            {isPending && (
+              <View className="w-full gap-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <SkeletonToothEventCard key={index} />
+                ))}
+              </View>
+            )}
+
+            {isLoadingError && (
+              <View className="w-full gap-3">
+                <ErrorState
+                  title="Não foi possível carregar os registros"
                   message={
                     kidUnlinked
                       ? KID_NOT_LINKED_MESSAGE
-                      : "Não foi possível atualizar os registros. Mostrando o histórico carregado anteriormente."
+                      : "Verifique sua conexão e tente novamente."
                   }
                   onRetry={() => void refetch()}
+                  retryLabel={kidUnlinked ? "Atualizar" : "Tentar novamente"}
                 />
-              )}
-              {events.map((event) => (
-                <ToothEventCard
-                  key={event.id}
-                  event={event}
-                  onPress={editor.openEditor}
-                />
-              ))}
-            </View>
-          )}
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <SkeletonToothEventCard key={index} />
+                ))}
+              </View>
+            )}
 
-          {!isPending && !isLoadingError && renderFooter()}
-        </Wrapper>
-      </ScrollView>
+            {!isPending && !isLoadingError && events.length === 0 && (
+              <Wrapper
+                className="w-full rounded-xl bg-base-100 p-6"
+                direction="column"
+                align="center"
+                justify="center"
+              >
+                <Text className="text-center text-base-500">
+                  Nenhum registro ainda. Os eventos aparecem aqui conforme forem
+                  cadastrados no mapa.
+                </Text>
+              </Wrapper>
+            )}
+
+            {!isPending && !isLoadingError && events.length > 0 && (
+              <View className="w-full gap-3">
+                {isRefetchError && (
+                  <QueryWarningBanner
+                    message={
+                      kidUnlinked
+                        ? KID_NOT_LINKED_MESSAGE
+                        : "Não foi possível atualizar os registros. Mostrando o histórico carregado anteriormente."
+                    }
+                    onRetry={() => void refetch()}
+                  />
+                )}
+                {events.map((event) => (
+                  <ToothEventCard
+                    key={event.id}
+                    event={event}
+                    onPress={editor.openEditor}
+                  />
+                ))}
+              </View>
+            )}
+
+            {!isPending && !isLoadingError && renderFooter()}
+          </Wrapper>
+        </ScrollView>
       </SessionGate>
 
       <ToothEventModal {...editor.modalProps} />

@@ -10,6 +10,7 @@ export const HomeStack = createNativeStackNavigator<HomeStackParamList>({
   screens: {
     HomeRoot: {
       screen: Home,
+      linking: "",
     },
   },
   screenOptions: {

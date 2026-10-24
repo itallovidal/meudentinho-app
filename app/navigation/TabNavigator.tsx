@@ -14,7 +14,7 @@ import {
 import { TAB_ROOT_SCREEN, isTabName } from "./types";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { HomeStack } from "./HomeStack";
 import { ArticlesStack } from "./ArticlesStack";
 import type { ArticlesStackParamList } from "./ArticlesStack";
@@ -186,7 +186,7 @@ function isFocusedTab(
 
 export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   initialRouteName: "Home",
-  backBehavior: "history",
+  backBehavior: Platform.OS === "web" ? "fullHistory" : "history",
   tabBar: (props) => <TabBar {...props} />,
   screenListeners: ({ navigation, route }) => ({
     tabPress: () => {
@@ -198,6 +198,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   screens: {
     Home: {
       screen: HomeStack,
+      linking: "",
       options: {
         tabBarLabel: "Início",
         tabBarIcon: ({ focused }) => (
@@ -212,6 +213,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     },
     Smile: {
       screen: SmileStack,
+      linking: "sorriso",
       options: {
         tabBarLabel: "Sorriso",
         tabBarIcon: ({ focused }) => (
@@ -226,6 +228,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     },
     Articles: {
       screen: ArticlesStack,
+      linking: "artigos",
       options: {
         tabBarLabel: "Artigos",
 

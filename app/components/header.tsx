@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { BackHandler, Pressable, View } from "react-native";
+import { BackHandler, Platform, Pressable, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
 import { CaretLeftIcon } from "phosphor-react-native";
@@ -41,7 +41,7 @@ export function Header({ hasBackButton }: HeaderProps) {
 
   useFocusEffect(
     useCallback(() => {
-      if (!hasBackButton) {
+      if (!hasBackButton || Platform.OS !== "android") {
         return;
       }
 

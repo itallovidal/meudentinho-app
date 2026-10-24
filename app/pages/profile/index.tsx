@@ -2,7 +2,8 @@ import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
-import { ScrollView, Alert } from "react-native";
+import { ScrollView } from "react-native";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import Constants from "expo-constants";
 import { ProfileNavegationProp } from "@/navigation/ProfileStack";
 import { useNavigation } from "@react-navigation/native";
@@ -27,6 +28,7 @@ export function Index() {
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
   const { signOut, user, hydrated, sessionExpired } = useContext(UserContext)!;
+  const [policyError, setPolicyError] = useState<string | null>(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -51,12 +53,12 @@ export function Index() {
     }
   }
 
-  const handleOpenPolicy = async () => {
+  async function handleOpenPolicy() {
     const opened = await openPrivacyPolicy();
     if (!opened) {
-      Alert.alert("Erro", "Não foi possível abrir a Política de Privacidade.");
+      setPolicyError("Não foi possível abrir a Política de Privacidade.");
     }
-  };
+  }
 
   const accountOption = user
     ? {
@@ -241,6 +243,11 @@ export function Index() {
           <Text className="text-base font-bold">Cancelar</Text>
         </Button>
       </BottomSheet>
+      <FeedbackSheet
+        title="Não foi possível abrir o link"
+        message={policyError}
+        onClose={() => setPolicyError(null)}
+      />
     </Wrapper>
   );
 }

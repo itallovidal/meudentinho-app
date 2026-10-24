@@ -1,4 +1,8 @@
 import { RegisterKidForm } from "@/components/forms/registerKidForm";
+import { FormLoadState } from "@/components/forms/formLoadState";
+import { FeedbackSheet } from "@/components/feedbackSheet";
+import { useKids } from "@/hooks/useKids";
+import { loginReturnPath } from "@/navigation/linking";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
 import { Button } from "@/components/ui/button";
@@ -20,16 +24,21 @@ import { KidFormValues } from "@/lib/schemas/kid";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { TrashIcon } from "phosphor-react-native";
 import { useContext, useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import type { ProfileRouteParams } from "@/navigation/ProfileStack";
 
 export function EditDependent() {
   const colors = THEME.light;
   const { authToken, hydrated } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
-  const { params } = useRoute<RouteProp<ProfileRouteParams, "EditDependent">>();
-  const kid = params?.kid;
-  const isEditing = kid !== undefined;
+  const route =
+    useRoute<RouteProp<ProfileRouteParams, "EditDependent" | "NewDependent">>();
+  const { params } = route;
+  const kidId = params && "kidId" in params ? params.kidId : undefined;
+  const { kids, isLoading, failure, refetch } = useKids(authToken);
+  const kid = kids.find((item) => item.id === kidId);
+  const isEditing = route.name === "EditDependent";
+  const [operationError, setOperationError] = useState<string | null>(null);
   const { showToast } = useToast();
   const { createKidMutation, saveKidMutation, revokeKidMutation } =
     useKidMutations(authToken);
@@ -45,12 +54,16 @@ export function EditDependent() {
     ) {
       return;
     }
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("Dependents");
+    }
   }
 
   useEffect(() => {
     if (hydrated && !authToken) {
-      navigation.replace("Login");
+      navigation.replace("Login", { returnTo: loginReturnPath() });
     }
   }, [hydrated, authToken, navigation]);
 
@@ -60,8 +73,7 @@ export function EditDependent() {
       showToast("Dependente cadastrado com sucesso.");
       exitScreen();
     } catch (error) {
-      Alert.alert(
-        "Erro",
+      setOperationError(
         errorMessage(error, "Não foi possível cadastrar o dependente."),
       );
     }
@@ -76,8 +88,7 @@ export function EditDependent() {
       showToast("Dependente atualizado com sucesso.");
       exitScreen();
     } catch (error) {
-      Alert.alert(
-        "Erro",
+      setOperationError(
         errorMessage(error, "Não foi possível atualizar o dependente."),
       );
     }
@@ -93,8 +104,7 @@ export function EditDependent() {
       showToast("Consentimento revogado com sucesso.");
       exitScreen();
     } catch (error) {
-      Alert.alert(
-        "Erro",
+      setOperationError(
         errorMessage(error, "Não foi possível revogar o consentimento."),
       );
     }
@@ -117,6 +127,24 @@ export function EditDependent() {
 
   if (!authToken) {
     return null;
+  }
+
+  if (isEditing && (isLoading || failure || !kid)) {
+    return (
+      <View className="flex-1 bg-base-100">
+        <Header hasBackButton />
+        <FormLoadState
+          message={
+            isLoading
+              ? undefined
+              : failure
+                ? "Não foi possível carregar o dependente. Tente novamente."
+                : "Este dependente não está disponível para sua conta."
+          }
+          onRetry={() => void refetch()}
+        />
+      </View>
+    );
   }
 
   return (
@@ -211,6 +239,11 @@ export function EditDependent() {
           <Text className="text-base font-bold">Cancelar</Text>
         </Button>
       </BottomSheet>
+      <FeedbackSheet
+        title="Não foi possível concluir"
+        message={operationError}
+        onClose={() => setOperationError(null)}
+      />
     </Wrapper>
   );
 }

@@ -2,9 +2,10 @@ import "./global.css";
 import { createStaticNavigation } from "@react-navigation/native";
 import { enableScreens } from "react-native-screens";
 import { PortalHost } from "@rn-primitives/portal";
-import { TabNavigator } from "./app/navigation/TabNavigator";
+import { RootNavigator } from "./app/navigation/RootNavigator";
+import { webLinking } from "./app/navigation/linking";
 import { UserContext, UserProvider } from "./app/contexts/UserContext";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { ErrorBoundary } from "./app/components/ErrorBoundary";
 import { ToastProvider } from "./app/components/ui/toast";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -15,12 +16,15 @@ import { envIssues } from "@/lib/env";
 import { InvalidEnvScreen } from "@/components/invalidEnvScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Platform, View } from "react-native";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NAV_THEME } from "@/lib/theme";
+import { configureWebStyles } from "@/lib/webStyles";
 
+configureWebStyles();
 enableScreens();
 
-console.log(`[app] bundle loaded em ${new Date().toLocaleTimeString("pt-BR")}`);
-
-const Navigation = createStaticNavigation(TabNavigator);
+const Navigation = createStaticNavigation(RootNavigator);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -30,11 +34,39 @@ const queryClient = new QueryClient({
 });
 
 function SessionNavigation() {
-  const { userId } = useContext(UserContext)!;
-  return <Navigation key={userId ?? "anon"} />;
+  const { userId, hydrated } = useContext(UserContext)!;
+  const [sessionBoundary, setSessionBoundary] = useState({
+    userId,
+    revision: 0,
+  });
+  if (sessionBoundary.userId !== userId) {
+    setSessionBoundary({
+      userId,
+      revision: sessionBoundary.revision + (sessionBoundary.userId ? 1 : 0),
+    });
+  }
+
+  if (!hydrated) {
+    return (
+      <View className="flex-1 gap-6 bg-base-100 p-6">
+        <Skeleton className="h-12 w-40" />
+        <Skeleton className="h-56 w-full rounded-3xl" />
+        <Skeleton className="h-32 w-full rounded-3xl" />
+      </View>
+    );
+  }
+  return (
+    <Navigation
+      key={
+        Platform.OS === "web" ? sessionBoundary.revision : (userId ?? "anon")
+      }
+      linking={webLinking}
+      theme={NAV_THEME.light}
+    />
+  );
 }
 
-export default function App() {
+export function App() {
   colorScheme.set("light");
 
   if (envIssues.length > 0) {
@@ -53,7 +85,7 @@ export default function App() {
             <UserProvider>
               <SafeAreaView
                 edges={["top", "left", "right"]}
-                className="flex-1 bg-base-100"
+                className="w-full flex-1 bg-base-100 web:mx-auto web:max-w-5xl"
               >
                 <ToastProvider>
                   <ErrorBoundary>

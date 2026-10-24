@@ -1,6 +1,6 @@
 import { Image, View } from "react-native";
 import { ClockIcon } from "phosphor-react-native";
-import { Markdown } from "react-native-remark";
+import { MarkdownContent } from "@/components/markdownContent";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 import { THEME } from "@/lib/theme";
@@ -54,7 +54,7 @@ export function ArticleContent({
           </Text>
         </View>
       )}
-      <Markdown markdown={content} />
+      <MarkdownContent content={content} />
     </View>
   );
 }
