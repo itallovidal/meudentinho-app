@@ -49,6 +49,7 @@ jest.mock("@/components/forms/prematureWeeksSelector", () => ({
   PrematureWeeksSelector: "PrematureWeeksSelector",
 }));
 jest.mock("@/lib/privacyPolicy", () => ({
+  getPrivacyPolicyUrl: () => "https://example.com/politica-de-privacidade",
   openPrivacyPolicy: jest.fn(),
   buildKidRequest: async (data: unknown) => data,
 }));

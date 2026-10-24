@@ -114,7 +114,7 @@ export function Index() {
     ...(user?.isAdmin ? [categoriesOption] : []),
     {
       icon: <ShieldCheckIcon color={colors.primary400} />,
-      title: "Políticas de privacidade",
+      title: "Política de Privacidade",
       description: "Leia e entenda nossa política.",
       variant: "default" as const,
       handlePress: () => void handleOpenPolicy(),

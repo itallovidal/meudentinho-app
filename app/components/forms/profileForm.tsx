@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AnimatedCheckbox } from "./animatedCheckbox";
 import { BirthDateInput } from "./birthDateInput";
-import { ENV } from "@/lib/env";
+import { getPrivacyPolicyUrl } from "@/lib/privacyPolicy";
 import { ExternalLink } from "@/components/externalLink";
 import { FeedbackSheet } from "@/components/feedbackSheet";
 import { signupSchema, SignupFormValues } from "@/lib/schemas/profile";
@@ -135,7 +135,7 @@ export function ProfileForm({
         <Text className="flex-1 text-sm">
           Li e aceito a{" "}
           <ExternalLink
-            href={ENV.PRIVACY_POLICY_URL}
+            href={getPrivacyPolicyUrl()}
             onError={() =>
               setPolicyError(
                 "Não foi possível abrir a Política de Privacidade.",

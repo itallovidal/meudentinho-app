@@ -6,12 +6,19 @@ import type { KidRequestDTO } from "@/types/dtos/user";
 
 export const PRIVACY_POLICY_VERSION = "1.0";
 
-export async function openPrivacyPolicy(): Promise<boolean> {
-  const url = ENV.PRIVACY_POLICY_URL;
-  if (!url.startsWith("https:")) {
-    return false;
+export function getPrivacyPolicyUrl(): string {
+  if (Platform.OS === "web" && typeof globalThis.window !== "undefined") {
+    return new URL("/politica-de-privacidade", window.location.origin).href;
   }
+  return ENV.PRIVACY_POLICY_URL;
+}
+
+export async function openPrivacyPolicy(): Promise<boolean> {
   try {
+    const url = getPrivacyPolicyUrl();
+    if (Platform.OS !== "web" && !url.startsWith("https:")) {
+      return false;
+    }
     const supported = Platform.OS === "web" || (await Linking.canOpenURL(url));
     if (!supported) {
       return false;

@@ -1,5 +1,5 @@
 import { kidSchema, kidEditSchema, KidFormValues } from "@/lib/schemas/kid";
-import { ENV } from "@/lib/env";
+import { getPrivacyPolicyUrl } from "@/lib/privacyPolicy";
 import { ExternalLink } from "@/components/externalLink";
 import { FeedbackSheet } from "@/components/feedbackSheet";
 import { ApiError } from "@/types/domain";
@@ -207,7 +207,7 @@ export function RegisterKidForm({
             <Text className="flex-1 text-sm">
               Li e aceito a{" "}
               <ExternalLink
-                href={ENV.PRIVACY_POLICY_URL}
+                href={getPrivacyPolicyUrl()}
                 onError={() =>
                   setPolicyError(
                     "Não foi possível abrir a Política de Privacidade.",
