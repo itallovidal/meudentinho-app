@@ -56,7 +56,7 @@ function client() {
 async function flush() {
   for (let i = 0; i < 6; i++) {
     await act(async () => {
-      await Promise.resolve();
+      await new Promise((done) => setTimeout(done, 0));
     });
   }
 }
@@ -83,15 +83,15 @@ beforeEach(() => {
         return page(
           [
             article("banner", [CATEGORIES[0].name]),
-            ...["a2", "a3", "a4"].map((id) => article(id, [CATEGORIES[0].name])),
+            ...["a2", "a3", "a4"].map((id) =>
+              article(id, [CATEGORIES[0].name]),
+            ),
           ],
           { page: 1, per_page: 4, total: 4, total_pages: 1 },
         );
       }
       return page(
-        ["b1", "b2", "b3"].map((id) =>
-          article(id, [CATEGORIES[1].name]),
-        ),
+        ["b1", "b2", "b3"].map((id) => article(id, [CATEGORIES[1].name])),
         { page: 1, per_page: 4, total: 3, total_pages: 1 },
       );
     }
