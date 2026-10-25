@@ -201,6 +201,30 @@ it("opens the exported login URL without native storage or environment failures"
   expect(failures).toEqual([]);
 });
 
+it("keeps the welcome illustration at its intended size on the web", async () => {
+  navigate("/app");
+  await waitFor(
+    () =>
+      document.querySelector(
+        '[aria-label="Dente segurando uma escova de dentes"]',
+      ) !== null,
+  );
+  const illustration = document.querySelector<HTMLElement>(
+    '[aria-label="Dente segurando uma escova de dentes"]',
+  )!;
+  const size = {
+    width: getComputedStyle(illustration).width,
+    height: getComputedStyle(illustration).height,
+  };
+  navigate(
+    "/app/login?returnTo=%2Fapp%2Fperfil%2Fdependentes%2Fkid-1%2Feditar",
+  );
+  await waitFor(
+    () => document.querySelector('input[autocomplete="email"]') !== null,
+  );
+  expect(size).toEqual({ width: "128px", height: "128px" });
+});
+
 it("logs in through the shared API and persists the token pair for this tab", async () => {
   fillInput("Digite seu email", "responsavel@example.com");
   fillInput("Digite sua senha", "senha-de-teste");
@@ -540,4 +564,34 @@ it("snaps home cards and updates pagination and the active kid while scrolling",
       window.location.pathname === "/app/sorriso" &&
       new URLSearchParams(window.location.search).get("kidId") === secondKid.id,
   );
+});
+
+it(
+  "reserves enough icon space to contain the selected tab highlight",
+  async () => {
+    navigate("/app");
+    await waitFor(() => window.location.pathname === "/app");
+    await waitFor(() => {
+      const tab = document.querySelector('[role="tab"][aria-selected="true"]');
+      return tab?.textContent?.includes("Início") === true;
+    });
+    refreshStyles();
+    const tab = document.querySelector('[role="tab"][aria-selected="true"]')!;
+    const highlight = tab.querySelector("svg")!.parentElement!;
+    const iconContainer = highlight.parentElement!.parentElement!;
+    expect(getComputedStyle(iconContainer).width).toBe("64px");
+    expect(getComputedStyle(highlight).width).toBe("100%");
+  },
+);
+
+it("keeps the error illustration at its intended size on the web", async () => {
+  navigate("/app/pagina-inexistente");
+  await waitFor(
+    () => document.body.textContent?.includes("Página não encontrada") === true,
+  );
+  const illustration = document.querySelector<HTMLElement>(
+    '[aria-label="Dente sem conexão com a internet"]',
+  )!;
+  expect(getComputedStyle(illustration).width).toBe("144px");
+  expect(getComputedStyle(illustration).height).toBe("128px");
 });

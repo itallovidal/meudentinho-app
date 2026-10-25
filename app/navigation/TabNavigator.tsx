@@ -57,7 +57,7 @@ export function TabBarIcon({
     return <>{children}</>;
   }
   return (
-    <View className="items-center justify-center rounded-full bg-primary-100 px-5 py-1">
+    <View className="h-8 w-full items-center justify-center rounded-full bg-primary-100">
       {children}
     </View>
   );
@@ -261,6 +261,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
     headerShown: false,
     tabBarActiveTintColor: colors.primary400,
     tabBarInactiveTintColor: colors.base500,
+    tabBarIconStyle: { width: 64 },
     tabBarButton: (props) => <TabBarButton {...props} />,
   },
 });
