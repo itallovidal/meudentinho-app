@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
-import { Image, Pressable } from "react-native";
+import { Illustration } from "@/components/illustration";
+import { Pressable } from "react-native";
 
 type SessionCardProps = {
   title: string;
@@ -23,10 +24,10 @@ export function SessionCard({
   layout = "horizontal",
 }: SessionCardProps) {
   const illustration = (
-    <Image
+    <Illustration
       source={require("../../assets/tooth.png")}
-      className="h-32 w-32"
-      resizeMode="contain"
+      width={128}
+      height={128}
       accessibilityLabel="Dente segurando uma escova de dentes"
     />
   );

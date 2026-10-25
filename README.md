@@ -127,7 +127,7 @@ A Política de Privacidade fica em `/politica-de-privacidade`, fora do aplicativ
 
 Na web, os links do perfil e dos formulários usam a origem atual, inclusive `http://localhost:4173`. No aplicativo instalado, usam `EXPO_PUBLIC_PRIVACY_POLICY_URL`, que deve continuar sendo uma URL HTTPS válida para a página publicada. Alterar essa variável exige gerar um novo bundle; a validação HTTPS permanece ativa também no preview.
 
-A política inicial é a versão `1.0`, com vigência a partir da publicação do aplicativo na web. Ela identifica os autores e desenvolvedores pelo projeto Janelinha, de iniciação científica da Universidade Veiga de Almeida (UVA), e informa `suporte.janelinha@gmail.com` como canal de atendimento. Os dados dos usuários não são usados em pesquisa; Analytics é uma possibilidade futura e não está integrado na versão atual. Alterações relevantes devem ser acompanhadas de aviso no aplicativo antes de entrarem em vigor.
+A política inicial é a versão `1.0`, com data de vigência em 24 de outubro de 2026. Ela identifica os autores e desenvolvedores pelo projeto Janelinha, de iniciação científica da Universidade Veiga de Almeida (UVA), e informa `suporte.janelinha@gmail.com` como canal de atendimento. Os dados dos usuários não são usados em pesquisa; Analytics é uma possibilidade futura e não está integrado na versão atual. Alterações relevantes devem ser acompanhadas de aviso no aplicativo antes de entrarem em vigor.
 
 A exclusão de conta preserva registros técnicos de auditoria, substituindo o identificador do responsável e removendo identificadores de entidades pessoais nas categorias previstas. O backend grava expiração de 180 dias, mas a limpeza depende de uma política TTL ativa no Firestore. Como essa configuração não foi confirmada, o texto não promete exclusão automática nesse prazo. Antes de disponibilizar dados reais, conferir o TTL de `auditLogs.ExpiresAt` no projeto correto e as configurações de logs e backups dos prestadores. A API também limpa tokens de renovação vencidos na inicialização e a cada 24 horas. Ao definir o subdomínio público definitivo, configurar a URL HTTPS de privacidade e, se adotado, o canonical correspondente.
 
@@ -141,6 +141,12 @@ Após gerar o build, executar `npm run test:web` para verificar o bundle de prod
 
 - `version`, `versionCode` (Android) e `buildNumber` (iOS) vivem no `app.json` — fonte única: o Perfil exibe `version` via `expo-constants` e o gradle nativo recebe `versionCode`/`versionName` no `prebuild`.
 - Política: `versionCode` e `buildNumber` sobem **+1 a cada release**, manualmente, e o bump entra no PR do release.
+
+### Aparência nativa e dispositivos
+
+O app usa apenas tema claro, incluindo a configuração nativa de aparência e os ícones escuros da status bar. O suporte a iPad permanece habilitado; a web e os tablets Android continuam disponíveis. Os layouts nativos em tablets devem ser conferidos em aparelho ou simulador, além dos testes de responsividade web.
+
+O ícone do app e o ícone adaptativo usam `assets/tooth-icon.png`, sem texto. A splash nativa usa `assets/splash-tooth-wordmark.png`, com o mascote e “Janelinha” logo abaixo, sobre fundo branco do tema. O Expo Go usa o ícone do app na abertura; a splash nativa completa é verificada em build próprio. O favicon web é gerado pelo Expo a partir de `assets/tooth.png`; o mesmo `/favicon.ico` atende o aplicativo, a landing e a política de privacidade. As permissões de sobreposição, vibração, armazenamento externo e biometria são bloqueadas; a exportação de PDF usa o cache do app e a sessão não exige autenticação biométrica. A permissão privada de assinatura do AndroidX para receivers internos é preservada. Após mudar plugins, permissões ou imagens, execute `npx expo prebuild --platform android` antes de um build debug. O comando de release já regenera o projeto nativo.
 
 ### Release nativo
 
