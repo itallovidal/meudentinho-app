@@ -23,11 +23,13 @@ it("provides a standalone document with accessible section navigation", () => {
   }
 });
 
-it("identifies the project, public contact and publication-based effective date", () => {
+it("identifies the project, public contact and effective date", () => {
   const text = policy.body.textContent!.replace(/\s+/g, " ");
 
   expect(text).toContain("Universidade Veiga");
-  expect(text).toContain("publicação do aplicativo na web");
+  const effectiveDate = policy.querySelector("time");
+  expect(effectiveDate?.getAttribute("datetime")).toBe("2026-10-24");
+  expect(effectiveDate?.textContent).toBe("24 de outubro de 2026");
   expect(policy.getElementById("revisao")).toBeNull();
   expect(policy.querySelector('meta[name="robots"]')).toBeNull();
   expect(
