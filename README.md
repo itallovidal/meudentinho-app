@@ -142,6 +142,12 @@ Após gerar o build, executar `npm run test:web` para verificar o bundle de prod
 - `version`, `versionCode` (Android) e `buildNumber` (iOS) vivem no `app.json` — fonte única: o Perfil exibe `version` via `expo-constants` e o gradle nativo recebe `versionCode`/`versionName` no `prebuild`.
 - Política: `versionCode` e `buildNumber` sobem **+1 a cada release**, manualmente, e o bump entra no PR do release.
 
+### Aparência nativa e dispositivos
+
+O app usa apenas tema claro, incluindo a configuração nativa de aparência e os ícones escuros da status bar. O suporte a iPad permanece habilitado; a web e os tablets Android continuam disponíveis. Os layouts nativos em tablets devem ser conferidos em aparelho ou simulador, além dos testes de responsividade web.
+
+O ícone do app e o ícone adaptativo usam `assets/tooth-icon.png`, sem texto. A splash nativa usa `assets/splash-tooth-wordmark.png`, com o mascote e “Janelinha” logo abaixo, sobre fundo branco do tema. O Expo Go usa o ícone do app na abertura; a splash nativa completa é verificada em build próprio. O favicon web é gerado pelo Expo a partir de `assets/tooth.png`; o mesmo `/favicon.ico` atende o aplicativo, a landing e a política de privacidade. As permissões de sobreposição, vibração, armazenamento externo e biometria são bloqueadas; a exportação de PDF usa o cache do app e a sessão não exige autenticação biométrica. A permissão privada de assinatura do AndroidX para receivers internos é preservada. Após mudar plugins, permissões ou imagens, execute `npx expo prebuild --platform android` antes de um build debug. O comando de release já regenera o projeto nativo.
+
 ### Release nativo
 
 Keystore própria e AAB para loja estão **adiados** até existir um alvo de distribuição nativo definido — o roadmap atual é web-first. Quando voltar: `*.keystore` e `keystore.properties` já estão no `.gitignore`; a chave e suas senhas nunca devem ser versionadas.
