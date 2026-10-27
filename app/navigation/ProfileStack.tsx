@@ -36,26 +36,53 @@ export type ProfileRouteProp = RouteProp<ProfileRouteParams, "Index">;
 export const ProfileStack = createNativeStackNavigator<ProfileRouteParams>({
   initialRouteName: "Index",
   screens: {
-    Login: { screen: Login, linking: "login" },
-    Signup: { screen: Signup, linking: "cadastro" },
-    Index: { screen: Index, linking: "perfil" },
-    Responsible: { screen: Responsible, linking: "perfil/responsavel" },
-    ChangePassword: { screen: ChangePassword, linking: "perfil/senha" },
-    Dependents: { screen: Dependents, linking: "perfil/dependentes" },
+    Login: { screen: Login, linking: "login", options: { title: "Entrar" } },
+    Signup: {
+      screen: Signup,
+      linking: "cadastro",
+      options: { title: "Criar conta" },
+    },
+    Index: { screen: Index, linking: "perfil", options: { title: "Perfil" } },
+    Responsible: {
+      screen: Responsible,
+      linking: "perfil/responsavel",
+      options: { title: "Dados do responsável" },
+    },
+    ChangePassword: {
+      screen: ChangePassword,
+      linking: "perfil/senha",
+      options: { title: "Alterar senha" },
+    },
+    Dependents: {
+      screen: Dependents,
+      linking: "perfil/dependentes",
+      options: { title: "Dependentes" },
+    },
     NewDependent: {
       screen: EditDependent,
       linking: "perfil/dependentes/novo",
+      options: { title: "Novo dependente" },
     },
     EditDependent: {
       screen: EditDependent,
       getId: ({ params }) => params.kidId,
       linking: "perfil/dependentes/:kidId/editar",
+      options: { title: "Editar dependente" },
     },
-    Categories: { screen: Categories, linking: "perfil/categorias" },
-    NewCategory: { screen: EditCategory, linking: "perfil/categorias/nova" },
+    Categories: {
+      screen: Categories,
+      linking: "perfil/categorias",
+      options: { title: "Categorias" },
+    },
+    NewCategory: {
+      screen: EditCategory,
+      linking: "perfil/categorias/nova",
+      options: { title: "Nova categoria" },
+    },
     EditCategory: {
       screen: EditCategory,
       linking: "perfil/categorias/:categoryId/editar",
+      options: { title: "Editar categoria" },
     },
   },
   screenOptions: {

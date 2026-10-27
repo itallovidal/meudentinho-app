@@ -23,18 +23,22 @@ export const ArticlesStack = createNativeStackNavigator<ArticlesStackParamList>(
     screens: {
       ArticlesList: {
         screen: Index,
+        options: { title: "Artigos" },
         linking: "",
       },
       Article: {
         screen: Article,
+        options: { title: "Artigo" },
         linking: ":id",
       },
       NewArticle: {
         screen: ArticleEditor,
+        options: { title: "Novo artigo" },
         linking: "novo",
       },
       ArticleEditor: {
         screen: ArticleEditor,
+        options: { title: "Editar artigo" },
         linking: ":articleId/editar",
       },
     },
