@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, type GestureResponderEvent } from "react-native";
 import {
   ClockCountdownIcon,
   ClockCounterClockwiseIcon,
@@ -56,6 +56,11 @@ export function ToothReviewSummary({
         },
       ]
     : null;
+
+  function handleRetry(event: GestureResponderEvent) {
+    event.stopPropagation();
+    onRetry?.();
+  }
 
   return (
     <View className="w-full gap-3">
@@ -119,7 +124,7 @@ export function ToothReviewSummary({
           </Text>
           {onRetry && (
             <Pressable
-              onPress={onRetry}
+              onPress={handleRetry}
               accessibilityRole="button"
               accessibilityLabel="Atualizar revisão dos registros"
               hitSlop={8}

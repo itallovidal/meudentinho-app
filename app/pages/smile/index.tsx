@@ -245,6 +245,7 @@ export function Smile() {
     if (selectedKidId) {
       navigation.navigate("Smile", {
         screen: "SmileHistory",
+        initial: false,
         params: { kidId: selectedKidId },
       });
     }
@@ -254,6 +255,7 @@ export function Smile() {
     if (selectedKidId) {
       navigation.navigate("Smile", {
         screen: "SmilePredictions",
+        initial: false,
         params: { kidId: selectedKidId },
       });
     }
@@ -547,7 +549,6 @@ export function Smile() {
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}
-                onItemPress={editor.openEditor}
               />
             </>
           )}
