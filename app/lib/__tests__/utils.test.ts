@@ -1,4 +1,6 @@
 /// <reference types="jest" />
+import type { ToothEvent } from "@/types/teeth";
+import { correctedBirthDate } from "@/lib/toothMilestones";
 import {
   ageInMonths,
   calendarAgeInMonths,
@@ -8,6 +10,7 @@ import {
   localDateKeyToISO,
   parseLocalDate,
   toLocalDateKey,
+  validateToothEventDateOrder,
 } from "@/lib/utils";
 
 describe("parseLocalDate", () => {
@@ -162,5 +165,111 @@ describe("calendar age display", () => {
 
   it("rejects an invalid reference date", () => {
     expect(calendarAgeInMonths("2025-01-01", new Date(NaN))).toBeNull();
+  });
+});
+
+describe("correctedBirthDate", () => {
+  it("does not correct non-premature or invalid values", () => {
+    const birth = new Date("2025-01-15T12:00:00");
+    const reference = new Date("2025-02-15T12:00:00");
+    expect(correctedBirthDate(birth, "0", reference).toISOString()).toBe(
+      birth.toISOString(),
+    );
+    expect(correctedBirthDate(birth, "abc", reference).toISOString()).toBe(
+      birth.toISOString(),
+    );
+    expect(correctedBirthDate(birth, 40, reference).toISOString()).toBe(
+      birth.toISOString(),
+    );
+  });
+
+  it("corrects premature births within the first 24 months", () => {
+    const birth = new Date("2025-01-15T12:00:00");
+    const reference = new Date("2025-02-15T12:00:00");
+    const corrected = correctedBirthDate(birth, "32", reference);
+    // 40 - 32 = 8 weeks => + 56 days
+    expect(corrected.getTime() - birth.getTime()).toBe(8 * 7 * 86400000);
+  });
+
+  it("does not correct after 24 months", () => {
+    const birth = new Date("2022-01-15T12:00:00");
+    const reference = new Date("2025-02-15T12:00:00");
+    const corrected = correctedBirthDate(birth, "32", reference);
+    expect(corrected.getTime()).toBe(birth.getTime());
+  });
+});
+
+describe("validateToothEventDateOrder", () => {
+  const eruption: ToothEvent = {
+    id: "kid|central_incisor|upper_right|primary|eruption",
+    parentId: "parent",
+    kidId: "kid",
+    occurrenceDate: "2024-06-01T12:00:00Z",
+    dentition: "primary",
+    arch: "upper",
+    side: "right",
+    toothType: "central_incisor",
+    eventType: "eruption",
+    quadrant: "upper_right",
+    recordKind: "dated",
+    createdAt: "2024-06-01T12:00:00Z",
+    updatedAt: "2024-06-01T12:00:00Z",
+  };
+
+  it("rejects exfoliation before eruption", () => {
+    const result = validateToothEventDateOrder({
+      newDate: "2024-05-01",
+      newDentition: "primary",
+      newEventType: "exfoliation",
+      newRecordKind: "dated",
+      quadrant: "upper_right",
+      toothType: "central_incisor",
+      events: [eruption],
+      ignoreId: null,
+    });
+    expect(result).not.toBeNull();
+    expect(result).toContain("anterior");
+  });
+
+  it("accepts the same day", () => {
+    const result = validateToothEventDateOrder({
+      newDate: "2024-06-01",
+      newDentition: "primary",
+      newEventType: "exfoliation",
+      newRecordKind: "dated",
+      quadrant: "upper_right",
+      toothType: "central_incisor",
+      events: [eruption],
+      ignoreId: null,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("ignores undated events", () => {
+    const result = validateToothEventDateOrder({
+      newDate: "2024-05-01",
+      newDentition: "primary",
+      newEventType: "exfoliation",
+      newRecordKind: "dated",
+      quadrant: "upper_right",
+      toothType: "central_incisor",
+      events: [{ ...eruption, recordKind: "undated", occurrenceDate: "" }],
+      ignoreId: null,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null for undated new records", () => {
+    const result = validateToothEventDateOrder({
+      newDate: "2024-05-01",
+      newDentition: "primary",
+      newEventType: "exfoliation",
+      newRecordKind: "undated",
+      quadrant: "upper_right",
+      toothType: "central_incisor",
+      events: [eruption],
+      ignoreId: null,
+    });
+    expect(result).toBeNull();
   });
 });

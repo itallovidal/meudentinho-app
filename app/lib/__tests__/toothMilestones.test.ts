@@ -35,6 +35,7 @@ function evaluate(
     kidId: "kid",
     birthDate: "2025-01-31",
     events,
+    gender: "male",
     referenceDate: new Date(reference),
     trackingStartedAt,
   });
@@ -124,6 +125,7 @@ it("keeps primary history out of the main warning once its permanent phase start
     kidId: "kid",
     birthDate: "2018-01-01",
     events: [],
+    gender: "male",
     referenceDate: new Date("2026-06-07T12:00:00Z"),
   });
   const groups = partitionToothAlerts(
@@ -167,6 +169,7 @@ it("does not turn third molars into automatic alerts even for adults", () => {
     kidId: "kid",
     birthDate: "1980-01-01",
     events: [],
+    gender: "male",
     referenceDate: new Date("2026-06-07T12:00:00Z"),
   });
   expect(
@@ -241,6 +244,7 @@ it("does not keep third molars in the active eruption period beyond their refere
     kidId: "kid",
     birthDate: "1980-01-01",
     events: [],
+    gender: "male",
     referenceDate: new Date("2026-06-07T12:00:00Z"),
   });
   const thirdMolars = milestones.filter(
