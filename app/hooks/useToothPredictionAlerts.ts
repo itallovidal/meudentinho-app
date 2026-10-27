@@ -24,6 +24,7 @@ export function useToothPredictionAlerts({
     id: string;
     birthDate: string;
     gender?: ChronologyGender | null;
+    prematureWeeks?: string;
     createdAt?: string;
   };
   events: ToothEvent[];
@@ -63,11 +64,12 @@ export function useToothPredictionAlerts({
             birthDate: kid.birthDate,
             events,
             gender: kid.gender,
+            prematureWeeks: kid.prematureWeeks,
             referenceDate,
             trackingStartedAt: kid.createdAt,
           })
-        : [],
-    [kid, events, eventsReady, referenceDate],
+    : [],
+    [kid, events, eventsReady, referenceDate, kid?.prematureWeeks],
   );
   const birth = kid ? parseLocalDate(kid.birthDate) : null;
   const evaluationError =

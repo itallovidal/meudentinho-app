@@ -36,6 +36,7 @@ it("does not advance review alerts into the tolerance period", () => {
     kidId: "kid",
     birthDate: "2018-09-01",
     events: [],
+    gender: "male",
     referenceDate,
   });
   const milestone = milestones.find(
@@ -54,6 +55,7 @@ it("does not advance review alerts into the tolerance period", () => {
     kidId: "kid",
     birthDate: "2018-09-01",
     events: [],
+    gender: "male",
     referenceDate: after,
   }).find((item) => item.id === milestone.id)!;
   expect(partitionToothAlerts([overdue], [], after).active).toEqual([overdue]);

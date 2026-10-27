@@ -35,6 +35,7 @@ import {
   localDateKeyToISO,
   toLocalDateKey,
   validateEventDateKey,
+  validateToothEventDateOrder,
 } from "@/lib/utils";
 import {
   expectedDentition,
@@ -51,8 +52,10 @@ import {
 } from "@/lib/teethLabels";
 import type {
   Dentition,
+  Quadrant,
   ToothEvent,
   ToothEventRequestDTO,
+  ToothType,
 } from "@/types/teeth";
 
 const colors = THEME.light;
@@ -260,9 +263,23 @@ export function ToothEventModal({
     resetForm(nextDentition);
   }
 
-  const dateError = dateUnknown
+  const dateKeyError = dateUnknown
     ? null
     : validateEventDateKey(date, kidBirthDate);
+  const dateOrderError =
+    dateUnknown || !parsed
+      ? null
+      : validateToothEventDateOrder({
+          newDate: date,
+          newDentition: dentition,
+          newEventType: eventType,
+          newRecordKind: "dated",
+          quadrant: parsed.quadrant as Quadrant,
+          toothType: parsed.toothType as ToothType,
+          events,
+          ignoreId: editingEvent?.id ?? null,
+        });
+  const dateError = dateKeyError ?? dateOrderError;
   const [isSaving, setIsSaving] = useState(false);
   const [isSnoozing, setIsSnoozing] = useState(false);
   const actionPendingRef = useRef(false);
