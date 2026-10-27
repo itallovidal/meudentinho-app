@@ -488,7 +488,15 @@ export function ArticleForm({
       >
         {(dismiss) => (
           <>
-            {previewArticle && <ArticleContent {...previewArticle} />}
+            {previewArticle && (
+              <ArticleContent
+                title={previewArticle.title}
+                categories={previewArticle.categories}
+                readingTime={previewArticle.readingTime}
+                imageCoverURL={previewArticle.imageCoverURL}
+                content={previewArticle.content}
+              />
+            )}
             <Button
               variant="outline"
               onPress={dismiss}

@@ -1,4 +1,5 @@
-import { Image, Pressable } from "react-native";
+import { RemoteImage } from "@/components/remoteImage";
+import { Pressable } from "react-native";
 import { Text } from "../ui/text";
 import { Wrapper } from "../wrapper";
 import { useNavigation } from "@react-navigation/native";
@@ -47,9 +48,9 @@ export function ArticleCard({
         justify="start"
         gap="gap-3"
       >
-        <Image
-          className="h-24 w-24 shrink-0 rounded-lg bg-base-200"
-          source={{ uri: imageCoverURL }}
+        <RemoteImage
+          className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-base-200"
+          uri={imageCoverURL}
           accessibilityLabel={`Capa do artigo: ${title}`}
         />
         <Wrapper

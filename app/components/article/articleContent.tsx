@@ -1,4 +1,5 @@
-import { Image, View } from "react-native";
+import { RemoteImage } from "@/components/remoteImage";
+import { View } from "react-native";
 import { ClockIcon } from "phosphor-react-native";
 import { MarkdownContent } from "@/components/markdownContent";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { THEME } from "@/lib/theme";
 
 type ArticleContentProps = {
   title: string;
+  summary?: string;
   categories: string[];
   readingTime: number;
   imageCoverURL: string;
@@ -15,6 +17,7 @@ type ArticleContentProps = {
 
 export function ArticleContent({
   title,
+  summary,
   categories,
   readingTime,
   imageCoverURL,
@@ -28,6 +31,9 @@ export function ArticleContent({
       >
         {title}
       </Text>
+      {!!summary?.trim() && (
+        <Text className="text-base leading-6 text-base-600">{summary}</Text>
+      )}
       <View className="w-full flex-row flex-wrap items-center gap-3">
         {categories.length > 0 && (
           <Badge variant="secondary">
@@ -41,19 +47,11 @@ export function ArticleContent({
           </Text>
         </View>
       </View>
-      {imageCoverURL ? (
-        <Image
-          source={{ uri: imageCoverURL }}
-          className="h-56 w-full rounded-2xl bg-base-200"
-          accessibilityLabel={`Imagem de capa: ${title}`}
-        />
-      ) : (
-        <View className="h-56 w-full items-center justify-center rounded-2xl bg-base-200 px-5">
-          <Text className="text-center text-sm leading-5 text-base-500">
-            A imagem de capa aparecerá aqui após carregar no formulário.
-          </Text>
-        </View>
-      )}
+      <RemoteImage
+        uri={imageCoverURL}
+        className="h-56 w-full overflow-hidden rounded-2xl bg-base-200"
+        accessibilityLabel={`Imagem de capa: ${title}`}
+      />
       <MarkdownContent content={content} />
     </View>
   );
