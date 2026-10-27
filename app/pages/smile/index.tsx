@@ -519,6 +519,7 @@ export function Smile() {
               )}
               {selectedKidRecord && (
                 <PredictionsCard
+                  referenceDate={alerts.referenceDate}
                   items={predictions.slice(0, 3)}
                   reviewCounts={
                     alerts.ready

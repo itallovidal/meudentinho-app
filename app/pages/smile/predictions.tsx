@@ -1,3 +1,4 @@
+import { AnimatedHeight } from "@/components/animatedHeight";
 import { ScreenContent } from "@/components/screenContent";
 import { loginReturnPath } from "@/navigation/linking";
 import { ToothTypeSVG } from "@/components/smile/teeth/ToothTypeSVG";
@@ -6,9 +7,14 @@ import { ToothAlertsPanel } from "@/components/smile/ToothAlertsPanel";
 import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
 import { useToothAlertActions } from "@/hooks/useToothAlertActions";
 import { toothEventErrorMessage } from "@/lib/toothEventError";
-import { useContext, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { CaretDownIcon } from "phosphor-react-native";
 import { Header } from "@/components/header";
 import { ErrorState } from "@/components/errorState";
@@ -32,12 +38,21 @@ import { THEME } from "@/lib/theme";
 import {
   buildPredictionCalendarMarks,
   buildToothPredictions,
-  getCalendarFocus,
+  PREDICTION_STATUS_DESCRIPTION,
   getPredictionFocusKey,
   PREDICTION_STATUS_LABEL,
 } from "@/lib/toothPredictions";
 import { parseLocalDate } from "@/lib/utils";
-import type { ToothPrediction } from "@/types/teeth";
+import type { ToothPrediction, ToothPredictionStatus } from "@/types/teeth";
+
+const STATUS_STYLE: Record<
+  ToothPredictionStatus,
+  { badge: string; text: string }
+> = {
+  current: { badge: "bg-primary-100", text: "text-primary-800" },
+  tolerance: { badge: "bg-warning-100", text: "text-warning-600" },
+  upcoming: { badge: "bg-base-200", text: "text-muted-foreground" },
+};
 
 const TOTAL_MILK_TEETH = 20;
 const PREDICTIONS_PAGE_SIZE = 2;
@@ -123,16 +138,17 @@ export function SmilePredictions() {
     [predictions, events],
   );
 
-  const defaultFocus = useMemo(
-    () => getCalendarFocus(predictions, new Date()),
-    [predictions],
-  );
-  const [activePredictionId, setActivePredictionId] = useState<string | null>(
-    null,
-  );
+  const [selection, setSelection] = useState<{
+    kidId: string;
+    predictionId: string | null;
+  }>({
+    kidId: params.kidId,
+    predictionId: null,
+  });
+  const activePredictionId =
+    selection.kidId === params.kidId ? selection.predictionId : null;
   const [focusRequest, setFocusRequest] = useState<{ date: Date } | null>(null);
-  const focusedPredictionId =
-    activePredictionId ?? defaultFocus?.prediction.id ?? null;
+  const focusedPredictionId = activePredictionId;
   const focusedIndex = predictions.findIndex(
     (prediction) => prediction.id === focusedPredictionId,
   );
@@ -140,11 +156,25 @@ export function SmilePredictions() {
   const shownCount = Math.max(visibleCount, focusedIndex + 1);
   const visiblePredictions = predictions.slice(0, shownCount);
 
+  useFocusEffect(
+    useCallback(() => {
+      setSelection({ kidId: params.kidId, predictionId: null });
+      setFocusRequest({ date: new Date() });
+      setVisibleCount(PREDICTIONS_PAGE_SIZE);
+    }, [params.kidId]),
+  );
+
   function handleSelectPrediction(prediction: ToothPrediction) {
-    setActivePredictionId(prediction.id);
+    const deselecting = activePredictionId === prediction.id;
+    setSelection({
+      kidId: params.kidId,
+      predictionId: deselecting ? null : prediction.id,
+    });
     setFocusRequest({
-      date:
-        parseLocalDate(getPredictionFocusKey(prediction, events)) ?? new Date(),
+      date: deselecting
+        ? new Date()
+        : (parseLocalDate(getPredictionFocusKey(prediction, events)) ??
+          new Date()),
     });
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }
@@ -329,7 +359,7 @@ export function SmilePredictions() {
                       <DentalCalendar
                         key={kid.id}
                         marks={marks}
-                        initialDate={defaultFocus?.date ?? new Date()}
+                        initialDate={alerts.referenceDate}
                         focusRequest={focusRequest}
                       />
                     </Wrapper>
@@ -351,49 +381,69 @@ export function SmilePredictions() {
                           avaliação de um dentista.
                         </Text>
                       </View>
-                      {visiblePredictions.map((prediction) => {
-                        const focused = prediction.id === focusedPredictionId;
-                        return (
-                          <Pressable
-                            key={prediction.id}
-                            onPress={() => handleSelectPrediction(prediction)}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Ver ${prediction.title} no calendário`}
-                            className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
-                          >
-                            <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
-                              <ToothTypeSVG toothType={prediction.toothType} />
-                            </View>
-                            <View className="flex-1 gap-1">
-                              <View className="flex-row items-start justify-between gap-2">
-                                <Text className="flex-1 text-base font-bold leading-5 text-primary-800">
-                                  {prediction.title}
-                                </Text>
-                                <View
-                                  className={`rounded-full px-2 py-0.5 ${prediction.status === "current" ? "bg-primary-100" : "bg-base-200"}`}
-                                >
+                      <AnimatedHeight>
+                        <View className="w-full gap-3">
+                          {visiblePredictions.map((prediction) => {
+                            const focused =
+                              prediction.id === focusedPredictionId;
+                            return (
+                              <Pressable
+                                key={prediction.id}
+                                onPress={() =>
+                                  handleSelectPrediction(prediction)
+                                }
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: focused }}
+                                accessibilityLabel={
+                                  focused
+                                    ? `Desmarcar ${prediction.title} e voltar para hoje`
+                                    : `Ver ${prediction.title} no calendário`
+                                }
+                                className={`w-full flex-row items-start gap-4 rounded-2xl border-2 bg-base-100 p-4 shadow-sm shadow-base-300 ${focused ? "border-primary-400" : "border-base-100"}`}
+                              >
+                                <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
+                                  <ToothTypeSVG
+                                    toothType={prediction.toothType}
+                                  />
+                                </View>
+                                <View className="flex-1 gap-1">
+                                  <View className="flex-row items-start justify-between gap-2">
+                                    <Text className="flex-1 text-base font-bold leading-5 text-primary-800">
+                                      {prediction.title}
+                                    </Text>
+                                    <View
+                                      className={`max-w-[48%] shrink rounded-full px-2 py-0.5 ${STATUS_STYLE[prediction.status].badge}`}
+                                    >
+                                      <Text
+                                        className={`text-[10px] font-bold uppercase tracking-wide ${STATUS_STYLE[prediction.status].text}`}
+                                      >
+                                        {
+                                          PREDICTION_STATUS_LABEL[
+                                            prediction.status
+                                          ]
+                                        }
+                                      </Text>
+                                    </View>
+                                  </View>
+                                  <Text className="text-xs font-medium text-primary">
+                                    {`${formatMonthWindow(prediction.windowStart, prediction.windowEnd)} · ${prediction.pendingSides === 1 ? "1 lado pendente" : `${prediction.pendingSides} lados pendentes`}`}
+                                  </Text>
                                   <Text
-                                    className={`text-[10px] font-bold uppercase tracking-wide ${prediction.status === "current" ? "text-primary-800" : "text-muted-foreground"}`}
+                                    className="text-xs leading-4 text-muted-foreground"
+                                    numberOfLines={2}
                                   >
-                                    {PREDICTION_STATUS_LABEL[prediction.status]}
+                                    {
+                                      PREDICTION_STATUS_DESCRIPTION[
+                                        prediction.status
+                                      ]
+                                    }
                                   </Text>
                                 </View>
-                              </View>
-                              <Text className="text-xs font-medium text-primary">
-                                {`${formatMonthWindow(prediction.windowStart, prediction.windowEnd)} · ${prediction.pendingSides === 1 ? "1 lado pendente" : `${prediction.pendingSides} lados pendentes`}`}
-                              </Text>
-                              <Text
-                                className="text-xs leading-4 text-muted-foreground"
-                                numberOfLines={2}
-                              >
-                                {prediction.status === "current"
-                                  ? "Período provável para a erupção deste dente."
-                                  : "Estimativa baseada na cronologia média de erupção."}
-                              </Text>
-                            </View>
-                          </Pressable>
-                        );
-                      })}
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                      </AnimatedHeight>
                       {shownCount < predictions.length && (
                         <Pressable
                           onPress={() =>

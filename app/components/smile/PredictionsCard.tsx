@@ -20,6 +20,7 @@ import {
 
 type PredictionsCardProps = {
   items: ToothPrediction[];
+  referenceDate: Date;
   reviewCounts: ReviewCounts | null;
   reviewError?: string | null;
   onPress?: () => void;
@@ -28,6 +29,7 @@ type PredictionsCardProps = {
 
 export function PredictionsCard({
   items,
+  referenceDate,
   reviewCounts,
   reviewError,
   onPress,
@@ -76,7 +78,7 @@ export function PredictionsCard({
                   <ClockIcon size={14} color={colors.base100} weight="bold" />
                 </View>
                 <Text className="flex-1 text-xs text-base-100/60">
-                  {`${PREDICTION_STATUS_LABEL[item.status]}: ${formatPredictionWindow(item.windowStart, item.windowEnd)}`}
+                  {`${PREDICTION_STATUS_LABEL[item.status]}: ${formatPredictionWindow(item.windowStart, item.windowEnd, referenceDate)}`}
                 </Text>
               </View>
             </View>
