@@ -239,7 +239,7 @@ export function ArticleEditor() {
           </Text>
         }
       >
-        <Text className="text-base text-base-500">
+        <Text className="text-base text-muted-foreground">
           O artigo será removido permanentemente. Esta ação não pode ser
           desfeita.
         </Text>

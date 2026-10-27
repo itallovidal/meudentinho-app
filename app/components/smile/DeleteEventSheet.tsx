@@ -36,7 +36,7 @@ export function DeleteEventSheet({
         <>
           {dependents.length > 0 ? (
             <>
-              <Text className="text-base text-base-500">
+              <Text className="text-base text-muted-foreground">
                 Excluir esse registro, também removerá os registros:
               </Text>
               <View className="gap-2">
@@ -51,7 +51,7 @@ export function DeleteEventSheet({
               </View>
             </>
           ) : (
-            <Text className="text-base text-base-500">
+            <Text className="text-base text-muted-foreground">
               O registro será removido do histórico.
             </Text>
           )}

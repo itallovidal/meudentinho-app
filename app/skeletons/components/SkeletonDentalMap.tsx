@@ -91,7 +91,7 @@ export function SkeletonDentalMap({ error }: { error?: ReactNode }) {
                     <Text className="text-sm font-semibold text-base-600">
                       {entry.label}
                     </Text>
-                    <Text className="text-xs text-base-500">
+                    <Text className="text-xs text-muted-foreground">
                       {entry.description}
                     </Text>
                   </View>

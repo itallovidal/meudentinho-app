@@ -139,7 +139,7 @@ export function Categories() {
                 Categorias
               </Text>
               <Text
-                className={`text-muted ${isEmptyState ? "text-center" : ""}`}
+                className={`text-muted-foreground ${isEmptyState ? "text-center" : ""}`}
               >
                 {isEmptyState
                   ? "Adicione a primeira categoria para começar."

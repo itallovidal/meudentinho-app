@@ -50,7 +50,7 @@ export function CategoriesListStatus({
         <Text className="mb-2 text-center text-lg font-bold">
           Nenhuma categoria cadastrada
         </Text>
-        <Text className="text-center text-base-500">
+        <Text className="text-center text-muted-foreground">
           Toque no botão + para adicionar a primeira categoria.
         </Text>
       </View>

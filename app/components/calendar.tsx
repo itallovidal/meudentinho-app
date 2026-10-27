@@ -16,6 +16,7 @@ import {
   CaretRightIcon,
   CaretLeftIcon,
 } from "phosphor-react-native";
+import { THEME } from "@/lib/themeColors";
 import { Wrapper } from "./wrapper";
 
 type Props = CalendarProps;
@@ -70,7 +71,7 @@ function CalendarArrowButton({
       onLongPress={handleLongPress}
       onPress={handlePress}
     >
-      <Icon color="hsl(213 53.4% 20.2%)" size={20} weight="bold" />
+      <Icon color={THEME.light.primary} size={20} weight="bold" />
     </Pressable>
   );
 }
@@ -211,6 +212,16 @@ export function CustomCalendar({
     <View className="w-full">
       <Calendar
         {...props}
+        theme={{
+          calendarBackground: THEME.light.background,
+          dayTextColor: THEME.light.foreground,
+          textSectionTitleColor: THEME.light.mutedForeground,
+          todayTextColor: THEME.light.primary,
+          selectedDayBackgroundColor: THEME.light.primary,
+          selectedDayTextColor: THEME.light.primaryForeground,
+          textDisabledColor: THEME.light.base400,
+          ...props.theme,
+        }}
         key={jumpKey ?? undefined}
         current={jumpKey ?? undefined}
         maxDate={effectiveMaxDate}
@@ -281,8 +292,8 @@ export function CustomCalendar({
         justify="center"
         gap="gap-2"
       >
-        <QuestionIcon size={16} color="hsl(213 53.4% 20.2%)" weight="bold" />
-        <Text variant={"small"} className="text-base-500">
+        <QuestionIcon size={16} color={THEME.light.primary} weight="bold" />
+        <Text variant={"small"} className="text-muted-foreground">
           Você pode apertar e segurar para pular 6 meses.
         </Text>
       </Wrapper>

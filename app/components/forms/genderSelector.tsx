@@ -42,7 +42,7 @@ export function GenderSelector({
 
   return (
     <Wrapper direction="column" className={cn("w-full", className)} gap="gap-2">
-      <Text className="text-xs font-semibold uppercase tracking-wide text-primary-400">
+      <Text className="text-xs font-semibold uppercase tracking-wide text-primary">
         Sexo
       </Text>
 
@@ -73,7 +73,7 @@ export function GenderSelector({
               className={
                 gender === option.value
                   ? "font-bold text-base-100"
-                  : "font-medium text-base-400"
+                  : "font-medium text-muted-foreground"
               }
             >
               {option.label}

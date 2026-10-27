@@ -70,7 +70,7 @@ export function ArticleListSection({
         </Text>
       )}
       {!latestArticle && articles.length === 0 && (
-        <Text className="w-full py-8 text-center text-base-500">
+        <Text className="w-full py-8 text-center text-muted-foreground">
           Nenhum artigo disponível.
         </Text>
       )}

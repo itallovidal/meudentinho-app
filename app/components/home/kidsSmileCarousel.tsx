@@ -139,7 +139,7 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
             {kid.name}
           </Text>
           {age ? (
-            <Text className="text-sm text-base-500" numberOfLines={1}>
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
               {age}
             </Text>
           ) : null}
@@ -161,7 +161,7 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
           accessibilityRole="button"
           accessibilityLabel="Ver detalhes do mapa do sorriso"
         >
-          <Text className="text-xs font-bold tracking-wide text-primary-400">
+          <Text className="text-xs font-bold tracking-wide text-primary">
             VER DETALHES
           </Text>
         </Pressable>
@@ -246,7 +246,7 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
           accessibilityRole="button"
           accessibilityLabel="Ver mais registros"
         >
-          <Text className="text-xs font-bold tracking-wide text-primary-400">
+          <Text className="text-xs font-bold tracking-wide text-primary">
             VER MAIS
           </Text>
         </Pressable>
@@ -425,7 +425,7 @@ export function KidsSmileCarousel({
         >
           <Wrapper direction="row" align="center" gap="gap-1">
             <PlusIcon size={16} color={colors.primary400} weight="bold" />
-            <Text className="text-sm font-bold text-primary-400">
+            <Text className="text-sm font-bold text-primary">
               novo registro
             </Text>
           </Wrapper>

@@ -217,7 +217,7 @@ export function EditDependent() {
           </Text>
         }
       >
-        <Text className="text-base text-base-500">
+        <Text className="text-base text-muted-foreground">
           {`Isso apaga ${kid?.name ?? ""} e todo o histórico. Esta ação não pode ser desfeita.`}
         </Text>
         <Button

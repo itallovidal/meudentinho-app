@@ -120,7 +120,7 @@ export function Login() {
           <Text className="mb-0" variant={"h2"}>
             Bem vindo de volta!
           </Text>
-          <Text className="mb-6 mt-0 text-muted">
+          <Text className="mb-6 mt-0 text-muted-foreground">
             Por favor, faça login para continuar
           </Text>
         </Wrapper>

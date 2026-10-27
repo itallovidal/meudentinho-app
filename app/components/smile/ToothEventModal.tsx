@@ -428,7 +428,7 @@ export function ToothEventModal({
                 width={20}
                 height={20}
               />
-              <Text className="text-sm text-base-500">
+              <Text className="text-sm text-muted-foreground">
                 {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
               </Text>
             </View>
@@ -452,7 +452,7 @@ export function ToothEventModal({
           {!editingEvent && !initialDentition && (
             <>
               <View className="gap-3">
-                <Text className="text-base text-base-500">
+                <Text className="text-base text-muted-foreground">
                   O que aconteceu?
                 </Text>
                 <View className="flex-row flex-wrap gap-3">
@@ -487,7 +487,7 @@ export function ToothEventModal({
               </View>
 
               <View className="gap-3">
-                <Text className="text-base text-base-500">Dentição</Text>
+                <Text className="text-base text-muted-foreground">Dentição</Text>
                 <View className="flex-row flex-wrap gap-3">
                   <Chip
                     portalHost={popoverHost}
@@ -550,14 +550,14 @@ export function ToothEventModal({
                   <Text className="text-base-600">
                     Não tenho o histórico anterior de leite
                   </Text>
-                  <Text className="text-sm text-base-500">
+                  <Text className="text-sm text-muted-foreground">
                     Registrar este nascimento sem inventar as datas anteriores.
                   </Text>
                 </Pressable>
               </View>
             )}
           <View className="gap-3">
-            <Text className="text-base text-base-500">
+            <Text className="text-base text-muted-foreground">
               Data do acontecimento
             </Text>
             <View className="flex-row items-center gap-2">
@@ -598,7 +598,7 @@ export function ToothEventModal({
                 hitSlop={4}
                 className="flex-1"
               >
-                <Text className="text-sm text-base-500">Não sei informar</Text>
+                <Text className="text-sm text-muted-foreground">Não sei informar</Text>
               </Pressable>
             </View>
             {dateError ? (
@@ -608,7 +608,7 @@ export function ToothEventModal({
             ) : null}
           </View>
           <View className="gap-3">
-            <Text className="text-base text-base-500">Observação</Text>
+            <Text className="text-base text-muted-foreground">Observação</Text>
             <Textarea
               value={note}
               onChangeText={setNote}
@@ -668,7 +668,7 @@ export function ToothEventModal({
               className="min-h-12 w-full gap-2 rounded-full"
             >
               <ClockIcon size={18} color={colors.primary400} />
-              <Text className="text-sm font-semibold text-primary-400">
+              <Text className="text-sm font-semibold text-primary">
                 {isSnoozing ? "Adiando..." : "Adiar por 7 dias"}
               </Text>
             </Button>
@@ -681,7 +681,7 @@ export function ToothEventModal({
                 dismiss();
               }}
               accessibilityRole="button"
-              className="h-14 w-full items-center justify-center rounded-full active:opacity-70"
+              className="h-14 w-full items-center justify-center rounded-full active:opacity-90"
             >
               <Text className="text-base font-bold text-destructive">
                 Excluir registro

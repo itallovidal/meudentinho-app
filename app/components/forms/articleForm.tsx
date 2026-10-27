@@ -240,7 +240,7 @@ export function ArticleForm({
             >
               {isEditing ? "Editar artigo" : "Novo artigo"}
             </Text>
-            <Text className="text-sm leading-5 text-base-500">
+            <Text className="text-sm leading-5 text-muted-foreground">
               Compartilhe orientações e cuidados para acompanhar cada sorriso.
             </Text>
           </View>
@@ -288,7 +288,7 @@ export function ArticleForm({
             />
             <View className="w-full gap-2">
               <Text className="font-bold text-primary-800">Categoria</Text>
-              <Text className="text-xs leading-5 text-base-500">
+              <Text className="text-xs leading-5 text-muted-foreground">
                 Escolha uma categoria para o artigo.
               </Text>
               {categoriesData &&
@@ -333,7 +333,7 @@ export function ArticleForm({
               {!isCategoriesFetching &&
                 !categoriesFetchingError &&
                 categories.length === 0 && (
-                  <Text className="text-xs leading-5 text-base-500">
+                  <Text className="text-xs leading-5 text-muted-foreground">
                     Nenhuma categoria disponível no momento.
                   </Text>
                 )}
@@ -358,7 +358,7 @@ export function ArticleForm({
                   </Text>
                   {imageAction}
                 </View>
-                <Text className="text-xs leading-5 text-base-500">
+                <Text className="text-xs leading-5 text-muted-foreground">
                   Cole o link direto da imagem e toque no check para confirmar e
                   carregar a capa.
                 </Text>
@@ -439,7 +439,7 @@ export function ArticleForm({
             {!imageReady && (
               <Text
                 accessibilityLiveRegion="polite"
-                className="text-center text-xs leading-5 text-base-500"
+                className="text-center text-xs leading-5 text-muted-foreground"
               >
                 {previewUrl &&
                 imagePreview?.url === previewUrl &&

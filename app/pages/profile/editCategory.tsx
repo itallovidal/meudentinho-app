@@ -214,7 +214,7 @@ export function EditCategory() {
             <Text variant="h2" className="mb-0">
               {isEditing ? "Editar categoria" : "Nova categoria"}
             </Text>
-            <Text className="text-muted">
+            <Text className="text-muted-foreground">
               {isEditing
                 ? "Atualize o nome da categoria. Os artigos vinculados serão atualizados automaticamente."
                 : "Crie uma categoria para organizar os artigos."}
@@ -273,7 +273,7 @@ export function EditCategory() {
             </Text>
           }
         >
-          <Text className="text-base text-base-500">
+          <Text className="text-base text-muted-foreground">
             A categoria {category.name} será removida permanentemente e os
             artigos vinculados deixarão de exibi-la. Esta ação não pode ser
             desfeita.

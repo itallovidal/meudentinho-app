@@ -59,7 +59,7 @@ export function ToothAlertsSheet({
           >
             {title}
           </Text>
-          <Text className="text-xs leading-[18px] text-primary-400">
+          <Text className="text-xs leading-[18px] text-primary">
             {items.length} {items.length === 1 ? "registro" : "registros"}
           </Text>
         </View>
@@ -67,7 +67,7 @@ export function ToothAlertsSheet({
     >
       {(dismiss) => (
         <View className="gap-4">
-          <Text className="text-xs leading-5 text-primary-400">
+          <Text className="text-xs leading-5 text-primary">
             {description}
           </Text>
           {stale && (

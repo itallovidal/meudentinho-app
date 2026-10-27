@@ -153,7 +153,7 @@ export function Index() {
                 </>
               ) : (
                 !(latestArticle && !selectedCategory && !isSearchActive) && (
-                  <Text className="w-full py-8 text-center text-base-500">
+                  <Text className="w-full py-8 text-center text-muted-foreground">
                     {isSearchActive
                       ? `Nenhum artigo encontrado para "${searchQuery}"`
                       : selectedCategory

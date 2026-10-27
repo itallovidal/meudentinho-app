@@ -158,7 +158,7 @@ export function Index() {
         gap="gap-0"
       >
         <Header />
-        <Text className="mt-8 text-sm text-muted">Carregando...</Text>
+        <Text className="mt-8 text-sm text-muted-foreground">Carregando...</Text>
       </Wrapper>
     );
   }
@@ -201,10 +201,10 @@ export function Index() {
             align="center"
             justify="center"
           >
-            <Text className="mb-0 text-sm text-muted">
+            <Text className="mb-0 text-sm text-muted-foreground">
               v{Constants.expoConfig?.version ?? "0.0.0"}
             </Text>
-            <Text className="mb-4 mt-0 text-sm text-muted">
+            <Text className="mb-4 mt-0 text-sm text-muted-foreground">
               &copy; {year} Janelinha
             </Text>
           </Wrapper>
@@ -218,7 +218,7 @@ export function Index() {
           <Text className="text-xl font-bold text-base-900">Sair da conta</Text>
         }
       >
-        <Text className="text-base text-base-500">
+        <Text className="text-base text-muted-foreground">
           Deseja sair da sua conta neste aparelho?
         </Text>
         {logoutError && (

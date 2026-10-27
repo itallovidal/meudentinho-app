@@ -32,7 +32,7 @@ export function ArticleCard({
       accessibilityLabel={`Ler artigo: ${title}`}
       className="w-full overflow-hidden rounded-lg"
       android_ripple={{ color: colors.base200 }}
-      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
       onPress={() =>
         navigation.navigate("Articles", {
           screen: "Article",
@@ -62,8 +62,8 @@ export function ArticleCard({
             {title}
           </Text>
           <Wrapper direction="row" align="center" justify="start" gap="gap-1">
-            <ClockIcon size={12} weight="regular" color={colors.base500} />
-            <Text variant="small" className="text-base-400">
+            <ClockIcon size={12} weight="regular" color={colors.mutedForeground} />
+            <Text variant="small" className="text-muted-foreground">
               {readingTime} min de leitura
             </Text>
           </Wrapper>

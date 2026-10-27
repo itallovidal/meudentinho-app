@@ -6,20 +6,19 @@ import { RootNavigator } from "./app/navigation/RootNavigator";
 import { webLinking } from "./app/navigation/linking";
 import { webDocumentTitle } from "./app/navigation/documentTitle";
 import { UserContext, UserProvider } from "./app/contexts/UserContext";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ErrorBoundary } from "./app/components/ErrorBoundary";
 import { ToastProvider } from "./app/components/ui/toast";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { IconContext } from "phosphor-react-native";
-import { THEME } from "@/lib/theme";
+import { NAV_THEME, THEME } from "@/lib/theme";
 import { envIssues } from "@/lib/env";
 import { InvalidEnvScreen } from "@/components/invalidEnvScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Platform, View } from "react-native";
 import { Skeleton } from "@/components/ui/skeleton";
-import { NAV_THEME } from "@/lib/theme";
 import { configureWebStyles } from "@/lib/webStyles";
 
 configureWebStyles();
@@ -69,7 +68,9 @@ function SessionNavigation() {
 }
 
 export function App() {
-  colorScheme.set("light");
+  useEffect(function configureLightTheme() {
+    colorScheme.set("light");
+  }, []);
 
   if (envIssues.length > 0) {
     return <InvalidEnvScreen issues={envIssues} />;

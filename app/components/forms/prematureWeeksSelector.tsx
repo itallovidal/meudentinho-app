@@ -82,12 +82,12 @@ export function PrematureWeeksSelector({
         onPress={openSheet}
         accessibilityRole="button"
         accessibilityLabel="Escolher semanas de gestação"
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
         className="h-14 w-full flex-row items-center justify-between rounded-xl bg-base-200 px-4"
       >
         <Text
           className={
-            value ? "text-base text-base-900" : "text-base text-base-400"
+            value ? "text-base text-base-900" : "text-base text-muted-foreground"
           }
         >
           {value ? `${value} semanas` : "Selecione"}
@@ -95,7 +95,7 @@ export function PrematureWeeksSelector({
         <CaretDownIcon size={20} color={colors.base600} weight="regular" />
       </Pressable>
 
-      <Text className="text-sm text-base-500">
+      <Text className="text-sm text-muted-foreground">
         Informe as semanas de gestação para registrar a prematuridade.
       </Text>
 
@@ -114,7 +114,7 @@ export function PrematureWeeksSelector({
             <Text className="text-center text-xl font-bold text-base-900">
               Semanas de gestação
             </Text>
-            <Text className="mt-3 text-center text-base leading-6 text-base-500">
+            <Text className="mt-3 text-center text-base leading-6 text-muted-foreground">
               Selecione com quantas semanas a criança nasceu.
             </Text>
           </>
@@ -170,7 +170,7 @@ export function PrematureWeeksSelector({
                 <Text
                   className={cn(
                     "text-4xl font-bold",
-                    isSelected ? "text-base-100" : "text-base-400",
+                    isSelected ? "text-base-100" : "text-muted-foreground",
                   )}
                 >
                   {weeks}
@@ -178,7 +178,7 @@ export function PrematureWeeksSelector({
                 <Text
                   className={cn(
                     "mt-1 text-base font-medium",
-                    isSelected ? "text-base-100" : "text-base-400",
+                    isSelected ? "text-base-100" : "text-muted-foreground",
                   )}
                 >
                   semanas

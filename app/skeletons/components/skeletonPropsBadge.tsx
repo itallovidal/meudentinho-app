@@ -19,7 +19,7 @@ export function SkeletonPropsBadge({
       className={` ${className || (wrap ? " flex-wrap " : " flex-nowrap ")} w-full`}
     >
       {Array.from({ length: EXAMPLE_PROPS_LENGTH }).map((_, i) => (
-        <Skeleton key={i} className="h-9 w-20 rounded bg-base-100" />
+        <Skeleton key={i} className="h-9 w-20 rounded" />
       ))}
     </Wrapper>
   );

@@ -41,8 +41,8 @@ export function ArticleContent({
           </Badge>
         )}
         <View className="flex-row items-center gap-1">
-          <ClockIcon size={16} color={THEME.light.base500} weight="regular" />
-          <Text variant="small" className="text-base-500">
+          <ClockIcon size={16} color={THEME.light.mutedForeground} weight="regular" />
+          <Text variant="small" className="text-muted-foreground">
             {readingTime} min de leitura
           </Text>
         </View>

@@ -152,7 +152,7 @@ export function ExportHistorySheet({
         className="w-full flex-row items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4 py-3"
       >
         <View className="gap-1">
-          <Text className="text-xs font-semibold uppercase text-base-500">
+          <Text className="text-xs font-semibold uppercase text-muted-foreground">
             {label}
           </Text>
           <Text className="text-base font-bold text-primary-800">
@@ -174,7 +174,7 @@ export function ExportHistorySheet({
         </Text>
       }
     >
-      <Text className="text-base text-base-500">
+      <Text className="text-base text-muted-foreground">
         Selecione o período para exportar os registros de {kidName} em PDF.
       </Text>
       <View className="w-full gap-3">
@@ -185,7 +185,7 @@ export function ExportHistorySheet({
           setPickerTarget("end"),
         )}
       </View>
-      <Text className="text-sm text-base-500">
+      <Text className="text-sm text-muted-foreground">
         {periodEvents.length === 0
           ? "Nenhum registro nesse período."
           : `${periodEvents.length} ${periodEvents.length === 1 ? "registro" : "registros"} no período`}

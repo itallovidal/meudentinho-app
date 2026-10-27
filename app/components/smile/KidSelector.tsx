@@ -49,7 +49,7 @@ export function KidSelector({
                 onSelect(kid.id);
                 onOpen?.(kid.id);
               }}
-              activeOpacity={0.85}
+              activeOpacity={0.9}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               className={cn(
@@ -62,14 +62,11 @@ export function KidSelector({
               <View
                 className={cn(
                   "h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                  isSelected ? "bg-base-100" : "bg-base-400",
+                  isSelected ? "bg-base-100" : "bg-muted",
                 )}
               >
                 <Text
-                  className={cn(
-                    "text-lg font-bold",
-                    isSelected ? "text-primary-500" : "text-base-100",
-                  )}
+                  className="text-lg font-bold text-primary"
                 >
                   {initial}
                 </Text>
@@ -89,7 +86,7 @@ export function KidSelector({
                     numberOfLines={1}
                     className={cn(
                       "mb-0.5 text-xs leading-4",
-                      isSelected ? "text-base-200" : "text-base-500",
+                      isSelected ? "text-base-200" : "text-muted-foreground",
                     )}
                   >
                     {age}
@@ -102,7 +99,7 @@ export function KidSelector({
         {onAdd && (
           <TouchableOpacity
             onPress={onAdd}
-            activeOpacity={0.85}
+            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel="Adicionar dependente"
             className={`flex h-12 flex-row ${kids.length === 0 ? "w-auto" : "w-12"} shrink-0 items-center justify-center rounded-xl border border-base-300 bg-base-100`}

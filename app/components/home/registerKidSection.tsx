@@ -35,7 +35,7 @@ export function RegisterKidSection({
         <Text variant={"h4"} className="mb-0">
           Bem Vindo ao Janelinha!
         </Text>
-        <Text className="text-muted">
+        <Text className="text-muted-foreground">
           Precisamos de alguns dados básicos para começar a acompanhar o
           desenvolvimento dentário da criança de forma personalizada.
         </Text>

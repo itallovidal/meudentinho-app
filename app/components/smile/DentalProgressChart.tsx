@@ -74,7 +74,7 @@ function ProgressRing({
         <Text className="text-lg font-bold text-primary-800">
           {`${Math.round(percent * 100)}%`}
         </Text>
-        <Text className="text-xs text-base-500">{`${value} de ${total}`}</Text>
+        <Text className="text-xs text-muted-foreground">{`${value} de ${total}`}</Text>
       </View>
     </View>
   );
@@ -96,7 +96,7 @@ export default function DentalProgressChart({
       <Text variant="h4" className="text-center text-primary-800">
         {title}
       </Text>
-      <Text className="px-2 text-center text-sm leading-5 text-base-500">
+      <Text className="px-2 text-center text-sm leading-5 text-muted-foreground">
         {description}
       </Text>
 

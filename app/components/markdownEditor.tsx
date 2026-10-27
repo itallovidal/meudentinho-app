@@ -104,7 +104,7 @@ export function MarkdownEditor({
   return (
     <View className="w-full gap-3">
       <Text className="font-bold text-primary-800">{label}</Text>
-      <Text className="text-xs leading-5 text-base-500">
+      <Text className="text-xs leading-5 text-muted-foreground">
         Selecione um trecho e toque em uma opção para formatar. Sem seleção, a
         formatação será inserida no cursor.
       </Text>
@@ -156,7 +156,7 @@ export function MarkdownEditor({
           {errorMessage}
         </Text>
       )}
-      <Text className="text-xs leading-5 text-base-500">
+      <Text className="text-xs leading-5 text-muted-foreground">
         Use “Visualizar prévia” ao final do formulário para conferir o texto
         formatado. Ao inserir um link, substitua o endereço selecionado pelo
         destino desejado.

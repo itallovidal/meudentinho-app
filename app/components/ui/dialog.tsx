@@ -81,7 +81,7 @@ function DialogContent({
             className={cn(
               'absolute right-4 top-4 rounded opacity-70 active:opacity-100',
               Platform.select({
-                web: 'focus-visible:border-ring focus-visible:ring-ring/50 data-[state=open]:bg-accent outline-hidden focus-visible:ring-[3px] focus-visible:outline-1',
+                web: 'focus-visible:border-ring focus-visible:ring-ring data-[state=open]:bg-accent outline-none focus-visible:ring-[3px] focus-visible:outline-1',
               })
             )}
             hitSlop={12}>
