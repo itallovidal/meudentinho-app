@@ -509,6 +509,7 @@ export function Smile() {
                   alerts.ready && !alerts.stale ? alerts.active : []
                 }
                 onRegisterEvent={handleRegisterEvent}
+                onEditEvent={editor.openEditor}
                 onMissingKid={() => setAddDependentVisible(true)}
               />
               {kids.length > 0 && (

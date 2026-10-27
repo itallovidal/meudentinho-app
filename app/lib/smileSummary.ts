@@ -1,4 +1,7 @@
-import { buildToothMilestones } from "@/lib/toothMilestones";
+import {
+  buildToothMilestones,
+  getEruptionPositions,
+} from "@/lib/toothMilestones";
 import { toothState, type ChronologyGender } from "@/lib/toothChronology";
 import type { Arch, Side, ToothEvent, ToothType } from "@/types/teeth";
 
@@ -36,13 +39,15 @@ export function buildSmileSummary(
     eruptionWindow: 0,
     registered: 0,
   };
-  summary.eruptionWindow = buildToothMilestones({
-    kidId: "",
-    birthDate,
-    events,
-    gender,
-    referenceDate,
-  }).filter((milestone) => milestone.status === "current").length;
+  summary.eruptionWindow = getEruptionPositions(
+    buildToothMilestones({
+      kidId: "",
+      birthDate,
+      events,
+      gender,
+      referenceDate,
+    }),
+  ).size;
 
   for (const arch of ARCHES) {
     for (const side of SIDES) {

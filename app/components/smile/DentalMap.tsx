@@ -3,6 +3,7 @@ import { useContainerWidth } from "@/hooks/useContainerWidth";
 import { Separator } from "@/components/ui/separator";
 import {
   buildToothMilestones,
+  getEruptionPositions,
   type ToothMilestone,
 } from "@/lib/toothMilestones";
 import {
@@ -124,6 +125,7 @@ type DentalMapProps = {
   kidGender: ChronologyGender | null;
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
+  onEditEvent: (event: ToothEvent) => void;
   onMissingKid?: () => void;
   pendingMilestones?: ToothMilestone[];
   referenceDate?: Date;
@@ -135,6 +137,7 @@ export function DentalMap({
   kidGender,
   events,
   onRegisterEvent,
+  onEditEvent,
   onMissingKid,
   pendingMilestones = [],
   referenceDate = new Date(),
@@ -173,12 +176,7 @@ export function DentalMap({
     [kidId, kidBirthDate, events, kidGender, referenceDate],
   );
   const currentPositions = useMemo(
-    () =>
-      new Set(
-        milestones
-          .filter((item) => item.status === "current")
-          .map((item) => `${item.quadrant}:${item.toothType}`),
-      ),
+    () => getEruptionPositions(milestones),
     [milestones],
   );
   const overduePositions = new Set(
@@ -244,6 +242,24 @@ export function DentalMap({
       setModalVisible(true);
     },
     [kidId, onMissingKid],
+  );
+
+  const onToothLongPress = useCallback(
+    (toothId: string) => {
+      const position = parseToothId(toothId);
+      const event =
+        position && kidId
+          ? latestEventByTooth.get(`${position.quadrant}:${position.toothType}`)
+          : undefined;
+      if (!event) {
+        onToothPress(toothId);
+        return;
+      }
+      setSelectedTooth(toothId);
+      setModalVisible(false);
+      onEditEvent(event);
+    },
+    [kidId, latestEventByTooth, onToothPress, onEditEvent],
   );
 
   const handleRegister = useCallback(
@@ -317,6 +333,20 @@ export function DentalMap({
       return { x, y, rotation };
     }
 
+    function toothAtLocation(x: number, y: number) {
+      const points = [
+        ...right.map((position, index) => ({
+          id: position.id,
+          ...place(-1, 7 - index),
+        })),
+        ...left.map((position, index) => ({
+          id: position.id,
+          ...place(1, index),
+        })),
+      ];
+      return nearestPosition(points, x, y);
+    }
+
     const gumPoints: string[] = [];
     for (let k = 7; k >= 0; k -= 0.5) {
       const { x, y } = place(-1, k);
@@ -339,6 +369,9 @@ export function DentalMap({
       const style = TOOTH_STYLE[key];
       const milk = isMilkSymbol(key);
       const event = eventOf(position);
+      const eruption = currentPositions.get(
+        `${position.quadrant}:${position.toothType}`,
+      );
       const isSelected = selectedTooth === position.id;
       const theta = (curveIndex / 7) * (Math.PI / 2);
       const indicatorX = -sign * Math.sin(theta);
@@ -354,17 +387,31 @@ export function DentalMap({
         <TouchableOpacity
           key={position.id}
           onPress={() => onToothPress(position.id)}
+          onLongPress={event ? () => onToothLongPress(position.id) : undefined}
           accessibilityRole="button"
           accessibilityLabel={toothAccessibilityLabel({
             toothId: position.id,
             state: key,
             event,
+            pendingDentition: eruption?.dentition,
           })}
           accessibilityHint={
-            overduePositions.has(`${position.quadrant}:${position.toothType}`)
+            (overduePositions.has(`${position.quadrant}:${position.toothType}`)
               ? "Há um registro pendente após o limite estimado. Abre o registro deste dente."
-              : "Abre o registro deste dente"
+              : "Toque para adicionar um registro.") +
+            (event
+              ? " Toque e segure para editar o último registro deste dente."
+              : "")
           }
+          accessibilityActions={
+            event
+              ? [{ name: "longpress", label: "Editar último registro" }]
+              : undefined
+          }
+          onAccessibilityAction={(action) => {
+            if (action.nativeEvent.actionName === "longpress")
+              onToothLongPress(position.id);
+          }}
           accessibilityState={{ selected: isSelected }}
           style={{
             position: "absolute",
@@ -380,6 +427,12 @@ export function DentalMap({
             contour={tooth.contour}
             details={tooth.details}
             fill={style.fill}
+            halfFill={
+              eruption && key !== "eruptionWindow"
+                ? TOOTH_STYLE.eruptionWindow.fill
+                : undefined
+            }
+            halfFillSide={position.arch === "lower" ? "top" : "bottom"}
             stroke={style.stroke}
             strokeDasharray={milk ? MILK_SYMBOL_DASH : undefined}
             width={OPEN_TOOTH_SIZE}
@@ -455,20 +508,15 @@ export function DentalMap({
             }}
             onPress={(event) => {
               const { locationX, locationY } = event.nativeEvent;
-              const points = [
-                ...right.map((position, index) => ({
-                  id: position.id,
-                  ...place(-1, 7 - index),
-                })),
-                ...left.map((position, index) => ({
-                  id: position.id,
-                  ...place(1, index),
-                })),
-              ];
-              const nearest = nearestPosition(points, locationX, locationY);
+              const nearest = toothAtLocation(locationX, locationY);
               if (nearest) {
                 onToothPress(nearest.id);
               }
+            }}
+            onLongPress={(event) => {
+              const { locationX, locationY } = event.nativeEvent;
+              const nearest = toothAtLocation(locationX, locationY);
+              if (nearest) onToothLongPress(nearest.id);
             }}
           />
         )}

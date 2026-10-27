@@ -170,15 +170,19 @@ export function toothAccessibilityLabel(params: {
   toothId: string;
   state: MapToothState | "eruptionWindow";
   event?: ToothEvent | null;
+  pendingDentition?: Dentition;
 }): string {
   const name = toothIdLabel(params.toothId);
-  const { state, event } = params;
+  const { state, event, pendingDentition } = params;
+  const expected = pendingDentition
+    ? `, nascimento ${pendingDentition === "permanent" ? "permanente" : "de leite"} esperado, ainda sem registro`
+    : "";
 
   if (state === "unregistered") {
-    return `${name}, sem registro`;
+    return `${name}, sem registro${expected}`;
   }
   if (state === "eruptionWindow") {
-    return `${name}, hora de nascer, ainda sem registro`;
+    return `${name}, hora de nascer${expected || ", ainda sem registro"}`;
   }
 
   const date = event
@@ -196,7 +200,11 @@ export function toothAccessibilityLabel(params: {
       : date
         ? ` em ${date}`
         : "";
-  return [name, dentition, `${verb}${occurred}`].filter(Boolean).join(", ");
+  return (
+    [name, dentition, `${verb}${occurred}`].filter(Boolean).join(", ") +
+    expected +
+    (pendingDentition ? ", metade voltada para o centro da boca amarela" : "")
+  );
 }
 
 export function toothEventName(event: {
