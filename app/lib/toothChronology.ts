@@ -193,6 +193,11 @@ export function getChronology(
   if (!side) {
     return chronology;
   }
+  if (gender !== "female" && gender !== "male") {
+    // Sem sexo informado: não se aplica tabela lateral específica (sem fallback
+    // silencioso para a tabela masculina). Apenas a cronologia genérica da base.
+    return chronology;
+  }
   const table = gender === "female" ? WOMEN_PERMANENT : MEN_PERMANENT;
   const permanent = table[`${arch}_${side}:${toothType}`];
   return permanent ? { ...chronology, permanent } : chronology;

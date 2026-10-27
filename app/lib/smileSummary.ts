@@ -31,6 +31,7 @@ export function buildSmileSummary(
   events: ToothEvent[],
   gender: ChronologyGender | null = null,
   referenceDate: Date = new Date(),
+  prematureWeeks: string | number | null = null,
 ): SmileSummary {
   const summary: SmileSummary = {
     bornPermanent: 0,
@@ -45,6 +46,7 @@ export function buildSmileSummary(
       birthDate,
       events,
       gender,
+      prematureWeeks,
       referenceDate,
     }),
   ).size;

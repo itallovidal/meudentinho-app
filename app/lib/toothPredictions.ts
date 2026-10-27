@@ -60,6 +60,7 @@ export function buildToothPredictions(
   events: ToothEvent[],
   gender: ChronologyGender | null = null,
   referenceDate: Date = new Date(),
+  prematureWeeks: string | number | null = null,
 ): ToothPrediction[] {
   const groups = new Map<string, ToothPrediction>();
   const today = toLocalDateKey(referenceDate);
@@ -68,6 +69,7 @@ export function buildToothPredictions(
     birthDate,
     events,
     gender,
+    prematureWeeks,
     referenceDate,
   })) {
     if (milestone.status !== "current" && milestone.status !== "upcoming")

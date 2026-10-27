@@ -127,10 +127,17 @@ export function SmilePredictions() {
         ? "Atualize os dados antes de registrar ou adiar."
         : null,
   });
+  const prematureWeeks = kid?.prematureWeeks ?? null;
   const predictions = useMemo(
     () =>
-      buildToothPredictions(birthDate, events, gender, alerts.referenceDate),
-    [birthDate, gender, events, alerts.referenceDate],
+      buildToothPredictions(
+        birthDate,
+        events,
+        gender,
+        alerts.referenceDate,
+        prematureWeeks,
+      ),
+    [birthDate, gender, events, alerts.referenceDate, prematureWeeks],
   );
 
   const marks = useMemo(

@@ -123,6 +123,8 @@ type DentalMapProps = {
   kidId: string | null;
   kidBirthDate: string | null;
   kidGender: ChronologyGender | null;
+
+  kidPrematureWeeks?: string | null;
   events: ToothEvent[];
   onRegisterEvent: (payload: ToothEventRequestDTO) => Promise<void>;
   onEditEvent: (event: ToothEvent) => void;
@@ -135,6 +137,7 @@ export function DentalMap({
   kidId,
   kidBirthDate,
   kidGender,
+  kidPrematureWeeks = null,
   events,
   onRegisterEvent,
   onEditEvent,
@@ -171,9 +174,10 @@ export function DentalMap({
         birthDate: kidBirthDate,
         events,
         gender: kidGender,
+        prematureWeeks: kidPrematureWeeks,
         referenceDate,
       }),
-    [kidId, kidBirthDate, events, kidGender, referenceDate],
+    [kidId, kidBirthDate, events, kidGender, kidPrematureWeeks, referenceDate],
   );
   const currentPositions = useMemo(
     () => getEruptionPositions(milestones),
