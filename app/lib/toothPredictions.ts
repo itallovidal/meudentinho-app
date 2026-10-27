@@ -1,7 +1,11 @@
 import { isToothEventDateUnknown } from "@/lib/toothIdentity";
 import { type ChronologyGender } from "@/lib/toothChronology";
 import { buildToothMilestones } from "@/lib/toothMilestones";
-import { archLabel, toothTypeLabel } from "@/lib/teethLabels";
+import {
+  archLabel,
+  dentitionLabel,
+  toothDentitionLabel,
+} from "@/lib/teethLabels";
 import { eventDateKey, toLocalDateKey } from "@/lib/utils";
 import type {
   ToothEvent,
@@ -26,7 +30,24 @@ const MONTH_NAMES_PT_BR = [
 
 export const PREDICTION_STATUS_LABEL: Record<ToothPredictionStatus, string> = {
   current: "Em período",
+  tolerance: "Após o período previsto",
   upcoming: "Previsto",
+};
+
+export const PREDICTION_STATUS_DESCRIPTION: Record<
+  ToothPredictionStatus,
+  string
+> = {
+  current: "Período provável para a erupção deste dente.",
+  tolerance:
+    "A faixa prevista terminou. O limite estimado ainda não foi ultrapassado.",
+  upcoming: "Estimativa baseada na cronologia média de erupção.",
+};
+
+const STATUS_PRIORITY: Record<ToothPredictionStatus, number> = {
+  current: 0,
+  tolerance: 1,
+  upcoming: 2,
 };
 
 function keyToDate(key: string): Date {
@@ -52,7 +73,8 @@ export function buildToothPredictions(
     if (milestone.status !== "current" && milestone.status !== "upcoming")
       continue;
     if (milestone.limitDate === null && today > milestone.expectedEnd) continue;
-    const key = `${milestone.arch}:${milestone.toothType}:${milestone.dentition}:${milestone.windowStart}:${milestone.expectedEnd}:${milestone.limitDate}:${milestone.status}`;
+    const status = milestone.inTolerance ? "tolerance" : milestone.status;
+    const key = `${milestone.arch}:${milestone.toothType}:${milestone.dentition}:${milestone.windowStart}:${milestone.expectedEnd}:${milestone.limitDate}:${status}`;
     const group = groups.get(key);
     if (group) {
       group.sides.push(milestone.side);
@@ -63,36 +85,45 @@ export function buildToothPredictions(
         toothType: milestone.toothType,
         arch: milestone.arch,
         dentition: milestone.dentition,
-        title: `${toothTypeLabel(milestone.toothType)} ${archLabel(milestone.arch)}`,
+        title: `${toothDentitionLabel(milestone.toothType, milestone.dentition).replace(/ de leite$/, "")} ${archLabel(milestone.arch)} (${dentitionLabel(milestone.dentition).toLowerCase()})`,
         sides: [milestone.side],
         pendingSides: 1,
-        status: milestone.status,
+        status,
         windowStart: milestone.windowStart,
         windowEnd: milestone.expectedEnd,
+        limitDate: milestone.limitDate,
       });
     }
   }
-  return [...groups.values()].sort((a, b) =>
-    a.windowStart.localeCompare(b.windowStart),
-  );
+  return [...groups.values()].sort((a, b) => {
+    const priority = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
+    const dateA =
+      a.status === "tolerance" ? (a.limitDate ?? a.windowEnd) : a.windowStart;
+    const dateB =
+      b.status === "tolerance" ? (b.limitDate ?? b.windowEnd) : b.windowStart;
+    return priority || dateA.localeCompare(dateB) || a.id.localeCompare(b.id);
+  });
 }
 
 export function formatPredictionWindow(
   startKey: string,
   endKey: string,
+  referenceDate: Date = new Date(),
 ): string {
   const [startYear, startMonth, startDay] = startKey.split("-").map(Number);
   const [endYear, endMonth, endDay] = endKey.split("-").map(Number);
+  const yearSuffix =
+    endYear !== referenceDate.getFullYear() ? ` de ${endYear}` : "";
   if (startKey === endKey) {
-    return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
+    return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}${yearSuffix}`;
   }
   if (startYear !== endYear) {
     return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} de ${startYear} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]} de ${endYear}`;
   }
   if (startMonth === endMonth) {
-    return `${startDay} a ${endDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}`;
+    return `${startDay} a ${endDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]}${yearSuffix}`;
   }
-  return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]}`;
+  return `${startDay} de ${MONTH_NAMES_PT_BR[startMonth - 1]} a ${endDay} de ${MONTH_NAMES_PT_BR[endMonth - 1]}${yearSuffix}`;
 }
 
 export interface PredictionCalendarMark {
@@ -166,24 +197,4 @@ export function getPredictionFocusKey(
     }
   }
   return latest ?? prediction.windowStart;
-}
-
-export function getCalendarFocus(
-  predictions: ToothPrediction[],
-  today: Date,
-): { prediction: ToothPrediction; date: Date } | null {
-  if (predictions.length === 0) {
-    return null;
-  }
-  const todayKey = toLocalDateKey(today);
-  const upcoming = predictions.find(
-    (prediction) => prediction.windowEnd >= todayKey,
-  );
-  if (!upcoming) {
-    return { prediction: predictions[predictions.length - 1], date: today };
-  }
-  if (upcoming.windowStart <= todayKey) {
-    return { prediction: upcoming, date: today };
-  }
-  return { prediction: upcoming, date: keyToDate(upcoming.windowStart) };
 }

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useCurrentDate } from "@/hooks/useCurrentDate";
+import { formatAgeFromBirthDate } from "@/lib/utils";
 
 jest.mock("react-native", () => ({
   AppState: { addEventListener: jest.fn() },
@@ -17,10 +18,12 @@ const { AppState } = jest.requireMock("react-native");
 let onActive: (state: string) => void;
 const remove = jest.fn();
 let current: Date;
+let currentAge: string;
 function Harness({ expiration }: { expiration?: string }) {
   const value = useCurrentDate(expiration);
   useEffect(() => {
     current = value;
+    currentAge = formatAgeFromBirthDate("2025-06-07", value);
   }, [value]);
   return null;
 }
@@ -47,10 +50,12 @@ it("recalculates at local midnight and removes its timer and listener", async ()
     renderer = create(<Harness />);
   });
   expect(current.getDate()).toBe(6);
+  expect(currentAge).toBe("11 meses");
   await act(async () => {
     jest.advanceTimersByTime(60_001);
   });
   expect(current.getDate()).toBe(7);
+  expect(currentAge).toBe("1 ano");
   const deadlineIndex = schedule.mock.calls.findLastIndex(
     ([, delay]) => typeof delay === "number" && delay > 60_000,
   );
@@ -89,6 +94,7 @@ it("updates the reference after returning from background days later", async () 
     onActive("active");
   });
   expect(current.getDate()).toBe(14);
+  expect(currentAge).toBe("1 ano");
   await act(async () => {
     renderer.unmount();
   });

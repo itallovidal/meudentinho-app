@@ -60,9 +60,14 @@ const SUMMARY_BADGES: {
 const EMPTY_MAP_TITLE = "O primeiro dentinho está por vir!";
 const EMPTY_EVENTS_TITLE = "A história do sorriso começa aqui!";
 
-function emptyMapDescription(name: string, birthDate: string): string {
-  const age = formatAgeMonthsFromBirthDate(birthDate) ?? "poucos meses";
-  return `Como o ${name} tem apenas ${age}, as gengivas ainda estão se preparando.`;
+function emptyMapDescription(
+  name: string,
+  birthDate: string,
+  referenceDate: Date,
+): string {
+  const age =
+    formatAgeMonthsFromBirthDate(birthDate, referenceDate) ?? "poucos meses";
+  return `Como o ${name} tem ${age}, as gengivas ainda estão se preparando.`;
 }
 
 function emptyEventsDescription(name: string): string {
@@ -114,7 +119,7 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
         : null);
   const colors = THEME.light;
   const initial = (kid.name.trim().charAt(0) || "?").toUpperCase();
-  const age = formatAgeFromBirthDate(kid.birthDate);
+  const age = formatAgeFromBirthDate(kid.birthDate, alerts.referenceDate);
   const badges = SUMMARY_BADGES.filter((badge) => summary[badge.key] > 0);
 
   return (
@@ -184,7 +189,11 @@ const SmileSummaryCard = memo(function SmileSummaryCard({
               {badges.length === 0 ? (
                 <NoticeCard
                   title={EMPTY_MAP_TITLE}
-                  description={emptyMapDescription(kid.name, kid.birthDate)}
+                  description={emptyMapDescription(
+                    kid.name,
+                    kid.birthDate,
+                    alerts.referenceDate,
+                  )}
                   icon={
                     <InfoIcon
                       size={17}

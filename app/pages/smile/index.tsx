@@ -245,6 +245,7 @@ export function Smile() {
     if (selectedKidId) {
       navigation.navigate("Smile", {
         screen: "SmileHistory",
+        initial: false,
         params: { kidId: selectedKidId },
       });
     }
@@ -254,6 +255,7 @@ export function Smile() {
     if (selectedKidId) {
       navigation.navigate("Smile", {
         screen: "SmilePredictions",
+        initial: false,
         params: { kidId: selectedKidId },
       });
     }
@@ -438,6 +440,7 @@ export function Smile() {
           gap="gap-4"
         >
           <KidSelector
+            referenceDate={alerts.referenceDate}
             kids={kids}
             selectedId={selectedKidId}
             onSelect={setSelectedKidId}
@@ -508,6 +511,7 @@ export function Smile() {
                   alerts.ready && !alerts.stale ? alerts.active : []
                 }
                 onRegisterEvent={handleRegisterEvent}
+                onEditEvent={editor.openEditor}
                 onMissingKid={() => setAddDependentVisible(true)}
               />
               {kids.length > 0 && (
@@ -518,6 +522,7 @@ export function Smile() {
               )}
               {selectedKidRecord && (
                 <PredictionsCard
+                  referenceDate={alerts.referenceDate}
                   items={predictions.slice(0, 3)}
                   reviewCounts={
                     alerts.ready
@@ -544,7 +549,6 @@ export function Smile() {
               <RecentEventsList
                 items={events.slice(0, 3)}
                 onHistoryPress={openHistory}
-                onItemPress={editor.openEditor}
               />
             </>
           )}

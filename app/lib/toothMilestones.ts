@@ -183,6 +183,32 @@ export function buildToothMilestones({
   return result;
 }
 
+export function getEruptionPositions(
+  milestones: ToothMilestone[],
+): Map<string, ToothMilestone> {
+  const permanentRecorded = new Set(
+    milestones
+      .filter(
+        (item) =>
+          item.dentition === "permanent" &&
+          (item.status === "recorded" || item.status === "covered"),
+      )
+      .map((item) => `${item.quadrant}:${item.toothType}`),
+  );
+  const positions = new Map<string, ToothMilestone>();
+  for (const milestone of milestones) {
+    const key = `${milestone.quadrant}:${milestone.toothType}`;
+    if (
+      milestone.status !== "current" ||
+      milestone.inTolerance ||
+      permanentRecorded.has(key)
+    )
+      continue;
+    positions.set(key, milestone);
+  }
+  return positions;
+}
+
 export function partitionToothAlerts(
   milestones: ToothMilestone[],
   snoozes: ToothAlertSnooze[],

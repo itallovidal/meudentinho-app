@@ -100,15 +100,23 @@ describe("buildToothPredictions", () => {
     ).toBe(false);
   });
 
-  it("sorts predictions by the window start", () => {
+  it("sorts predictions by the window start within each status", () => {
     const predictions = buildToothPredictions("2025-11-01", [], null);
-    const keys = predictions.map((prediction) => prediction.windowStart);
-
-    expect([...keys].sort()).toEqual(keys);
+    for (const status of ["current", "tolerance", "upcoming"]) {
+      const keys = predictions
+        .filter((item) => item.status === status)
+        .map((item) => item.windowStart);
+      expect(keys).toEqual([...keys].sort());
+    }
   });
 });
 
 describe("formatPredictionWindow", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-10-27T12:00:00-03:00"));
+  });
+  afterEach(() => jest.useRealTimers());
   it("formats a single day", () => {
     expect(formatPredictionWindow("2026-10-05", "2026-10-05")).toBe(
       "5 de outubro",

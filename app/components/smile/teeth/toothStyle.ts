@@ -33,7 +33,7 @@ export const LEGEND: {
   {
     key: "eruptionWindow",
     label: "Hora de nascer",
-    description: "Período esperado, ainda sem registro",
+    description: "Período esperado para nascimento",
   },
   {
     key: "bornMilk",

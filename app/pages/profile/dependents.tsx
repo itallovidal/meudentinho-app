@@ -1,5 +1,6 @@
 import { loginReturnPath } from "@/navigation/linking";
 import { KidCard } from "@/components/dependents/kidCard";
+import { useCurrentDate } from "@/hooks/useCurrentDate";
 import { KidsListStatus } from "@/components/dependents/kidsListStatus";
 import { Header } from "@/components/header";
 import { QueryWarningBanner } from "@/components/queryWarningBanner";
@@ -17,6 +18,7 @@ import { useContext, useEffect } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 
 export function Dependents() {
+  const referenceDate = useCurrentDate();
   const { authToken, hydrated } = useContext(UserContext)!;
   const navigation = useNavigation<ProfileNavegationProp>();
   const colors = THEME.light;
@@ -126,7 +128,12 @@ export function Dependents() {
 
               {showKidList &&
                 kids.map((kid) => (
-                  <KidCard key={kid.id} kid={kid} onPress={handleSelectKid} />
+                  <KidCard
+                    key={kid.id}
+                    kid={kid}
+                    referenceDate={referenceDate}
+                    onPress={handleSelectKid}
+                  />
                 ))}
             </>
           </Wrapper>

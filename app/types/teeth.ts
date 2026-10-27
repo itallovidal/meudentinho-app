@@ -51,7 +51,7 @@ export interface ToothEventRequestDTO {
   note?: string;
 }
 
-export type ToothPredictionStatus = "current" | "upcoming";
+export type ToothPredictionStatus = "current" | "tolerance" | "upcoming";
 
 export interface ToothPrediction {
   id: string;
@@ -64,6 +64,7 @@ export interface ToothPrediction {
   status: ToothPredictionStatus;
   windowStart: string;
   windowEnd: string;
+  limitDate: string | null;
 }
 
 export interface TeethExchangeStats {
