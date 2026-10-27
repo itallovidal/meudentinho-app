@@ -1,98 +1,201 @@
-import { ScrollView, RefreshControl } from "react-native";
+import { useCallback, useContext, useRef, useState } from "react";
+import {
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  View,
+} from "react-native";
+import { ScreenContent } from "@/components/screenContent";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
-import { useArticles } from "@/hooks/useArticles";
-import { ArticleListRender } from "@/components/articleListRender";
-import { SkeletonArticleListPage } from "@/skeletons/pages/skeletonArticleListPage";
-// import { Text } from "@/components/ui/text";
-// import { Input } from "@/components/ui/input";
-// import { MagnifyingGlassIcon } from "phosphor-react-native";
-// import { Badge } from "@/components/ui/badge";
+import { useArticlesFeed } from "@/hooks/useArticlesFeed";
+import { useArticleSearch } from "@/hooks/useArticleSearch";
+import { errorMessage } from "@/lib/errorMessage";
+import { ArticleCard } from "@/components/article/articleCard";
+import { ArticleCategoriesFeed } from "@/components/article/articleCategoriesFeed";
+import { ArticleFeedFooter } from "@/components/article/articleFeedFooter";
+import { SearchInput } from "@/components/searchinput";
+import { ErrorState } from "@/components/errorState";
+import { Text } from "@/components/ui/text";
+import { FloatingActionButton } from "@/components/ui/floatingActionButton";
+import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
+import { UserContext } from "@/contexts/UserContext";
+import { THEME } from "@/lib/theme";
+import type { ArticlesNavigationProp } from "@/navigation/ArticlesStack";
+import type { ArticlePreviewDTO } from "@/types/dtos/article";
+import { useNavigation } from "@react-navigation/native";
+import { PlusIcon } from "phosphor-react-native";
 
 export function Index() {
+  const navigation = useNavigation<ArticlesNavigationProp>();
+  const { user, hydrated } = useContext(UserContext)!;
   const {
-    articles,
-    categories,
-    articlesByCategory,
     latestArticle,
+    latestLoading,
+    categories,
+    selectedCategory,
+    selectCategory,
+    categoriesLoading,
+    categoriesError,
+    latestError,
+    feed,
     isLoading,
+    isError,
     isRefreshing,
+    refetchError,
     onRefresh,
-  } = useArticles({ withCategories: true });
-  console.log(articlesByCategory);
+  } = useArticlesFeed();
+  const [searchQuery, setSearchQuery] = useState("");
+  const listRef = useRef<FlatList<ArticlePreviewDTO>>(null);
+  const {
+    results: searchResults,
+    isFetching: isSearching,
+    error: searchError,
+    refetch: retrySearch,
+    isSearchActive,
+  } = useArticleSearch(searchQuery);
 
-  if (isLoading) {
-    return (
-      <SkeletonArticleListPage
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-      />
-    );
+  const handleSearchTermChange = useCallback((term: string) => {
+    setSearchQuery(term);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, []);
+
+  const articles = isSearchActive
+    ? isSearching || searchError
+      ? []
+      : searchResults
+    : feed.articles;
+  const pending = isSearchActive ? isSearching : isLoading;
+  const failed = isSearchActive ? !!searchError : isError;
+
+  function loadMore() {
+    if (!isSearchActive && !feed.isFetchNextPageError) {
+      feed.fetchNextPage();
+    }
+  }
+
+  function handleSelectCategory(categoryId: string) {
+    selectCategory(categoryId);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }
 
   return (
-    <Wrapper
-      direction="column"
-      align="start"
-      justify="start"
-      className="flex-1"
-    >
+    <Wrapper direction="column" className="flex-1 bg-base-200">
       <Header />
-      <ScrollView
-        className="w-full flex-1"
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
-      >
-        <Wrapper
-          className="mx-6 my-4 flex-1"
-          direction="column"
-          align="start"
-          justify="start"
-          gap="gap-2"
-        >
-          {/* <Wrapper
-            className="flex-1 relative w-full"
-            direction="row"
-            align="center"
-          >
-            <Input
-              placeholder="Buscar artigos e guias"
-              className="bg-base-100 rounded-lg"
+      <View className="relative w-full flex-1">
+        <FlatList
+          ref={listRef}
+          data={articles}
+          keyExtractor={(article) => article.id}
+          className="w-full flex-1"
+          contentContainerStyle={{ paddingVertical: 16, paddingBottom: 96 }}
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={5}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing && !isLoading}
+              onRefresh={() => {
+                void onRefresh();
+                if (isSearchActive) void retrySearch();
+              }}
             />
-            <MagnifyingGlassIcon
-              size={16}
-              color="gray"
-              weight="regular"
-              style={{ position: "absolute", right: 16 }}
-            />
-          </Wrapper>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-4 -mx-6 px-6"
-          >
-            {categories.map((cat) => (
-              <Badge
-                key={cat.id}
-                className="bg-base-100 border border-base-300 px-4 py-2 rounded-lg mr-2"
-                variant={"outline"}
-              >
-                <Text className="text-sm">{cat.name}</Text>
-              </Badge>
-            ))}
-          </ScrollView> */}
-
-          <ArticleListRender
-            latestArticle={latestArticle}
-            articles={articles.slice(1)}
-            categories={categories}
-            articlesByCategory={articlesByCategory}
-            hasCategoryTitle={true}
+          }
+          ListHeaderComponent={
+            <ScreenContent gap="gap-4" className="pb-4">
+              <SearchInput onSearchTermChange={handleSearchTermChange} />
+              {!isSearchActive && (
+                <ArticleCategoriesFeed
+                  latestArticle={latestArticle}
+                  latestLoading={latestLoading}
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={handleSelectCategory}
+                  categoriesLoading={categoriesLoading}
+                  categoriesError={categoriesError}
+                  latestError={latestError}
+                  refetchError={refetchError}
+                  hideWarnings={failed}
+                  onRetry={() => void onRefresh()}
+                />
+              )}
+            </ScreenContent>
+          }
+          ItemSeparatorComponent={() => <View className="h-2" />}
+          renderItem={({ item }) => (
+            <ScreenContent>
+              <ArticleCard {...item} />
+            </ScreenContent>
+          )}
+          ListEmptyComponent={
+            <ScreenContent gap="gap-4">
+              {failed && (
+                <ErrorState
+                  title={
+                    isSearchActive
+                      ? "Não foi possível buscar os artigos"
+                      : "Não foi possível carregar os artigos"
+                  }
+                  message={errorMessage(
+                    searchError,
+                    "Verifique sua conexão e tente novamente.",
+                  )}
+                  onRetry={() =>
+                    void (isSearchActive ? retrySearch() : onRefresh())
+                  }
+                />
+              )}
+              {pending || failed ? (
+                <>
+                  {isSearchActive && pending && (
+                    <ActivityIndicator color={THEME.light.primary500} />
+                  )}
+                  <SkeletonArticleListRender showBanner={false} />
+                </>
+              ) : (
+                !(latestArticle && !selectedCategory && !isSearchActive) && (
+                  <Text className="w-full py-8 text-center text-muted-foreground">
+                    {isSearchActive
+                      ? `Nenhum artigo encontrado para "${searchQuery}"`
+                      : selectedCategory
+                        ? "Nenhum artigo nesta categoria."
+                        : "Nenhum artigo disponível."}
+                  </Text>
+                )
+              )}
+            </ScreenContent>
+          }
+          ListFooterComponent={
+            !isSearchActive && !isLoading && !isError ? (
+              <ScreenContent>
+                <ArticleFeedFooter
+                  isError={feed.isFetchNextPageError}
+                  isLoading={feed.isFetchingNextPage}
+                  hasNextPage={feed.hasNextPage}
+                  hasArticles={feed.articles.length > 0}
+                  onLoadMore={feed.fetchNextPage}
+                />
+              </ScreenContent>
+            ) : undefined
+          }
+        />
+        {hydrated && user?.isAdmin && (
+          <FloatingActionButton
+            accessibilityLabel="Novo artigo"
+            onPress={() => navigation.navigate("NewArticle")}
+            icon={
+              <PlusIcon
+                size={24}
+                weight="bold"
+                color={THEME.light.primaryForeground}
+              />
+            }
           />
-        </Wrapper>
-      </ScrollView>
+        )}
+      </View>
     </Wrapper>
   );
 }

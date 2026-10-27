@@ -7,19 +7,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
-import { LoginDTO } from "@/types/dtos/user";
+import type { LoginRequest } from "@/types/dtos/user";
 
 interface LoginFormProps {
-  onSubmit: (data: Record<string, any>) => void | Promise<void>;
+  onSubmit: (data: LoginRequest) => void | Promise<void>;
   submitError?: ApiError | null;
 }
 
-export function LoginForm({ onSubmit, submitError }: Args) {
+export function LoginForm({ onSubmit, submitError }: LoginFormProps) {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginDTO>({
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -41,6 +41,8 @@ export function LoginForm({ onSubmit, submitError }: Args) {
           keyboardType: "email-address",
           autoCapitalize: "none",
           autoCorrect: false,
+          autoComplete: "email",
+          returnKeyType: "next",
         }}
       />
 
@@ -54,18 +56,21 @@ export function LoginForm({ onSubmit, submitError }: Args) {
           secureTextEntry: true,
           autoCapitalize: "none",
           autoCorrect: false,
+          autoComplete: "current-password",
+          returnKeyType: "go",
+          onSubmitEditing: () => void handleSubmit(onSubmit)(),
         }}
       />
 
       {submitError && (
-        <Text className="text-red-600">{submitError.message}</Text>
+        <Text className="text-destructive">{submitError.message}</Text>
       )}
 
       <Separator className="my-4 max-w-5" />
 
       <Button
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
+        onPress={() => void handleSubmit(onSubmit)()}
+        disabled={isSubmitting || !isDirty}
         className="mb-4 w-full"
       >
         <Text>{isSubmitting ? "Entrando..." : "Entrar"}</Text>

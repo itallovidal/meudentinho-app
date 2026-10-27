@@ -1,8 +1,8 @@
 export interface ArticlePreviewDTO {
   imageCoverURL: string;
   title: string;
-  categories: string;
-  readingTime: string;
+  categories: string[];
+  readingTime: number;
   id: string;
   className?: string;
 }
@@ -15,8 +15,11 @@ export interface ArticleRequestDTO {
   imageCoverURL: string;
 }
 
-export interface ArticleCategory {
+export interface ArticleCategoryDTO {
   id: string;
   name: string;
+}
+
+export interface ArticleCategory extends ArticleCategoryDTO {
   isSelected: boolean;
 }

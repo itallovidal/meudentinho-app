@@ -1,33 +1,64 @@
 {
   "expo": {
-    "name": "Meu Dentinho",
-    "slug": "meudentinho",
+    "name": "Janelinha",
+    "slug": "janelinha",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/new-icon.png",
+    "icon": "./assets/tooth-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/new-splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.meudentinhoapp"
+      "bundleIdentifier": "com.janelinhaapp",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/new-adaptive-icon.png",
+        "foregroundImage": "./assets/tooth-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
+      "allowBackup": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.meudentinhoapp"
+      "package": "com.janelinhaapp",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    }
+      "favicon": "./assets/tooth.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-status-bar",
+        {
+          "style": "dark",
+          "hidden": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-tooth-wordmark.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "backgroundColor": "#ffffff"
   }
 }

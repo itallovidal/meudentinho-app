@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      TZ: America/Sao_Paulo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Expo doctor
+        run: npx --yes expo-doctor
+
+      - name: Web production build
+        run: npm run build:web
+        env:
+          EXPO_NO_DOTENV: 1
+          EXPO_PUBLIC_API_BASE_URL: https://api.example.com
+          EXPO_PUBLIC_PRIVACY_POLICY_URL: https://example.com/politica-de-privacidade
+
+      - name: Web bundle smoke tests
+        run: npm run test:web
+
+      - name: Lint (non blocking, tracked debt)
+        run: npm run lint
+        continue-on-error: true

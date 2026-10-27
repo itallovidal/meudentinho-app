@@ -1,20 +1,45 @@
 const { hairlineWidth } = require("nativewind/theme");
+const plugin = require("tailwindcss/plugin");
+const tokens = require("./app/lib/themeTokens.json");
 
-/** @type {import('tailwindcss').Config} */
+function cssVariableName(name) {
+  return `--${name.replace(/([a-z])([A-Z0-9])/g, "$1-$2").toLowerCase()}`;
+}
+
+function registerTheme({ addBase }) {
+  const values = { ...tokens.palette };
+  for (const [name, reference] of Object.entries(tokens.semantic)) {
+    values[name] = tokens.palette[reference];
+  }
+  const variables = Object.fromEntries(
+    Object.entries(values).map(([name, value]) => [
+      cssVariableName(name),
+      value,
+    ]),
+  );
+  addBase({ ":root": { ...variables, "--radius": tokens.radius } });
+}
+
 module.exports = {
   darkMode: "class",
-  content: ["./App.tsx", "./app/**/*.{ts,tsx}"],
+  content: ["./App.tsx", "./app/**/*.{ts,tsx}", "./web/**/*.html"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
+        warning: {
+          100: "hsl(var(--warning-100))",
+          200: "hsl(var(--warning-200))",
+          600: "hsl(var(--warning-600))",
+        },
+        skeleton: "hsl(var(--skeleton))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary-500))",
+          DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
           100: "hsl(var(--primary-100))",
           200: "hsl(var(--primary-200))",
@@ -27,7 +52,7 @@ module.exports = {
           900: "hsl(var(--primary-900))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary-500))",
+          DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
           100: "hsl(var(--secondary-100))",
           200: "hsl(var(--secondary-200))",
@@ -44,7 +69,7 @@ module.exports = {
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--base-400))",
+          DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
@@ -61,7 +86,6 @@ module.exports = {
         },
         base: {
           DEFAULT: "hsl(var(--base-500))",
-          foreground: "hsl(var(--base-foreground))",
           100: "hsl(var(--base-100))",
           200: "hsl(var(--base-200))",
           300: "hsl(var(--base-300))",
@@ -100,5 +124,5 @@ module.exports = {
   future: {
     hoverOnlyWhenSupported: true,
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), plugin(registerTheme)],
 };

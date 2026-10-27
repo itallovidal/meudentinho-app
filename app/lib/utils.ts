@@ -10,31 +10,314 @@ export function getUserIdFromToken(token: string): string {
   if (parts.length !== 3) {
     throw new Error("Invalid token format");
   }
-  const payload = JSON.parse(atob(parts[1]));
+  const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const payload = JSON.parse(atob(padded));
   return payload.userId;
 }
 
-export function calculateAgeFromBirthDate(birthDate: string): number | null {
-  if (!birthDate) {
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+export function parseLocalDate(value: string): Date | null {
+  if (!value) {
     return null;
   }
-
-  const date = new Date(birthDate);
-
-  if (Number.isNaN(date.getTime())) {
+  const parts = value.split("T")[0].split("-").map(Number);
+  if (parts.length !== 3) {
     return null;
   }
+  const [year, month, day] = parts;
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+  const date = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
 
+export function eventDateKey(value: string): string {
+  if (!value) {
+    return "";
+  }
+  const key = value.split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+    return "";
+  }
+  return parseLocalDate(key) ? key : "";
+}
+
+export function validateEventDateKey(
+  dateKey: string,
+  birthIso: string | null,
+): string | null {
+  const date = parseLocalDate(dateKey);
+  if (!date) {
+    return "Digite uma data válida.";
+  }
+  if (birthIso) {
+    const birthKey = eventDateKey(birthIso);
+    const birth = birthKey ? parseLocalDate(birthKey) : null;
+    if (birth && date.getTime() < birth.getTime()) {
+      return "A data não pode ser anterior ao nascimento.";
+    }
+  }
+  const today = new Date();
+  const startOfTomorrow = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() + 1,
+  );
+  if (date.getTime() >= startOfTomorrow.getTime()) {
+    return "A data não pode ser futura.";
+  }
+  return null;
+}
+
+export function formatDatePtBR(value: string): string | null {
+  const date = parseLocalDate(value);
+  if (!date) {
+    return null;
+  }
+  return dateFormatter.format(date);
+}
+
+const shortDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+});
+
+export function formatDateShortPtBR(value: string): string | null {
+  const date = parseLocalDate(value);
+  if (!date) {
+    return null;
+  }
+  return shortDateFormatter.format(date);
+}
+
+export function formatRelativeDay(value: string): string | null {
+  const date = parseLocalDate(value);
+  if (!date) {
+    return null;
+  }
+  const today = new Date();
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const diffDays = Math.round(
+    (startOfToday.getTime() - date.getTime()) / 86400000,
+  );
+  if (diffDays <= 0) {
+    return "hoje";
+  }
+  if (diffDays === 1) {
+    return "ontem";
+  }
+  if (diffDays < 30) {
+    return `há ${diffDays} dias`;
+  }
+  return formatDatePtBR(value) ?? value;
+}
+
+export function birthDateToString(value: string | Date): string {
+  return typeof value === "string" ? value : value.toISOString();
+}
+
+export function toLocalDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export function localDateKeyToISO(value: string): string | null {
+  const date = parseLocalDate(value);
+  if (!date) {
+    return null;
+  }
+  date.setHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
+export function ageInMonths(birthDate: string): number | null {
+  const date = parseLocalDate(birthDate);
+  if (!date) {
+    return null;
+  }
+  return (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24 * 30.4375);
+}
+
+export const MONTH_SHORT_NAMES_PT_BR = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
+
+export function calendarAgeInMonths(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): number | null {
+  const birth = parseLocalDate(birthDate);
+  if (!birth || !Number.isFinite(referenceDate.getTime())) return null;
+  if (toLocalDateKey(birth) > toLocalDateKey(referenceDate)) return null;
+  const months =
+    (referenceDate.getFullYear() - birth.getFullYear()) * 12 +
+    referenceDate.getMonth() -
+    birth.getMonth();
+  const lastDay = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() + 1,
+    0,
+  ).getDate();
+  return (
+    months -
+    (referenceDate.getDate() < Math.min(birth.getDate(), lastDay) ? 1 : 0)
+  );
+}
+
+export function formatAgeFromBirthDate(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): string {
+  const months = calendarAgeInMonths(birthDate, referenceDate);
+  if (months === null || Number.isNaN(months) || months < 0) {
+    return "";
+  }
+  const wholeMonths = Math.floor(months);
+  if (wholeMonths < 1) {
+    return "menos de 1 mês";
+  }
+  if (wholeMonths < 12) {
+    return wholeMonths === 1 ? "1 mês" : `${wholeMonths} meses`;
+  }
+  const years = Math.floor(wholeMonths / 12);
+  const remainingMonths = wholeMonths % 12;
+  if (years === 1 && remainingMonths > 0) {
+    return `1 ano e ${remainingMonths === 1 ? "1 mês" : `${remainingMonths} meses`}`;
+  }
+  return years === 1 ? "1 ano" : `${years} anos`;
+}
+
+export function formatAgeMonthsFromBirthDate(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): string | null {
+  const months = calendarAgeInMonths(birthDate, referenceDate);
+  if (months === null || Number.isNaN(months) || months < 0) {
+    return null;
+  }
+  if (months < 1) return "menos de 1 mês";
+  const wholeMonths = Math.floor(months);
+  return wholeMonths === 1 ? "1 mês" : `${wholeMonths} meses`;
+}
+
+export function maskDateBr(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+export function validateBirthDateKey(value: string): string | null {
+  if (!value) {
+    return "A data de nascimento é obrigatória.";
+  }
+  const date = parseLocalDate(value);
+  if (!date || date.getFullYear() < 1900) {
+    return "Digite uma data válida.";
+  }
+  return toLocalDateKey(date) > toLocalDateKey(new Date())
+    ? "A data não pode ser futura."
+    : null;
+}
+
+export function brDateToIsoKey(br: string): string | null {
+  const match = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+  const [, dd, mm, yyyy] = match;
+  const day = Number(dd);
+  const month = Number(mm);
+  const year = Number(yyyy);
+  const currentYear = new Date().getFullYear();
+  if (year < 1900 || year > currentYear) {
+    return null;
+  }
+  if (month < 1 || month > 12) {
+    return null;
+  }
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    return null;
+  }
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  if (toLocalDateKey(date) > toLocalDateKey(new Date())) {
+    return null;
+  }
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function isoToBrDate(iso: string): string {
+  return formatDatePtBR(iso) ?? "";
+}
+
+export function isAdultBirthDate(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+  const date = parseLocalDate(value.split("T")[0]);
+  if (!date) {
+    return false;
+  }
   const today = new Date();
   let age = today.getFullYear() - date.getFullYear();
-  const monthDiff = today.getMonth() - date.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < date.getDate())
-  ) {
+  const hadBirthdayThisYear =
+    today.getMonth() > date.getMonth() ||
+    (today.getMonth() === date.getMonth() && today.getDate() >= date.getDate());
+  if (!hadBirthdayThisYear) {
     age -= 1;
   }
+  return age >= 18;
+}
 
-  return Math.max(0, age);
+export function shortDisplayName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) {
+    return fullName.trim();
+  }
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${parts[0]} ${lastInitial}.`;
 }

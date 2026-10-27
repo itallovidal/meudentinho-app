@@ -1,11 +1,38 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import { Smile } from "@/pages/smile/index";
+import { SmileHistory } from "@/pages/smile/history";
+import { SmilePredictions } from "@/pages/smile/predictions";
+import type { CrossTabOrigin } from "./types";
 
-export const SmileStack = createNativeStackNavigator({
+export type SmileStackParamList = {
+  SmileHome: { kidId?: string } & CrossTabOrigin;
+  SmileHistory: { kidId: string } & CrossTabOrigin;
+  SmilePredictions: { kidId: string } & CrossTabOrigin;
+};
+
+export type SmileNavigationProp =
+  NativeStackNavigationProp<SmileStackParamList>;
+
+export const SmileStack = createNativeStackNavigator<SmileStackParamList>({
   initialRouteName: "SmileHome",
   screens: {
     SmileHome: {
       screen: Smile,
+      options: { title: "Sorriso" },
+      linking: "",
+    },
+    SmileHistory: {
+      screen: SmileHistory,
+      options: { title: "Histórico do sorriso" },
+      linking: ":kidId/historico",
+    },
+    SmilePredictions: {
+      screen: SmilePredictions,
+      options: { title: "Previsões dentárias" },
+      linking: ":kidId/previsoes",
     },
   },
   screenOptions: {

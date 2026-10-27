@@ -2,17 +2,23 @@ import { Wrapper } from "@/components/wrapper";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { signupSchema } from "@/lib/schemas/profile";
+import { AnimatedCheckbox } from "./animatedCheckbox";
+import { BirthDateInput } from "./birthDateInput";
+import { getPrivacyPolicyUrl } from "@/lib/privacyPolicy";
+import { ExternalLink } from "@/components/externalLink";
+import { FeedbackSheet } from "@/components/feedbackSheet";
+import { signupSchema, SignupFormValues } from "@/lib/schemas/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { FormInput } from "../formInput";
-import { SignupDTO } from "@/types/dtos/user";
 import { ApiError } from "@/types/domain";
+import { View } from "react-native";
+import { useState } from "react";
 
 interface ProfileFormProps {
-  onSubmit: (data: SignupDTO) => void | Promise<void>;
+  onSubmit: (data: SignupFormValues) => void | Promise<void>;
   submitError?: ApiError | null;
-  defaultValues?: Partial<SignupDTO>;
+  defaultValues?: Partial<SignupFormValues>;
   submitLabel?: string;
   submittingLabel?: string;
 }
@@ -27,8 +33,8 @@ export function ProfileForm({
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<SignupDTO>({
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -37,9 +43,13 @@ export function ProfileForm({
       email: "",
       password: "",
       passwordConfirmation: "",
+      accepted: false,
+      guardianBirthDate: "",
       ...defaultValues,
     },
   });
+
+  const [policyError, setPolicyError] = useState<string | null>(null);
 
   return (
     <Wrapper align="center" direction="column" className="w-full" gap={"gap-6"}>
@@ -68,6 +78,20 @@ export function ProfileForm({
         }}
       />
 
+      <Controller
+        control={control}
+        name="guardianBirthDate"
+        render={({ field: { onChange, value } }) => (
+          <BirthDateInput
+            value={value}
+            onChange={onChange}
+            label="Sua Data de Nascimento"
+            labelProps={{ className: "mb-1 font-bold" }}
+            error={errors.guardianBirthDate?.message}
+          />
+        )}
+      />
+
       <FormInput
         control={control}
         errors={errors}
@@ -94,19 +118,63 @@ export function ProfileForm({
         }}
       />
 
+      <View className="w-full flex-row items-start gap-3">
+        <View className="mt-0.5">
+          <Controller
+            control={control}
+            name="accepted"
+            render={({ field: { onChange, value } }) => (
+              <AnimatedCheckbox
+                checked={value}
+                onChange={onChange}
+                accessibilityLabel="Li e aceito a Política de Privacidade"
+              />
+            )}
+          />
+        </View>
+        <Text className="flex-1 text-sm">
+          Li e aceito a{" "}
+          <ExternalLink
+            href={getPrivacyPolicyUrl()}
+            onError={() =>
+              setPolicyError(
+                "Não foi possível abrir a Política de Privacidade.",
+              )
+            }
+            className="font-bold text-primary-500 underline"
+          >
+            Política de Privacidade
+          </ExternalLink>{" "}
+          e declaro ser responsável legal pelas crianças que cadastrar.
+        </Text>
+      </View>
+
+      {errors.accepted ? (
+        <Text className="text-destructive" variant="small">
+          {errors.accepted.message}
+        </Text>
+      ) : null}
+
       {submitError && (
-        <Text className="text-red-600">{submitError.message}</Text>
+        <Text className="text-destructive">{submitError.message}</Text>
       )}
 
       <Separator className="my-4 max-w-5" />
 
       <Button
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
+        onPress={() => void handleSubmit(onSubmit)()}
+        disabled={isSubmitting || !isDirty}
         className="mb-4 w-full"
       >
         <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
       </Button>
+      {policyError ? (
+        <FeedbackSheet
+          title="Não foi possível abrir o link"
+          message={policyError}
+          onClose={() => setPolicyError(null)}
+        />
+      ) : null}
     </Wrapper>
   );
 }

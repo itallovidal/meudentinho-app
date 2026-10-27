@@ -1,126 +1,282 @@
-import { Text } from "@/components/ui/text";
-import { Wrapper } from "@/components/wrapper";
-import { Header } from "@/components/header";
-import { RegisterKidForm } from "@/components/forms/registerKidForm";
-import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
-import { useCallback, useContext, useState } from "react";
+import { ScreenContent } from "@/components/screenContent";
+import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
-import { Alert, ScrollView, View } from "react-native";
-import { Button } from "@/components/ui/button";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { RefreshControl, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { TabNavigatorNavigationProp } from "@/navigation/TabNavigator";
 import { UserContext } from "@/contexts/UserContext";
-import { createKid, getAllKids } from "@/api/user/kids";
+import { useKidMutations } from "@/hooks/useKidMutations";
+import { ArticleListSection } from "@/components/article/articleListSection";
+import { ErrorState } from "@/components/errorState";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
 import { useArticles } from "@/hooks/useArticles";
-import { ArticleListRender } from "@/components/articleListRender";
+import { useKids } from "@/hooks/useKids";
+import { useKidsSmileSummaries } from "@/hooks/useKidsSmileSummaries";
+import { KidsSmileCarousel } from "@/components/home/kidsSmileCarousel";
+import { SkeletonKidsSmileCarousel } from "@/skeletons/components/skeletonKidsSmileCarousel";
+import { Wrapper } from "@/components/wrapper";
+import { Header } from "@/components/header";
+import { KidFormValues } from "@/lib/schemas/kid";
+import { errorMessage } from "@/lib/errorMessage";
+import { buildKidRequest } from "@/lib/privacyPolicy";
+import { RegisterKidSection } from "@/components/home/registerKidSection";
+import { useToast } from "@/components/ui/toast";
+import { SessionCard } from "@/components/sessionCard";
+import { SessionNotice } from "@/components/sessionNotice";
+
+const HOME_VISIBLE_ARTICLES = 4;
 
 export function Home() {
-  const [isVisible, setVisible] = useState(true);
-  const [kids, setKids] = useState<KidResponseDTO[]>([]);
   const navigation = useNavigation<TabNavigatorNavigationProp>();
   const [registerKidError, setRegisterKidError] = useState<ApiError | null>(
     null,
   );
-  const { authToken } = useContext(UserContext)!;
+  const { authToken, hydrated, sessionExpired, expireSession } =
+    useContext(UserContext)!;
+  const { showToast } = useToast();
 
-  const { articles, latestArticle } = useArticles({ withCategories: false });
+  const {
+    isRefreshing,
+    onRefresh,
+    articles,
+    latestArticle,
+    isLoading,
+    isError,
+    refetchError: articlesRefetchError,
+  } = useArticles();
 
-  async function loadKids() {
-    const { data } = await getAllKids(authToken!);
-    setKids(data || []);
+  const {
+    kids,
+    isLoading: kidsPending,
+    failure: kidsFailure,
+    refetch: refetchKids,
+    isRefreshing: kidsRefreshing,
+    refetchError: kidsRefetchError,
+  } = useKids(authToken);
 
-    console.log("Loaded kids:", data.length);
-    if (data.length > 0) {
-      setVisible(false);
+  const {
+    items: smileSummaries,
+    isLoading: smilePending,
+    isError: smileError,
+    refetch: refetchSmile,
+  } = useKidsSmileSummaries(kids, authToken);
+
+  const showOnboarding =
+    hydrated &&
+    !!authToken &&
+    !kidsPending &&
+    !kidsFailure &&
+    kids.length === 0;
+
+  const showKidsError =
+    hydrated && !!authToken && !kidsPending && kidsFailure !== null;
+
+  const showSmileCarousel = hydrated && !!authToken && kids.length > 0;
+
+  const { createKidMutation } = useKidMutations(authToken);
+
+  async function onRegisterKid(kidDTO: KidFormValues) {
+    if (createKidMutation.isPending) {
+      return;
     }
-  }
-
-  async function onRegisterKid(kidDTO: KidRequestDTO) {
     try {
       if (!authToken) {
-        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
+        setRegisterKidError(
+          new ApiError(
+            "Sessão expirada. Faça login novamente.",
+            "INVALID_CREDENTIALS",
+          ),
+        );
         return;
       }
 
-      const newKid = await createKid(kidDTO, authToken);
-      console.log("New kid created:", newKid);
+      await createKidMutation.mutateAsync(await buildKidRequest(kidDTO));
 
-      // TODO: create better modals
-      Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
+      setRegisterKidError(null);
+      showToast("Dependente cadastrado com sucesso.");
     } catch (error) {
-      console.error("Error creating dependent:", error);
-      setRegisterKidError(error as ApiError);
+      if (error instanceof ApiError) {
+        setRegisterKidError(error);
+        return;
+      }
+      setRegisterKidError(
+        new ApiError(
+          errorMessage(
+            error,
+            "Não foi possível cadastrar o dependente. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
+        ),
+      );
     }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log("Loading kids...");
-      loadKids();
-    }, []),
-  );
+  async function handleRefresh() {
+    if (!authToken) {
+      await onRefresh();
+      return;
+    }
+    await Promise.all([onRefresh(), refetchKids(), refetchSmile()]);
+  }
+
+  function openKidSmile(kidId: string) {
+    navigation.navigate("Smile", {
+      screen: "SmileHome",
+      initial: false,
+      pop: true,
+      params: { kidId },
+    });
+  }
+
+  function openKidHistory(kidId: string) {
+    navigation.navigate("Smile", {
+      screen: "SmileHistory",
+      initial: false,
+      params: { kidId, fromTab: "Home" },
+    });
+  }
+
+  function goToLogin() {
+    navigation.navigate("Profile", {
+      screen: "Login",
+      initial: false,
+      params: { fromTab: "Home" },
+    });
+  }
+
+  function goToSignup() {
+    navigation.navigate("Profile", {
+      screen: "Signup",
+      initial: false,
+      params: { fromTab: "Home" },
+    });
+  }
 
   return (
     <Wrapper
       direction="column"
       align="start"
       justify="start"
-      className="flex-1"
+      className="flex-1 bg-base-200"
     >
       <Header />
-      <ScrollView className="w-full flex-1">
-        <Wrapper
-          className="mx-6 my-4 flex-1"
+      <ScrollView
+        className="w-full flex-1"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing || kidsRefreshing}
+            onRefresh={() => void handleRefresh()}
+          />
+        }
+      >
+        <ScreenContent
+          className="mb-4 mt-2"
           direction="column"
           align="start"
           justify="start"
-          gap="gap-2"
+          gap="gap-4"
         >
+          {hydrated && showOnboarding && (
+            <RegisterKidSection
+              onRegisterKid={onRegisterKid}
+              registerKidError={registerKidError}
+              isPending={createKidMutation.isPending}
+            />
+          )}
+
+          {hydrated && showKidsError && kidsFailure !== "auth" && !isError && (
+            <ErrorState onRetry={() => void refetchKids()} />
+          )}
+
+          {hydrated && showKidsError && kidsFailure !== "auth" && isError && (
+            <ErrorState onRetry={() => void handleRefresh()} />
+          )}
+
+          {hydrated && showKidsError && kidsFailure === "auth" && (
+            <Wrapper className="mt-4 w-full">
+              <SessionNotice
+                title="Sessão expirada"
+                message="Faça login novamente para cadastrar o dependente."
+                actionLabel="Entrar"
+                onAction={() => void expireSession()}
+              />
+            </Wrapper>
+          )}
+
+          {hydrated && kidsRefetchError && (
+            <QueryWarningBanner
+              message="Não foi possível atualizar os dependentes. Mostrando a lista carregada anteriormente."
+              onRetry={() => void refetchKids()}
+            />
+          )}
+
+          {hydrated && !authToken && (
+            <Wrapper className="mb-2 mt-4 w-full">
+              {sessionExpired ? (
+                <SessionNotice
+                  title="Sessão expirada"
+                  message="Entre novamente para continuar de onde parou."
+                  actionLabel="Entrar"
+                  onAction={goToLogin}
+                />
+              ) : (
+                <SessionCard
+                  title="Bem-vindo!"
+                  message="Acompanhe a saúde bucal do seu filho."
+                  actionLabel="Entrar"
+                  onAction={goToLogin}
+                  secondaryLabel="Criar conta"
+                  onSecondary={goToSignup}
+                />
+              )}
+            </Wrapper>
+          )}
+
+          {showSmileCarousel && (smilePending || smileError) && (
+            <Wrapper
+              direction="column"
+              align="start"
+              justify="start"
+              className="w-full"
+              gap="gap-4"
+            >
+              {smileError && (
+                <ErrorState
+                  message="Não foi possível carregar o resumo do sorriso dos dependentes."
+                  onRetry={() => void refetchSmile()}
+                />
+              )}
+              <SkeletonKidsSmileCarousel itemCount={kids.length} />
+            </Wrapper>
+          )}
+
+          {showSmileCarousel && !smilePending && !smileError && (
+            <KidsSmileCarousel
+              items={smileSummaries}
+              onOpenKid={openKidSmile}
+              onOpenHistory={openKidHistory}
+              onRegisterEvent={openKidSmile}
+            />
+          )}
+
           <Wrapper
-            className="my-4 flex-1"
             direction="column"
             align="start"
             justify="start"
-            gap="gap-2"
-          >
-            <Text variant={"h4"}>Bem Vindo ao MeuDentinho!</Text>
-
-            {isVisible && (
-              <View className="w-full">
-                <View className="w-full">
-                  <Text>
-                    Precisamos de alguns dados básicos para começar a acompanhar
-                    o desenvolvimento dentário da criança de forma
-                    personalizada.
-                  </Text>
-                </View>
-                <View className="w-full p-4 bg-base-100 rounded-lg">
-                  <RegisterKidForm
-                    onSubmit={onRegisterKid}
-                    submitError={registerKidError}
-                  />
-                </View>
-              </View>
-            )}
-          </Wrapper>
-
-          <Text variant={"h4"} className="mt-4">
-            Dicas e Artigos
-          </Text>
-
-          <ArticleListRender
-            latestArticle={latestArticle}
-            articles={articles.slice(1)}
-            hasCategoryTitle={false}
-          />
-
-          <Button
             className="w-full"
-            onPress={() => navigation.navigate("Articles")}
           >
-            <Text>Ver mais artigos</Text>
-          </Button>
-        </Wrapper>
+            <ArticleListSection
+              articles={articles.slice(0, HOME_VISIBLE_ARTICLES)}
+              latestArticle={latestArticle}
+              isLoading={isLoading}
+              isError={isError}
+              refetchError={articlesRefetchError}
+              hideError={showKidsError && kidsFailure !== "auth" && isError}
+              onRetry={onRefresh}
+              fromTab="Home"
+            />
+          </Wrapper>
+        </ScreenContent>
       </ScrollView>
     </Wrapper>
   );

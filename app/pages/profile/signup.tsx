@@ -1,57 +1,118 @@
 import { Wrapper } from "@/components/wrapper";
+import { Header } from "@/components/header";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { ScrollView, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import {
+  RouteProp,
+  useNavigation,
+  useFocusEffect,
+  useRoute,
+  useLinkTo,
+} from "@react-navigation/native";
 import { Card } from "@/components/card";
 import {
   ArrowsClockwiseIcon,
   BookOpenIcon,
-  MailboxIcon,
+  FileIcon,
+  ToothIcon,
 } from "phosphor-react-native";
-import { useContext, useRef, useState } from "react";
+import { useContext, useCallback, useRef, useState } from "react";
 import { ProfileForm } from "@/components/forms/profileForm";
-import { SignupDTO } from "@/types/dtos/user";
-import { signupUser } from "@/api/user/signupUser";
+import type { SignupRequest } from "@/types/dtos/user";
+import { SignupFormValues } from "@/lib/schemas/profile";
 import { UserContext } from "@/contexts/UserContext";
+import { errorMessage } from "@/lib/errorMessage";
 import { ApiError } from "@/types/domain";
-import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import {
+  ProfileNavegationProp,
+  ProfileRouteParams,
+} from "@/navigation/ProfileStack";
 import { THEME } from "@/lib/theme";
+import { PRIVACY_POLICY_VERSION } from "@/lib/privacyPolicy";
+import { safeReturnPath } from "@/navigation/linking";
+import { signup } from "@/api/auth/signup";
 
 export function Signup() {
   const navigation = useNavigation<ProfileNavegationProp>();
-  const scrollViewRef = useRef<ScrollView>(null);
-  const formRef = useRef<View>(null);
+  const route = useRoute<RouteProp<ProfileRouteParams, "Signup">>();
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const formRef = useRef<React.ComponentRef<typeof View>>(null);
 
+  const linkTo = useLinkTo();
   const [error, setError] = useState<ApiError | null>(null);
-  const { updateAppUser } = useContext(UserContext)!;
+  const { updateAppUser, user, authToken, hydrated } = useContext(UserContext)!;
 
   const colors = THEME.light;
 
-  async function onSubmit(signupDTO: SignupDTO) {
+  useFocusEffect(
+    useCallback(() => {
+      if (hydrated && user && authToken) {
+        const returnTo = safeReturnPath(route.params?.returnTo);
+        if (returnTo) {
+          linkTo(returnTo);
+          return;
+        }
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Index" }],
+        });
+        const origin = route.params?.fromTab;
+        if (origin) {
+          navigation.getParent()?.navigate(origin);
+        }
+      }
+    }, [
+      hydrated,
+      user,
+      authToken,
+      navigation,
+      route.params?.fromTab,
+      route.params?.returnTo,
+      linkTo,
+    ]),
+  );
+
+  async function onSubmit({ accepted, ...profile }: SignupFormValues) {
+    setError(null);
     try {
-      const { data } = await signupUser(signupDTO);
+      const request: SignupRequest = {
+        ...profile,
+        accepted: true,
+        acceptedPolicyVersion: PRIVACY_POLICY_VERSION,
+        acceptedAt: new Date().toISOString(),
+        isLegalGuardian: true,
+      };
+      const { data } = await signup(request);
 
-      console.log("Signup successful, user data:", data);
-
+      const responseEmail =
+        (data as unknown as { email?: string }).email ?? profile.email;
       const basicUser = {
         name: data.name,
-        email: signupDTO.email,
+        email: responseEmail,
         isAdmin: data.isAdmin,
       };
 
-      updateAppUser(basicUser, data.token);
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Index", params: { payload: basicUser } }],
-      });
+      await updateAppUser(
+        basicUser,
+        data.token,
+        data.refreshToken ?? null,
+        data.userId ?? null,
+      );
     } catch (err: unknown) {
-      console.log("Signup error:", err);
       if (err instanceof ApiError) {
         setError(err);
         return;
       }
+      setError(
+        new ApiError(
+          errorMessage(
+            err,
+            "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+          ),
+          "NETWORK_ERROR",
+        ),
+      );
     }
   }
 
@@ -66,80 +127,87 @@ export function Signup() {
   }
 
   return (
-    <ScrollView ref={scrollViewRef} className="bg-base-100 ">
-      <Wrapper
-        className="w-full pb-6"
-        direction="column"
-        align="center"
-        justify="center"
-      >
+    <View className="flex-1 bg-base-100">
+      <Header hasBackButton />
+      <ScrollView ref={scrollViewRef} className="bg-base-100 ">
         <Wrapper
-          className="h-[85vh] w-full bg-base-100 px-4 py-4"
-          direction="column"
-          justify="center"
-          gap={"gap-4"}
-        >
-          <Text className="mb-0" variant={"h2"}>
-            Crie sua conta
-          </Text>
-          <Text className="mb-6 mt-0 text-muted">
-            Acompanhe a saúde bucal do seu filho com a tecnologia e o carinho
-            que ele merece.
-          </Text>
-          <Wrapper direction="column" className="w-full" gap={"gap-6"}>
-            <Card
-              icon={<ArrowsClockwiseIcon color={colors.primary400} />}
-              title="Sincronize seus dados"
-            >
-              Acesse o histórico dental em qualquer dispositivo.
-            </Card>
-            <Card
-              icon={<MailboxIcon color={colors.primary400} />}
-              title="Atualizações por e-mail"
-            >
-              Receba relatórios de seus filhos diretamente na sua caixa de
-              entrada.
-            </Card>
-            <Card
-              icon={<BookOpenIcon color={colors.primary400} />}
-              title="Conteúdo exclusivo"
-            >
-              Novos artigos e guias especializados odontopediatria toda semana.
-            </Card>
-          </Wrapper>
-
-          <Button onPress={goToForm} className="my-4 w-full">
-            <Text>Vamos lá!</Text>
-          </Button>
-        </Wrapper>
-
-        <Wrapper
-          ref={formRef}
-          className="w-full bg-base-100 px-4"
+          className="w-full pb-6"
           direction="column"
           align="center"
           justify="center"
         >
-          <Wrapper className="w-full" direction="column" gap={"gap-0"}>
+          <Wrapper
+            className="min-h-[85vh] w-full bg-base-100 px-6 py-4"
+            direction="column"
+            justify="center"
+            gap={"gap-4"}
+          >
             <Text className="mb-0" variant={"h2"}>
-              Bem vindo à família
+              Crie sua conta
             </Text>
-            <Text className="mb-6 mt-0 text-muted">
-              Preencha os dados abaixo para começar o acompanhamento.
+            <Text className="mb-6 mt-0 text-muted-foreground">
+              Acompanhe a saúde bucal do seu filho com a tecnologia e o carinho
+              que ele merece.
             </Text>
+            <Wrapper direction="column" className="w-full" gap={"gap-6"}>
+              <Card
+                icon={<ArrowsClockwiseIcon color={colors.primary400} />}
+                title="Sincronize seus dados"
+              >
+                Acesse o histórico dental em qualquer dispositivo.
+              </Card>
+              <Card
+                icon={<ToothIcon color={colors.primary400} />}
+                title="Previsões dentárias"
+              >
+                Acompanhe quando cada dentinho deve nascer.
+              </Card>
+              <Card
+                icon={<FileIcon color={colors.primary400} />}
+                title="Tudo pronto para a consulta"
+              >
+                Exporte o histórico dental e compartilhe com o odontopediatra.
+              </Card>
+            </Wrapper>
+
+            <Button onPress={goToForm} className="my-4 w-full">
+              <Text>Vamos lá!</Text>
+            </Button>
           </Wrapper>
 
-          <ProfileForm submitError={error} onSubmit={onSubmit} />
-
-          <Text variant={"small"}>Já tem uma conta?</Text>
-          <Button
-            onPress={() => navigation.navigate("Login")}
-            variant={"ghost"}
+          <Wrapper
+            ref={formRef}
+            className="w-full bg-base-100 px-6"
+            direction="column"
+            align="center"
+            justify="center"
           >
-            <Text>Entrar</Text>
-          </Button>
+            <Wrapper className="w-full" direction="column" gap={"gap-0"}>
+              <Text className="mb-0" variant={"h2"}>
+                Bem vindo à família
+              </Text>
+              <Text className="mb-6 mt-0 text-muted-foreground">
+                Preencha os dados abaixo para começar o acompanhamento.
+              </Text>
+            </Wrapper>
+
+            <ProfileForm submitError={error} onSubmit={onSubmit} />
+
+            <Text variant={"small"}>Já tem uma conta?</Text>
+            <Button
+              onPress={() =>
+                navigation.navigate("Login", {
+                  fromTab: route.params?.fromTab,
+                  returnTo: route.params?.returnTo,
+                })
+              }
+              variant={"ghost"}
+            >
+              <Text>Entrar</Text>
+            </Button>
+          </Wrapper>
         </Wrapper>
-      </Wrapper>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

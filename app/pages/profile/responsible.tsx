@@ -1,21 +1,278 @@
+import { loginReturnPath } from "@/navigation/linking";
+import { deleteUser } from "@/api/user/deleteUser";
+import { patchUser } from "@/api/user/patchUser";
+import { PasswordSheetForm } from "@/components/forms/passwordSheetForm";
 import { UpdateResponsibleForm } from "@/components/forms/updateResponsibleForm";
+import { FeedbackSheet } from "@/components/feedbackSheet";
 import { Header } from "@/components/header";
+import { BottomSheet } from "@/components/ui/bottomSheet";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { useContext } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import {
+  ConfirmPasswordDTO,
+  UpdateProfileDTO,
+} from "@/lib/schemas/responsible";
+import { THEME } from "@/lib/theme";
+import { getUserIdFromToken } from "@/lib/utils";
+import { ApiError } from "@/types/domain";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import { TrashIcon } from "phosphor-react-native";
+import { useContext, useEffect, useState } from "react";
+import { Keyboard, ScrollView, View } from "react-native";
+
+function getInitials(name?: string) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  const first = parts[0][0];
+  const second = parts.length > 1 ? parts[1][0] : "";
+  return (first + second).toUpperCase();
+}
 
 export function Responsible() {
-  const { user } = useContext(UserContext)!;
+  const {
+    user,
+    authToken,
+    hydrated,
+    updateAppUser,
+    updateUserProfile,
+    userId: contextUserId,
+  } = useContext(UserContext)!;
+  const navigation = useNavigation<ProfileNavegationProp>();
+  const colors = THEME.light;
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<ApiError | null>(null);
+  const [emailChangeSheetMounted, setEmailChangeSheetMounted] = useState(false);
+  const [emailChangeSheetOpen, setEmailChangeSheetOpen] = useState(false);
+  const [emailChangeError, setEmailChangeError] = useState<ApiError | null>(
+    null,
+  );
+  const [pendingProfile, setPendingProfile] = useState<UpdateProfileDTO | null>(
+    null,
+  );
 
-  async function handleUpdateResponsible(data: Record<string, unknown>) {
-    Alert.alert("Dados atualizados", "As alterações foram salvas com sucesso.");
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (password: string) => {
+      let resolvedUserId: string | null = contextUserId ?? null;
+      if (!resolvedUserId && authToken) {
+        try {
+          resolvedUserId = getUserIdFromToken(authToken) ?? null;
+        } catch {
+          resolvedUserId = null;
+        }
+      }
+      if (!resolvedUserId || !authToken) {
+        throw new ApiError(
+          "Sessão expirada. Faça login novamente.",
+          "INVALID_CREDENTIALS",
+        );
+      }
+      await deleteUser(resolvedUserId, authToken, password);
+    },
+  });
+
+  useEffect(() => {
+    if (hydrated && !authToken) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login", params: { returnTo: loginReturnPath() } }],
+      });
+    }
+  }, [hydrated, authToken, navigation]);
+
+  async function handleUpdateResponsible(profile: UpdateProfileDTO) {
+    Keyboard.dismiss();
+    if (!authToken || !user) {
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
+      return;
+    }
+
+    const userId =
+      contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
+    if (!userId) {
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
+      return;
+    }
+    const nameChanged = profile.name.trim() !== user.name;
+    const emailChanged = profile.email.trim() !== user.email;
+
+    if (!nameChanged && !emailChanged) {
+      return;
+    }
+
+    if (!emailChanged) {
+      try {
+        await patchUser(
+          userId,
+          authToken,
+          {
+            name: profile.name.trim(),
+            email: profile.email.trim(),
+          },
+          null,
+        );
+        await updateUserProfile({
+          name: profile.name.trim(),
+          email: profile.email.trim(),
+        });
+        setFeedback({
+          title: "Dados atualizados",
+          message: "As alterações foram salvas com sucesso.",
+        });
+      } catch (error) {
+        setFeedback({
+          title: "Erro",
+          message:
+            error instanceof ApiError
+              ? error.message
+              : "Não foi possível atualizar os dados.",
+        });
+      }
+      return;
+    }
+
+    setEmailChangeError(null);
+    setPendingProfile(profile);
+    setEmailChangeSheetMounted(true);
+    setEmailChangeSheetOpen(true);
+  }
+
+  async function handleConfirmEmailChange({ password }: ConfirmPasswordDTO) {
+    Keyboard.dismiss();
+    setEmailChangeError(null);
+    const profile = pendingProfile;
+    if (!profile) {
+      return;
+    }
+    if (!authToken) {
+      setEmailChangeSheetOpen(false);
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
+      return;
+    }
+
+    const userId =
+      contextUserId ?? (authToken ? getUserIdFromToken(authToken) : null);
+    if (!userId) {
+      setEmailChangeSheetOpen(false);
+      setFeedback({
+        title: "Sessão expirada",
+        message: "Faça login novamente.",
+      });
+      return;
+    }
+
+    try {
+      await patchUser(
+        userId,
+        authToken,
+        {
+          name: profile.name.trim(),
+          email: profile.email.trim(),
+        },
+        password,
+      );
+      await updateUserProfile({
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+      });
+      setPendingProfile(null);
+      setEmailChangeSheetOpen(false);
+      setFeedback({
+        title: "Dados atualizados",
+        message: "As alterações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setEmailChangeError(error);
+        return;
+      }
+      setEmailChangeError(
+        new ApiError(
+          "Não foi possível atualizar os dados. Tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
+    }
+  }
+
+  function handleCloseEmailChangeSheet() {
+    setEmailChangeSheetOpen(false);
+    setEmailChangeError(null);
+    setPendingProfile(null);
+  }
+
+  function handleOpenDeleteSheet() {
+    setDeleteError(null);
+    setDeleteSheetOpen(true);
+  }
+
+  function handleCloseDeleteSheet() {
+    setDeleteSheetOpen(false);
+    setDeleteError(null);
+  }
+
+  async function handleDeleteAccount({ password }: ConfirmPasswordDTO) {
+    setDeleteError(null);
+    try {
+      await deleteAccountMutation.mutateAsync(password);
+      setDeleteSheetOpen(false);
+      await updateAppUser(null, null);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Index" }],
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setDeleteError(error);
+        return;
+      }
+      setDeleteError(
+        new ApiError(
+          "Não foi possível excluir sua conta. Tente novamente.",
+          "INTERNAL_SERVER_ERROR",
+        ),
+      );
+    }
+  }
+
+  if (!hydrated) {
+    return (
+      <Wrapper
+        className="flex-1 bg-base-100"
+        direction="column"
+        align="center"
+        justify="start"
+        gap="gap-0"
+      >
+        <Header hasBackButton />
+        <Text>Carregando...</Text>
+      </Wrapper>
+    );
+  }
+
+  if (!authToken) {
+    return null;
   }
 
   return (
     <Wrapper
-      className="bg-base-200 flex-1"
+      className="flex-1 bg-base-100"
       direction="column"
       align="center"
       justify="start"
@@ -23,18 +280,94 @@ export function Responsible() {
     >
       <Header hasBackButton />
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 28 }}
+        contentContainerStyle={{ padding: 24, paddingBottom: 28 }}
         className="w-full"
       >
-        <Text className="text-3xl font-bold mb-4">Responsável</Text>
+        <View className="mb-10 mt-4 items-center">
+          <View className="h-32 w-32 items-center justify-center rounded-full bg-base-300">
+            <Text className="text-4xl font-semibold text-primary-500">
+              {getInitials(user?.name)}
+            </Text>
+          </View>
+        </View>
 
-        <View className="bg-base-100 rounded-lg p-4">
-          <UpdateResponsibleForm
-            onSubmit={handleUpdateResponsible}
-            defaultName={user?.name}
-          />
+        <UpdateResponsibleForm
+          onSubmit={handleUpdateResponsible}
+          onChangePassword={() => navigation.navigate("ChangePassword")}
+          defaultName={user?.name}
+          defaultEmail={user?.email}
+        />
+
+        <View className="mt-8 w-full rounded-2xl bg-base-200 p-5 shadow-sm shadow-base-300">
+          <Text variant="h4" className="text-destructive">
+            Zona de perigo
+          </Text>
+          <Text className="mt-1 text-sm text-muted-foreground">
+            Excluir sua conta apaga todos os dependentes e o histórico. Esta
+            ação é irreversível.
+          </Text>
+          <Button
+            variant="ghost"
+            onPress={handleOpenDeleteSheet}
+            className="mt-3"
+          >
+            <TrashIcon size={20} color={colors.destructive} />
+            <Text className="font-medium text-destructive">
+              Excluir minha conta
+            </Text>
+          </Button>
         </View>
       </ScrollView>
+
+      <BottomSheet
+        visible={deleteSheetOpen}
+        onClose={handleCloseDeleteSheet}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Excluir minha conta
+          </Text>
+        }
+      >
+        <PasswordSheetForm
+          description="Todos os dependentes e o histórico serão apagados e esta ação é irreversível. Digite sua senha para confirmar."
+          passwordLabel="Senha"
+          passwordPlaceholder="Digite sua senha"
+          submitLabel="Excluir"
+          submittingLabel="Excluindo..."
+          destructive
+          onSubmit={handleDeleteAccount}
+          onCancel={handleCloseDeleteSheet}
+          submitError={deleteError}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={emailChangeSheetOpen}
+        onClose={handleCloseEmailChangeSheet}
+        onDismiss={() => setEmailChangeSheetMounted(false)}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Alterar e-mail
+          </Text>
+        }
+      >
+        <PasswordSheetForm
+          description="Informe sua senha atual para confirmar a alteração do e-mail."
+          passwordLabel="Senha atual"
+          passwordPlaceholder="Digite sua senha atual"
+          submitLabel="Salvar alterações"
+          submittingLabel="Salvando..."
+          onSubmit={handleConfirmEmailChange}
+          onCancel={handleCloseEmailChangeSheet}
+          submitError={emailChangeError}
+        />
+      </BottomSheet>
+
+      <FeedbackSheet
+        title={feedback?.title ?? ""}
+        message={emailChangeSheetMounted ? null : (feedback?.message ?? null)}
+        onClose={() => setFeedback(null)}
+      />
     </Wrapper>
   );
 }

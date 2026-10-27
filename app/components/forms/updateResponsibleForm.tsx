@@ -1,99 +1,115 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { Wrapper } from "@/components/wrapper";
+import { FieldShell } from "./fieldShell";
+import { THEME } from "@/lib/theme";
 import {
-  updateResponsibleSchema,
-  UpdateResponsibleDTO,
+  updateProfileSchema,
+  UpdateProfileDTO,
 } from "@/lib/schemas/responsible";
-import { FormInput } from "../formInput";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import {
+  CaretRightIcon,
+  EnvelopeSimpleIcon,
+  LockIcon,
+  UserIcon,
+} from "phosphor-react-native";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Pressable, View } from "react-native";
 
 interface UpdateResponsibleFormProps {
-  onSubmit: (data: UpdateResponsibleDTO) => void | Promise<void>;
+  onSubmit: (profile: UpdateProfileDTO) => void | Promise<void>;
+  onChangePassword: () => void;
   defaultName?: string;
+  defaultEmail?: string;
 }
 
 export function UpdateResponsibleForm({
   onSubmit,
+  onChangePassword,
   defaultName,
+  defaultEmail,
 }: UpdateResponsibleFormProps) {
+  const colors = THEME.light;
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<UpdateResponsibleDTO>({
-    resolver: zodResolver(updateResponsibleSchema),
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<UpdateProfileDTO>({
+    resolver: zodResolver(updateProfileSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
       name: defaultName || "",
-      currentPassword: "",
-      newPassword: "",
-      passwordConfirmation: "",
+      email: defaultEmail || "",
     },
   });
 
+  useEffect(() => {
+    reset({ name: defaultName || "", email: defaultEmail || "" });
+  }, [defaultName, defaultEmail, reset]);
+
   return (
-    <Wrapper align="center" direction="column" className="w-full" gap="gap-4">
-      <FormInput
-        control={control}
-        errors={errors}
-        name="name"
-        label="Nome do Responsável"
-        inputProps={{
-          placeholder: "Seu nome completo",
-          autoCapitalize: "words",
-          autoCorrect: false,
-        }}
-      />
+    <View className="w-full">
+      <FieldShell label="Nome Completo" error={errors.name?.message}>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Seu nome completo"
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          )}
+        />
+        <UserIcon color={colors.primary500} weight="regular" />
+      </FieldShell>
 
-      <FormInput
-        control={control}
-        errors={errors}
-        name="currentPassword"
-        label="Senha Atual"
-        inputProps={{
-          placeholder: "Digite sua senha atual",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
+      <FieldShell label="E-mail" error={errors.email?.message}>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Digite seu email"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+            />
+          )}
+        />
+        <EnvelopeSimpleIcon color={colors.primary500} weight="regular" />
+      </FieldShell>
 
-      <FormInput
-        control={control}
-        errors={errors}
-        name="newPassword"
-        label="Nova Senha"
-        inputProps={{
-          placeholder: "Digite sua nova senha",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
-
-      <FormInput
-        control={control}
-        errors={errors}
-        name="passwordConfirmation"
-        label="Confirmar Senha"
-        inputProps={{
-          placeholder: "Confirme sua nova senha",
-          secureTextEntry: true,
-          autoCapitalize: "none",
-          autoCorrect: false,
-        }}
-      />
+      <Pressable
+        onPress={onChangePassword}
+        className="mt-2 flex-row items-center rounded-xl bg-base-100 p-3 shadow-sm"
+      >
+        <View className="h-12 w-12 items-center justify-center rounded-lg bg-base-200">
+          <LockIcon color={colors.primary500} weight="bold" />
+        </View>
+        <Text className="ml-3 flex-1 text-base font-medium">Alterar Senha</Text>
+        <CaretRightIcon color={colors.primary500} weight="regular" />
+      </Pressable>
 
       <Button
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-        className="w-full mb-2"
+        onPress={() => handleSubmit(onSubmit)()}
+        disabled={isSubmitting || !isDirty}
+        className="mt-10 w-full"
       >
-        <Text>{isSubmitting ? "Salvando..." : "Confirmar"}</Text>
+        <Text>{isSubmitting ? "Salvando..." : "Salvar Alterações"}</Text>
       </Button>
-    </Wrapper>
+    </View>
   );
 }

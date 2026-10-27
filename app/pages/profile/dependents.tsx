@@ -1,90 +1,74 @@
-import { createKid, getAllKids } from "@/api/user/kids";
-import { RegisterKidForm } from "@/components/forms/registerKidForm";
+import { loginReturnPath } from "@/navigation/linking";
+import { KidCard } from "@/components/dependents/kidCard";
+import { useCurrentDate } from "@/hooks/useCurrentDate";
+import { KidsListStatus } from "@/components/dependents/kidsListStatus";
 import { Header } from "@/components/header";
-import { Button } from "@/components/ui/button";
+import { QueryWarningBanner } from "@/components/queryWarningBanner";
+import { FloatingActionButton } from "@/components/ui/floatingActionButton";
 import { Text } from "@/components/ui/text";
 import { Wrapper } from "@/components/wrapper";
 import { UserContext } from "@/contexts/UserContext";
-import { KidRequestDTO, KidResponseDTO } from "@/types/dtos/user";
-import React, { useContext, useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { useKids } from "@/hooks/useKids";
+import { THEME } from "@/lib/theme";
+import { ProfileNavegationProp } from "@/navigation/ProfileStack";
+import type { KidResponseDTO } from "@/types/dtos/user";
+import { useNavigation } from "@react-navigation/native";
+import { PlusIcon } from "phosphor-react-native";
+import { useContext, useEffect } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 
 export function Dependents() {
-  const [loading, setLoading] = useState(true);
-  const { authToken } = useContext(UserContext)!;
-  const [kids, setKids] = useState<KidResponseDTO[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const referenceDate = useCurrentDate();
+  const { authToken, hydrated } = useContext(UserContext)!;
+  const navigation = useNavigation<ProfileNavegationProp>();
+  const colors = THEME.light;
 
-  const isEmptyState = !loading && kids.length === 0;
+  const { kids, isLoading, isRefreshing, failure, refetchError, refetch } =
+    useKids(authToken);
+
+  const isEmptyState = !isLoading && !failure && kids.length === 0;
+  const showKidList = !isLoading && !failure && kids.length > 0;
 
   useEffect(() => {
-    loadDependents();
-  }, []);
-
-  async function loadDependents() {
-    try {
-      await loadKids();
-    } catch (error) {
-      console.error("Error fetching dependents:", error);
-    } finally {
-      setLoading(false);
+    if (hydrated && !authToken) {
+      navigation.replace("Login", { returnTo: loginReturnPath() });
     }
+  }, [hydrated, authToken, navigation]);
+
+  function handleLoginAgain() {
+    navigation.replace("Login", { returnTo: loginReturnPath() });
   }
 
-  function handleSubmitKidForm(data: KidRequestDTO, index: number) {
-    Alert.alert(
-      "Ainda não implementado",
-      "A edição de dependentes existentes ainda não foi implementada.",
-    );
+  function handleSelectKid(kid: KidResponseDTO) {
+    navigation.navigate("EditDependent", { kidId: kid.id });
   }
 
-  async function handleCreateKidForm(data: KidRequestDTO) {
-    try {
-      if (!authToken) {
-        Alert.alert("Erro", "Sessão expirada. Faça login novamente.");
-        return;
-      }
-
-      await createKid(data, authToken);
-      await loadKids();
-      setShowCreateForm(false);
-      Alert.alert("Sucesso", "Dependente cadastrado com sucesso.");
-    } catch (error) {
-      console.error("Error creating dependent:", error);
-      Alert.alert("Erro", "Não foi possível cadastrar o dependente.");
-    }
+  function handleCreateKid() {
+    navigation.navigate("NewDependent");
   }
 
-  function renderItem({
-    dependent,
-    index,
-  }: {
-    dependent: KidResponseDTO;
-    index: number;
-  }) {
+  if (!hydrated) {
     return (
-      <View key={dependent.id}>
-        <Text className="font-bold mb-2">{dependent.name}</Text>
-        <View className="bg-base-100 rounded-lg p-4">
-          <RegisterKidForm
-            onSubmit={(data) => handleSubmitKidForm(data, index)}
-            defaultValues={{
-              name: dependent.name,
-              birthDate: dependent.birthDate,
-              gender: dependent.gender,
-              prematureWeeks: dependent.prematureWeeks ?? undefined,
-            }}
-            submitLabel="Salvar dependente"
-            submittingLabel="Salvando dependente..."
-          />
-        </View>
-      </View>
+      <Wrapper
+        className="flex-1 bg-base-200"
+        direction="column"
+        align="center"
+        justify="start"
+        gap="gap-0"
+      >
+        <Header hasBackButton />
+        <Text>Carregando...</Text>
+      </Wrapper>
     );
+  }
+
+  if (!authToken) {
+    return null;
   }
 
   return (
     <Wrapper
-      className="bg-base-200 flex-1"
+      className="flex-1 bg-base-200"
       direction="column"
       align="center"
       justify="start"
@@ -92,66 +76,83 @@ export function Dependents() {
     >
       <Header hasBackButton />
 
-      <ScrollView
-        className="w-full px-4"
-        contentContainerStyle={{ flexGrow: 1, paddingVertical: 16 }}
-      >
-        <Wrapper
-          direction="column"
-          className={`w-full ${isEmptyState ? "flex-1 justify-center" : ""}`}
-          gap="gap-4"
+      <View className="relative w-full flex-1">
+        <ScrollView
+          testID="dependents-list"
+          className="w-full flex-1"
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 24,
+            paddingTop: 16,
+            paddingBottom: 104,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => void refetch()}
+            />
+          }
         >
-          {loading && (
-            <View className="bg-base-100 rounded-lg p-4">
-              <Text>Carregando dependentes...</Text>
-            </View>
-          )}
+          <Wrapper direction="column" className="w-full" gap="gap-4">
+            <>
+              <Wrapper direction="column" gap="gap-1">
+                <Text
+                  variant="h2"
+                  className={`mb-0 ${isEmptyState ? "text-center" : ""}`}
+                >
+                  Dependentes
+                </Text>
+                <Text
+                  className={`text-muted-foreground ${isEmptyState ? "text-center" : ""}`}
+                >
+                  {isEmptyState
+                    ? "Adicione o primeiro dependente para começar."
+                    : "Toque em um dependente para editar os dados."}
+                </Text>
+              </Wrapper>
 
-          {!loading && isEmptyState && !showCreateForm && (
-            <View className="bg-base-100 rounded-xl px-5 py-6 items-center">
-              <Text className="font-bold text-lg text-center mb-2">
-                Nenhum dependente cadastrado
-              </Text>
-              <Text className="text-base-500 text-center mb-5">
-                Adicione o primeiro dependente para começar a gerenciar os
-                dados.
-              </Text>
-              <Button onPress={() => setShowCreateForm(true)} className="h-12">
-                <Text>Adicionar dependente</Text>
-              </Button>
-            </View>
-          )}
+              {refetchError && (
+                <QueryWarningBanner
+                  message="Não foi possível atualizar os dependentes. Mostrando a lista carregada anteriormente."
+                  onRetry={() => void refetch()}
+                />
+              )}
 
-          {!loading &&
-            !isEmptyState &&
-            kids.map((kid, index) => renderItem({ dependent: kid, index }))}
-
-          {showCreateForm && (
-            <View className="bg-base-100 rounded-lg p-4">
-              <RegisterKidForm
-                onSubmit={handleCreateKidForm}
-                submitLabel="Adicionar novo dependente"
-                submittingLabel="Adicionando novo dependente..."
+              <KidsListStatus
+                loading={isLoading}
+                failure={failure}
+                isEmpty={isEmptyState}
+                onRetry={() => void refetch()}
+                onLoginAgain={handleLoginAgain}
               />
-            </View>
-          )}
 
-          {!loading && !isEmptyState && !showCreateForm && (
-            <Button
-              onPress={() => setShowCreateForm(true)}
-              className="w-full"
-              variant="default"
-            >
-              <Text>Novo dependente</Text>
-            </Button>
-          )}
-        </Wrapper>
-      </ScrollView>
+              {showKidList &&
+                kids.map((kid) => (
+                  <KidCard
+                    key={kid.id}
+                    kid={kid}
+                    referenceDate={referenceDate}
+                    onPress={handleSelectKid}
+                  />
+                ))}
+            </>
+          </Wrapper>
+        </ScrollView>
+
+        {!isLoading && !failure && (
+          <FloatingActionButton
+            accessibilityLabel="Novo dependente"
+            onPress={handleCreateKid}
+            icon={
+              <PlusIcon
+                size={24}
+                weight="bold"
+                color={colors.primaryForeground}
+              />
+            }
+          />
+        )}
+      </View>
     </Wrapper>
   );
-
-  async function loadKids() {
-    const { data } = await getAllKids(authToken!);
-    setKids(data || []);
-  }
 }
