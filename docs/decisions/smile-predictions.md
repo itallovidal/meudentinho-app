@@ -39,7 +39,9 @@ da data de nascimento, do sexo do dependente, dos eventos registrados e das tabe
   molares. Páginas 14–16: identificação e faixas médias dos dentes permanentes. Páginas 17–20:
   limites masculinos por quadrante; páginas 21–24: limites femininos por quadrante.
 - Os limites masculinos também diferem entre lados. Não é correto aplicar uma única tabela por
-  arco a ambos os lados. Sem sexo informado, mantém-se a tabela masculina como fallback técnico.
+  arco a ambos os lados. O fallback para tabela masculina em dependentes sem sexo foi removido;
+  sem sexo válido, não se gera previsão (cadastro passa a exigir sexo). Registros legados serão
+  saneados e o fallback pode ser eliminado por completo após a limpeza.
 - A dentição decídua guarda a faixa média em meses e o limite em meses inteiros mais dias.
   Incisivos inferiores começam nas faixas 6–8 e 9–11 meses, sem substituir essas faixas pela média.
 - O intervalo exibido para dentes decíduos vai do início da faixa média até o limite informado;
@@ -56,6 +58,37 @@ da data de nascimento, do sexo do dependente, dos eventos registrados e das tabe
 - O PDF distingue molares decíduos (54/55, 64/65, 74/75, 84/85) de molares permanentes
   (16/17, 26/27, 36/37, 46/47). Não estabelece a sequência “molar de leite → molar permanente”
   nem regras de bloqueio, cascata de exclusão ou registro retroativo.
+
+## Referência e validação das tabelas (issue #15)
+
+As tabelas foram confrontadas com as frentes técnicas registradas no relatório da #15; nenhuma
+alteração clínica automática foi aplicada.
+
+- Referência de origem informada pelo usuário: PDF “PROJETO APP - MEU DENTINHO”, de Ana Luísa
+  Pontes, exportado em 15/06/2026, 26 páginas. Fontes bibliográficas usadas no aplicativo e no
+  trabalho acadêmico: Micheli et al., 2025; Fekonja, 2022; Kapusi-Papp, Máth e Nemes, 2025;
+  Toscano et al., 2026; Scarparo (org.), 2021 (ODONTOPEDIATRIA: bases teóricas para uma prática
+  clínica de excelência).
+- Comparação atual (mesma chave `ChronologyKey`, 32 entradas permanentes por sexo): `from` e `to`
+  iguais entre os sexos nas 32 chaves; **19 limites (`limit`) diferentes entre os sexos**; 13
+  entradas idênticas, incluindo quatro terceiros molares com limite `null`; **6 pares femininos
+  assimétricos entre 14 pares sem terceiros molares**; 8 pares masculinos assimétricos entre
+  14 pares. Os valores permanecem como estimativas versionadas (`CHRONOLOGY_VERSION`).
+- Propriedade `limit`: determina até quando a previsão permanece visível. Ao ultrapassá-lo, a
+  previsão deixa de ser exibida (`toothMilestones.ts`). Um permanente com nascimento `2019-10-26`,
+  sem eventos, referência `2026-10-27 12:00` em São Paulo, já produz diferença por sexo aos
+  **7 anos e 1 dia**, no primeiro molar inferior (masculino `overdue`; feminino `current`,
+  `inTolerance: true`). As tabelas públicas (AAPD) não reproduzem as colunas de limite por
+  sexo e lado do app, portanto a validação segue pendente.
+- Pendente (clínico, sem responsável atribuído): origem e validade de `from`, `to`, `limit`,
+  `limitDays`; valores por sexo/lado; fallback para dependentes antigos sem sexo (hoje tabela
+  masculina foi removido; sem sexo válido, não se gera previsão). O cadastro já exige escolha
+  explícita (ADR de cadastro:13), de modo que novos cadastros não precisam do fallback. Registros
+  legados sem sexo serão saneados; após saneamento, remoção definitiva do código. Não unificar lados
+  nem reajustar limites sem revisão clínica.
+- Aproximação da fonte pública consultada: [AAPD — Dental Growth and Development](https://www.aapd.org/globalassets/media/policies_guidelines/r_dentalgrowth25.pdf)
+  separa dentições e arcos, mas não apresenta colunas equivalentes de limite por sexo e lado; não
+  permite ratificar automaticamente os 19 valores diferentes nem substituir a tabela particular.
 
 ## Fluxo dos pré-molares no app
 
