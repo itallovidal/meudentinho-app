@@ -89,6 +89,7 @@ const OPEN_TOOTH_SIZE = 28;
 const ALERT_BADGE_SIZE = 16;
 const ALERT_BADGE_DISTANCE = OPEN_TOOTH_SIZE / 2 + ALERT_BADGE_SIZE / 2;
 const OPEN_ARCH_HEIGHT = 190;
+const MAX_OPEN_ARCH_WIDTH = 320;
 const GUM_COLOR = "#F4A3A6";
 const GUM_EDGE_COLOR = "#C2555F";
 
@@ -209,7 +210,10 @@ export function DentalMap({
     return map;
   }, [events]);
 
-  const archWidth = Math.max(240, containerWidth - 40);
+  const archWidth = Math.max(
+    240,
+    Math.min(MAX_OPEN_ARCH_WIDTH, containerWidth - 40),
+  );
 
   const legendCounts = useMemo(() => {
     const counts: LegendCounts = {
@@ -478,7 +482,7 @@ export function DentalMap({
     title: string,
   ) {
     return (
-      <View className="w-full">
+      <View className="self-center" style={{ width: archWidth }}>
         {title === "Inferior" && renderOpenArch(right, left)}
         <Wrapper direction="row" justify="between" className="mb-1 w-full">
           <Text className="text-xs font-bold text-base-500">

@@ -16,7 +16,7 @@ import { DeleteEventSheet } from "@/components/smile/DeleteEventSheet";
 import { useToast } from "@/components/ui/toast";
 import { AddDependentSheet } from "@/components/smile/AddDependentSheet";
 import { DentalMap } from "@/components/smile/DentalMap";
-import DentalTipCard from "@/components/smile/DentalTipCard";
+import { DentalTipCard } from "@/components/smile/DentalTipCard";
 
 import { KidSelector } from "@/components/smile/KidSelector";
 import { RecentEventsList } from "@/components/smile/RecentEventsList";
