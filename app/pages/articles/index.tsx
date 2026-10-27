@@ -31,6 +31,7 @@ export function Index() {
   const { user, hydrated } = useContext(UserContext)!;
   const {
     latestArticle,
+    latestLoading,
     categories,
     selectedCategory,
     selectCategory,
@@ -109,6 +110,7 @@ export function Index() {
               {!isSearchActive && (
                 <ArticleCategoriesFeed
                   latestArticle={latestArticle}
+                  latestLoading={latestLoading}
                   categories={categories}
                   selectedCategory={selectedCategory}
                   onSelectCategory={handleSelectCategory}
@@ -116,13 +118,15 @@ export function Index() {
                   categoriesError={categoriesError}
                   latestError={latestError}
                   refetchError={refetchError}
+                  hideWarnings={failed}
                   onRetry={() => void onRefresh()}
                 />
               )}
             </ScreenContent>
           }
+          ItemSeparatorComponent={() => <View className="h-2" />}
           renderItem={({ item }) => (
-            <ScreenContent className="pb-2">
+            <ScreenContent>
               <ArticleCard {...item} />
             </ScreenContent>
           )}

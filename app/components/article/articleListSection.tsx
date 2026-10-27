@@ -39,7 +39,7 @@ export function ArticleListSection({
 
   if (isLoading || isError) {
     return (
-      <>
+      <View className="w-full gap-4">
         {isError &&
           (onRetry ? (
             <ErrorState
@@ -51,8 +51,8 @@ export function ArticleListSection({
               Parece que estamos com problemas para carregar os artigos.
             </Text>
           ))}
-        <SkeletonArticleListRender showBanner={isError ? false : true} />
-      </>
+        <SkeletonArticleListRender showBanner={!isError} />
+      </View>
     );
   }
 

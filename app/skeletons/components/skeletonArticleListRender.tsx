@@ -12,15 +12,15 @@ export function SkeletonArticleListRender({
       direction="column"
       align="start"
       justify="start"
-      className="w-full flex-1 bg-base-200"
+      className="w-full bg-base-200"
       gap="gap-2"
     >
       <Wrapper
-        className="w-full flex-1"
+        className="w-full"
         direction="column"
         align="start"
         justify="start"
-        gap="gap-3"
+        gap="gap-2"
       >
         {showBanner && <SkeletonArticleBanner />}
         <SkeletonArticleCard />

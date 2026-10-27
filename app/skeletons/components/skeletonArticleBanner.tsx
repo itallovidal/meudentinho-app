@@ -4,8 +4,8 @@ import { View } from "react-native";
 
 export function SkeletonArticleBanner() {
   return (
-    <View className="mt-6 w-full overflow-hidden rounded-3xl bg-base-300">
-      <Skeleton className="h-60 w-full rounded-3xl" />
+    <View className="w-full overflow-hidden rounded-lg bg-base-300">
+      <Skeleton className="h-60 w-full rounded-lg" />
       <Wrapper
         direction="column"
         align="start"

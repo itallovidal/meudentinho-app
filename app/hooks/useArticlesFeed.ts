@@ -118,6 +118,7 @@ export function useArticlesFeed() {
 
   return {
     latestArticle,
+    latestLoading: latestQuery.isLoading,
     categories,
     selectedCategoryId,
     selectedCategory,
