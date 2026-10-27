@@ -3,6 +3,7 @@ import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import {
   copyFile,
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -56,6 +57,15 @@ beforeAll(async () => {
     ),
   );
   await Promise.all([
+    cp(resolve(projectRoot, "web/pwa"), resolve(fixtureRoot, "web/pwa"), {
+      recursive: true,
+    }),
+    mkdir(resolve(fixtureRoot, "dist/_expo"), { recursive: true }).then(() =>
+      writeFile(
+        resolve(fixtureRoot, "dist/_expo/app.js"),
+        "window.app = true;",
+      ),
+    ),
     ...["index.html", "404.html", "politica-de-privacidade.html"].map((file) =>
       copyFile(
         resolve(projectRoot, "web/public-site", file),
@@ -185,4 +195,47 @@ it("preserves the landing, deep app URLs and stylesheet", async () => {
   expect(app.body).toContain("/_expo/");
   expect(css.status).toBe(200);
   expect(css.headers["content-type"]).toContain("text/css");
+});
+
+it("makes both entry points installable and serves the PWA files", async () => {
+  const [landing, app, manifestResponse, worker, registration, icon] =
+    await Promise.all([
+      readResponse("/"),
+      readResponse("/app/sorriso"),
+      readResponse("/manifest.webmanifest"),
+      readResponse("/sw.js"),
+      readResponse("/pwa/register.js"),
+      readResponse("/pwa/icons/icon-192.png", "HEAD"),
+    ]);
+  for (const response of [landing, app]) {
+    expect(response.body).toContain(
+      'rel="manifest" href="/manifest.webmanifest"',
+    );
+    expect(response.body).toContain('src="/pwa/register.js"');
+    expect(response.body).toContain('rel="apple-touch-icon"');
+  }
+  const manifest = JSON.parse(manifestResponse.body);
+  expect(manifestResponse.headers["content-type"]).toContain(
+    "application/manifest+json",
+  );
+  expect(manifest).toMatchObject({
+    id: "/app",
+    start_url: "/app",
+    scope: "/app",
+    display: "standalone",
+  });
+  expect(manifest.icons).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ sizes: "192x192", purpose: "any" }),
+      expect.objectContaining({ sizes: "512x512", purpose: "any" }),
+    ]),
+  );
+  expect(icon.status).toBe(200);
+  expect(icon.headers["content-type"]).toBe("image/png");
+  expect(worker.status).toBe(200);
+  expect(worker.body).toContain("/_expo/app.js");
+  expect(worker.body).not.toContain("__CACHE_VERSION__");
+  expect(worker.body).not.toContain("__PRECACHE_URLS__");
+  expect(registration.status).toBe(200);
+  expect(registration.body).toContain('register("/sw.js"');
 });

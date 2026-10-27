@@ -4,6 +4,7 @@ import { enableScreens } from "react-native-screens";
 import { PortalHost } from "@rn-primitives/portal";
 import { RootNavigator } from "./app/navigation/RootNavigator";
 import { webLinking } from "./app/navigation/linking";
+import { webDocumentTitle } from "./app/navigation/documentTitle";
 import { UserContext, UserProvider } from "./app/contexts/UserContext";
 import { useContext, useState } from "react";
 import { ErrorBoundary } from "./app/components/ErrorBoundary";
@@ -61,6 +62,7 @@ function SessionNavigation() {
         Platform.OS === "web" ? sessionBoundary.revision : (userId ?? "anon")
       }
       linking={webLinking}
+      documentTitle={webDocumentTitle}
       theme={NAV_THEME.light}
     />
   );

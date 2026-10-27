@@ -1,0 +1,32 @@
+{
+  "id": "/app",
+  "name": "Janelinha",
+  "short_name": "Janelinha",
+  "description": "Acompanhe os dentinhos e o histórico do sorriso dos seus dependentes.",
+  "lang": "pt-BR",
+  "start_url": "/app",
+  "scope": "/app",
+  "display": "standalone",
+  "background_color": "hsl(0 0% 100%)",
+  "theme_color": "hsl(213 53.4% 20.2%)",
+  "icons": [
+    {
+      "src": "/pwa/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -103,6 +103,14 @@ Edição de nome e e-mail com confirmação por senha em bottom sheet, troca de 
 
 A versão web mantém React Navigation e compartilha telas, formulários, regras e integração com a API com o app nativo. Em desenvolvimento, `npm run web` inicia o Expo; a aplicação usa caminhos sob `/app`.
 
+A publicação web inclui um PWA instalável: manifest, ícones de 192 e 512 px, ícone para iOS e abertura em janela própria na rota `/app`. A página inicial oferece instalação; no aplicativo, a aba Perfil contém o botão de instalação ou as instruções específicas do navegador. No iPhone/iPad, use o Safari e a opção Compartilhar → Adicionar à Tela de Início. A instalação depende do suporte do navegador e de HTTPS na publicação; `localhost` também permite testar service workers.
+
+O service worker mantém somente os arquivos estáticos da interface, permitindo reabri-la sem conexão depois que o primeiro carregamento e a preparação do cache terminarem. Dados da API, sessões e respostas autenticadas não são armazenados nesse cache. Consultar e alterar registros exige internet; não há fila de alterações offline. O armazenamento da sessão web mantém o comportamento atual, por aba.
+
+Cada publicação gera uma versão do cache a partir do conteúdo exportado. Atualizações aguardam o fechamento das instâncias abertas ou a ação Atualizar aplicativo no Perfil; essa ação pede que o usuário salve suas alterações antes de recarregar. O registro verifica novas versões quando a página volta a ficar visível. A landing e a política pública continuam usando a rede, sem fallback para o aplicativo.
+
+Os arquivos-fonte ficam em `web/pwa`, e `scripts/finalize-web.mts` integra o PWA à saída exportada. O servidor do Expo não executa essa etapa; para validar instalação, rotas offline e atualização, use a saída de um build autorizado com `npm run preview:web`. Na Vercel, `vercel.json` configura o tipo do manifest e a revalidação do service worker.
+
 Para gerar e conferir a saída publicada:
 
 ```bash

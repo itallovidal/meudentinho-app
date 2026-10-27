@@ -1,3 +1,5 @@
+import { ScreenContent } from "@/components/screenContent";
+import { PwaSettings } from "@/components/pwaSettings";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
@@ -170,40 +172,43 @@ export function Index() {
       gap="gap-0"
     >
       <Header />
-      <ScrollView className="w-full bg-base-200 px-6 py-2">
-        {profileOptions.map((data, index) => {
-          if (data.title.includes("Sair da conta") && !user) {
-            return null;
-          }
+      <ScrollView className="w-full bg-base-200 py-2">
+        <ScreenContent>
+          <PwaSettings />
+          {profileOptions.map((data, index) => {
+            if (data.title.includes("Sair da conta") && !user) {
+              return null;
+            }
 
-          return (
-            <Card
-              className="mb-4"
-              key={index}
-              icon={data.icon}
-              title={data.title}
-              variant={data.variant}
-              handlePress={data.handlePress}
-              isDisabled={data.isDisabled}
-            >
-              {data.description}
-            </Card>
-          );
-        })}
+            return (
+              <Card
+                className="mb-4"
+                key={index}
+                icon={data.icon}
+                title={data.title}
+                variant={data.variant}
+                handlePress={data.handlePress}
+                isDisabled={data.isDisabled}
+              >
+                {data.description}
+              </Card>
+            );
+          })}
 
-        <Wrapper
-          className="my-4 pt-16"
-          direction="column"
-          align="center"
-          justify="center"
-        >
-          <Text className="mb-0 text-sm text-muted">
-            v{Constants.expoConfig?.version ?? "0.0.0"}
-          </Text>
-          <Text className="mb-4 mt-0 text-sm text-muted">
-            &copy; {year} Janelinha
-          </Text>
-        </Wrapper>
+          <Wrapper
+            className="my-4 w-full pt-16"
+            direction="column"
+            align="center"
+            justify="center"
+          >
+            <Text className="mb-0 text-sm text-muted">
+              v{Constants.expoConfig?.version ?? "0.0.0"}
+            </Text>
+            <Text className="mb-4 mt-0 text-sm text-muted">
+              &copy; {year} Janelinha
+            </Text>
+          </Wrapper>
+        </ScreenContent>
       </ScrollView>
 
       <BottomSheet

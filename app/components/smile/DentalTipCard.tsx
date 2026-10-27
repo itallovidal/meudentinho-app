@@ -10,10 +10,7 @@ interface DentalTipCardProps {
   description: string;
 }
 
-export default function DentalTipCard({
-  title,
-  description,
-}: DentalTipCardProps) {
+export function DentalTipCard({ title, description }: DentalTipCardProps) {
   const colors = THEME.light;
 
   return (
@@ -22,9 +19,9 @@ export default function DentalTipCard({
       align="start"
       justify="start"
       gap="gap-3"
-      className="rounded-xl bg-base-100 p-4 shadow-sm shadow-base-300"
+      className="w-full rounded-xl bg-base-100 p-4 shadow-sm shadow-base-300"
     >
-      <View className="h-9 w-9 items-center justify-center rounded-full bg-white/15">
+      <View className="h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
         <WarningCircleIcon
           size={22}
           color={colors.destructive}
@@ -32,7 +29,7 @@ export default function DentalTipCard({
         />
       </View>
 
-      <View className="flex-1">
+      <View className="min-w-0 flex-1">
         <Text variant="large">{title}</Text>
         <Text variant="muted">{description}</Text>
       </View>

@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { BackHandler, Platform, Pressable, View } from "react-native";
 import { Text } from "./ui/text";
 import { Wrapper } from "./wrapper";
+import { ScreenContent } from "./screenContent";
 import { CaretLeftIcon } from "phosphor-react-native";
 import {
   useFocusEffect,
@@ -55,26 +56,29 @@ export function Header({ hasBackButton }: HeaderProps) {
   );
 
   return (
-    <Wrapper
-      className="w-full bg-base-100 px-8 py-4"
-      align="center"
-      justify="between"
-    >
-      {hasBackButton && (
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
-        >
-          <CaretLeftIcon weight="regular" color={colors.primary500} />
-        </Pressable>
-      )}
+    <Wrapper className="w-full bg-base-100 py-4" direction="column">
+      <ScreenContent
+        className="px-8"
+        direction="row"
+        align="center"
+        justify="between"
+      >
+        {hasBackButton && (
+          <Pressable
+            onPress={handleBack}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+            style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+          >
+            <CaretLeftIcon weight="regular" color={colors.primary500} />
+          </Pressable>
+        )}
 
-      <Text className="font-bold text-primary-500">Janelinha</Text>
+        <Text className="font-bold text-primary-500">Janelinha</Text>
 
-      <View style={{ width: 24 }} />
+        <View style={{ width: 24 }} />
+      </ScreenContent>
     </Wrapper>
   );
 }

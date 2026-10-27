@@ -201,6 +201,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       linking: "",
       options: {
         tabBarLabel: "Início",
+        title: "Início",
         tabBarIcon: ({ focused }) => (
           <TabBarIcon focused={focused}>
             <HouseIcon
@@ -216,6 +217,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       linking: "sorriso",
       options: {
         tabBarLabel: "Sorriso",
+        title: "Sorriso",
         tabBarIcon: ({ focused }) => (
           <TabBarIcon focused={focused}>
             <ToothIcon
@@ -231,6 +233,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       linking: "artigos",
       options: {
         tabBarLabel: "Artigos",
+        title: "Artigos",
 
         tabBarIcon: ({ focused }) => (
           <TabBarIcon focused={focused}>
@@ -246,6 +249,7 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
       screen: ProfileStack,
       options: {
         tabBarLabel: "Perfil",
+        title: "Perfil",
         tabBarIcon: ({ focused }) => (
           <TabBarIcon focused={focused}>
             <UserIcon

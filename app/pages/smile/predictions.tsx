@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { loginReturnPath } from "@/navigation/linking";
 import { ToothTypeSVG } from "@/components/smile/teeth/ToothTypeSVG";
 import { ToothEventModal } from "@/components/smile/ToothEventModal";
@@ -252,8 +253,8 @@ export function SmilePredictions() {
             />
           }
         >
-          <Wrapper
-            className="mx-6 my-4"
+          <ScreenContent
+            className="my-4"
             direction="column"
             align="center"
             justify="start"
@@ -453,7 +454,7 @@ export function SmilePredictions() {
                 />
               </>
             )}
-          </Wrapper>
+          </ScreenContent>
         </ScrollView>
       </SessionGate>
       <ToothEventModal

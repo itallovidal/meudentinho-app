@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { TextDecoder, TextEncoder } from "node:util";
+import type { PwaSnapshot } from "@/types/pwa";
 
 const failures: string[] = [];
 const kid = {
@@ -594,4 +595,58 @@ it("keeps the error illustration at its intended size on the web", async () => {
   )!;
   expect(getComputedStyle(illustration).width).toBe("144px");
   expect(getComputedStyle(illustration).height).toBe("128px");
+});
+
+it("offers PWA installation, iOS instructions and a confirmed update from the profile", async () => {
+  let snapshot: PwaSnapshot = {
+    canInstall: true,
+    installed: false,
+    updateAvailable: false,
+    isIos: false,
+  };
+  const install = jest.fn().mockResolvedValue(undefined);
+  const update = jest.fn().mockReturnValue(true);
+  window.janelinhaPwa = { getSnapshot: () => snapshot, install, update };
+  navigate("/app/perfil");
+  function button(label: string) {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('[role="button"],button'),
+    ).find((element) => element.textContent === label);
+  }
+  await waitFor(() => button("Instalar Janelinha") !== undefined);
+  button("Instalar Janelinha")!.click();
+  await waitFor(() => install.mock.calls.length === 1);
+  snapshot = { ...snapshot, canInstall: false, isIos: true };
+  window.dispatchEvent(new Event("janelinha:pwa"));
+  await waitFor(() => button("Como instalar") !== undefined);
+  button("Como instalar")!.click();
+  await waitFor(
+    () =>
+      document
+        .querySelector('[data-testid="bottom-sheet-surface"]')
+        ?.textContent?.includes("Safari") === true,
+  );
+  document
+    .querySelector<HTMLElement>(
+      '[data-testid="bottom-sheet-surface"] [aria-label="Fechar"]',
+    )!
+    .click();
+  await waitFor(
+    () =>
+      document.querySelector('[data-testid="bottom-sheet-surface"]') === null,
+  );
+  snapshot = { ...snapshot, installed: true, updateAvailable: true };
+  window.dispatchEvent(new Event("janelinha:pwa"));
+  await waitFor(() => button("Atualizar aplicativo") !== undefined);
+  expect(button("Como instalar")).toBeUndefined();
+  button("Atualizar aplicativo")!.click();
+  await waitFor(
+    () => button("Salvei minhas alterações, atualizar") !== undefined,
+  );
+  expect(
+    document.querySelector('[data-testid="bottom-sheet-surface"]')?.textContent,
+  ).toContain("Salve suas alterações");
+  expect(update).not.toHaveBeenCalled();
+  button("Salvei minhas alterações, atualizar")!.click();
+  expect(update).toHaveBeenCalledTimes(1);
 });

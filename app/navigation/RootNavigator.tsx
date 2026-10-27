@@ -14,7 +14,11 @@ export const RootNavigator = createNativeStackNavigator<RootNavigatorParamList>(
     initialRouteName: "Main",
     screens: {
       Main: { screen: TabNavigator, linking: "app" },
-      NotFound: { screen: NotFound, linking: "app/*" },
+      NotFound: {
+        screen: NotFound,
+        linking: "app/*",
+        options: { title: "Página não encontrada" },
+      },
     },
     screenOptions: { headerShown: false },
   },
