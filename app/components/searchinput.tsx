@@ -60,7 +60,7 @@ export function SearchInput({ onSearchTermChange }: SearchInputProps) {
 
   return (
     <Wrapper
-      className="relative mb-4 w-full flex-1"
+      className="relative w-full"
       direction="row"
       align="center"
     >

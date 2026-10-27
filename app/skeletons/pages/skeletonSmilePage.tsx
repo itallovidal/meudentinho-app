@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { SkeletonDentalMap } from "../components/SkeletonDentalMap";
@@ -25,26 +26,26 @@ export function SkeletonSmilePage({
     >
       <Header />
       <ScrollView
-        className="w-full px-6 py-4"
+        className="w-full"
         refreshControl={
           onRefresh ? (
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           ) : undefined
         }
       >
-        <Wrapper
+        <ScreenContent
           direction="column"
           align="center"
           justify="start"
           gap="gap-4"
-          className="mb-7"
+          className="my-4"
         >
           <SkeletonKidSelector />
           <SkeletonDentalMap />
           <SkeletonDentalTipCard />
           <SkeletonRecentEventsList />
           <SkeletonTeethExchangeCard />
-        </Wrapper>
+        </ScreenContent>
       </ScrollView>
     </Wrapper>
   );

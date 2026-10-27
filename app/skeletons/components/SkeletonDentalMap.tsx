@@ -29,7 +29,7 @@ export function SkeletonDentalMap({ error }: { error?: ReactNode }) {
       align="start"
       justify="start"
       gap="gap-4"
-      className="mx-5 my-2 w-full rounded-lg bg-base-100 p-4"
+      className="w-full rounded-xl bg-base-100 p-5"
     >
       <View className="w-full flex-row items-center justify-between gap-4">
         <Text variant="h4" className="text-primary-500">

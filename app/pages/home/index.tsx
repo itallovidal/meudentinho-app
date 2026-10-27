@@ -170,7 +170,7 @@ export function Home() {
         }
       >
         <ScreenContent
-          className="mb-4 mt-2 flex-1"
+          className="mb-4 mt-2"
           direction="column"
           align="start"
           justify="start"

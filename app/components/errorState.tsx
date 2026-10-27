@@ -18,7 +18,7 @@ export function ErrorState({
   retryLabel = "Tentar novamente",
 }: ErrorStateProps) {
   return (
-    <View className="w-full items-center rounded-3xl bg-base-100 px-6 pb-4 shadow-lg shadow-base-300">
+    <View className="w-full min-w-0 shrink-0 items-center rounded-3xl bg-base-100 px-6 pb-4 shadow-lg shadow-base-300">
       <Illustration
         source={require("../../assets/tryagain.png")}
         width={144}
