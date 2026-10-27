@@ -12,7 +12,7 @@ import {
   StackActions,
 } from "@react-navigation/native";
 import { TAB_ROOT_SCREEN, isTabName } from "./types";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
 import { HomeStack } from "./HomeStack";
@@ -64,20 +64,14 @@ export function TabBarIcon({
 }
 
 export function TabBarButton({ style, ...props }: BottomTabBarButtonProps) {
-  const [pressed, setPressed] = useState(false);
   return (
     <PlatformPressable
       {...props}
       android_ripple={{ color: "transparent" }}
-      onPressIn={(event) => {
-        setPressed(true);
-        props.onPressIn?.(event);
-      }}
-      onPressOut={(event) => {
-        setPressed(false);
-        props.onPressOut?.(event);
-      }}
-      style={[style, { backgroundColor: pressed ? colors.muted : "transparent" }]}
+      pressColor="transparent"
+      pressOpacity={1}
+      hoverEffect={{ color: "transparent" }}
+      style={[style, { backgroundColor: "transparent" }]}
     />
   );
 }
