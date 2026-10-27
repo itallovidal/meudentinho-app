@@ -31,8 +31,8 @@ import {
 import { THEME } from "@/lib/theme";
 
 const colors = THEME.light;
-const focusedColor = colors.primary400;
-const unfocusedColor = colors.base500;
+const focusedColor = colors.primary;
+const unfocusedColor = colors.mutedForeground;
 
 export type TabNavigatorRouteParams = {
   Home: undefined;
@@ -77,7 +77,7 @@ export function TabBarButton({ style, ...props }: BottomTabBarButtonProps) {
         setPressed(false);
         props.onPressOut?.(event);
       }}
-      style={[style, { opacity: pressed ? 0.6 : 1 }]}
+      style={[style, { backgroundColor: pressed ? colors.muted : "transparent" }]}
     />
   );
 }
@@ -263,8 +263,8 @@ export const TabNavigator = createBottomTabNavigator<TabNavigatorRouteParams>({
   },
   screenOptions: {
     headerShown: false,
-    tabBarActiveTintColor: colors.primary400,
-    tabBarInactiveTintColor: colors.base500,
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: colors.mutedForeground,
     tabBarIconStyle: { width: 64 },
     tabBarButton: (props) => <TabBarButton {...props} />,
   },
