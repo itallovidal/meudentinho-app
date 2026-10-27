@@ -10,7 +10,7 @@ const Input = forwardRef<
     <TextInput
       ref={ref}
       className={cn(
-        "dark:bg-input/30 border-sm bg-base-200 text-base-900 flex h-14 w-full min-w-0 flex-row items-center rounded-md border border-base-200 px-3 py-2 text-base leading-5 shadow-sm shadow-black/5 sm:h-9",
+        "flex h-14 w-full min-w-0 flex-row items-center rounded-md border border-base-200 bg-base-200 px-3 py-2 text-base leading-5 text-base-900 shadow-sm shadow-black/5 dark:bg-input/30",
         props.editable === false &&
           cn(
             "opacity-50",
@@ -20,11 +20,11 @@ const Input = forwardRef<
           ),
         Platform.select({
           web: cn(
-            "placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground outline-none transition-[color,box-shadow] md:text-sm",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-            "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+            "outline-none transition-[color,box-shadow] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm",
+            "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring",
+            "aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/20 dark:aria-[invalid=true]:ring-destructive/40",
           ),
-          native: "placeholder:text-muted-foreground/50",
+          native: "placeholder:text-muted-foreground",
         }),
         className,
       )}

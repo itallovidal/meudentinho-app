@@ -123,7 +123,7 @@ export function RegisterKidForm({
           style: {
             width: "100%",
           },
-          className: "flex-grow-1",
+          className: "grow",
         }}
       />
 
