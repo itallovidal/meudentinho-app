@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { loginReturnPath } from "@/navigation/linking";
 import { useContext, useState } from "react";
 import {
@@ -217,8 +218,8 @@ export function SmileHistory() {
             />
           }
         >
-          <Wrapper
-            className="mx-6 my-4"
+          <ScreenContent
+            className="my-4"
             direction="column"
             align="center"
             justify="start"
@@ -320,7 +321,7 @@ export function SmileHistory() {
             )}
 
             {!isPending && !isLoadingError && renderFooter()}
-          </Wrapper>
+          </ScreenContent>
         </ScrollView>
       </SessionGate>
 

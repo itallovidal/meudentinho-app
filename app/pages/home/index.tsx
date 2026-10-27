@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { useContext, useState } from "react";
 import { ApiError } from "@/types/domain";
 import { RefreshControl, ScrollView } from "react-native";
@@ -168,8 +169,8 @@ export function Home() {
           />
         }
       >
-        <Wrapper
-          className="mx-6 mb-4 mt-2 flex-1"
+        <ScreenContent
+          className="mb-4 mt-2 flex-1"
           direction="column"
           align="start"
           justify="start"
@@ -275,7 +276,7 @@ export function Home() {
               fromTab="Home"
             />
           </Wrapper>
-        </Wrapper>
+        </ScreenContent>
       </ScrollView>
     </Wrapper>
   );

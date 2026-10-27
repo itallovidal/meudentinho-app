@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { Header } from "@/components/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrapper } from "@/components/wrapper";
@@ -15,8 +16,8 @@ export function SkeletonArticlePage() {
     >
       <Header hasBackButton />
 
-      <Wrapper
-        className="mx-8 flex-1 bg-base-100"
+      <ScreenContent
+        className="flex-1 bg-base-100"
         direction="column"
         align="start"
         justify="start"
@@ -47,7 +48,7 @@ export function SkeletonArticlePage() {
         <SkeletonText variant="p" />
         <SkeletonText variant="large" />
         <SkeletonText variant="default" />
-      </Wrapper>
+      </ScreenContent>
     </Wrapper>
   );
 }

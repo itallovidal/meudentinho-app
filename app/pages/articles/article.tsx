@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { ArticleContent } from "@/components/article/articleContent";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
@@ -167,8 +168,8 @@ export function Article() {
             />
           }
         >
-          <Wrapper
-            className="mx-6 flex-1 bg-base-100"
+          <ScreenContent
+            className="flex-1 bg-base-100"
             direction="column"
             align="start"
             justify="start"
@@ -192,7 +193,7 @@ export function Article() {
               imageCoverURL={article.imageCoverURL}
               content={article.content}
             />
-          </Wrapper>
+          </ScreenContent>
         </ScrollView>
 
         {hydrated && user?.isAdmin && (

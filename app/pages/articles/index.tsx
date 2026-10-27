@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import {
   type ComponentRef,
   useCallback,
@@ -129,8 +130,8 @@ export function Index() {
             />
           }
         >
-          <Wrapper
-            className="mx-6 my-4 flex-1"
+          <ScreenContent
+            className="my-4 flex-1"
             direction="column"
             align="start"
             justify="start"
@@ -179,7 +180,7 @@ export function Index() {
                 onRetry={() => void onRefresh()}
               />
             )}
-          </Wrapper>
+          </ScreenContent>
         </ScrollView>
 
         {hydrated && user?.isAdmin && (

@@ -1,3 +1,4 @@
+import { ScreenContent } from "@/components/screenContent";
 import { loginReturnPath } from "@/navigation/linking";
 import { useToothPredictionAlerts } from "@/hooks/useToothPredictionAlerts";
 import { useContext, useMemo, useState } from "react";
@@ -385,8 +386,8 @@ export function Smile() {
             />
           }
         >
-          <Wrapper
-            className="mx-6 my-4"
+          <ScreenContent
+            className="my-4"
             direction="column"
             align="center"
             justify="start"
@@ -406,7 +407,7 @@ export function Smile() {
             />
             <SkeletonDentalTipCard />
             <SkeletonRecentEventsList />
-          </Wrapper>
+          </ScreenContent>
         </ScrollView>
       </Wrapper>
     );
@@ -429,8 +430,8 @@ export function Smile() {
           />
         }
       >
-        <Wrapper
-          className="mx-6 my-4"
+        <ScreenContent
+          className="my-4"
           direction="column"
           align="center"
           justify="start"
@@ -547,7 +548,7 @@ export function Smile() {
               />
             </>
           )}
-        </Wrapper>
+        </ScreenContent>
       </ScrollView>
 
       <ToothEventModal {...editor.modalProps} />
