@@ -119,29 +119,10 @@ export function Article() {
 
   if (isLoadingError) {
     return (
-      <Wrapper
-        className="flex-1 bg-base-100"
-        direction="column"
-        align="start"
-        justify="start"
-        gap="gap-0"
-      >
-        <Header hasBackButton />
-
-        <Wrapper
-          className="flex-1 px-6"
-          direction="column"
-          align="center"
-          justify="center"
-          gap="gap-4"
-        >
-          <ErrorState
-            title="Não foi possível carregar o artigo"
-            message="Verifique sua conexão e tente novamente."
-            onRetry={handleRefresh}
-          />
-        </Wrapper>
-      </Wrapper>
+      <SkeletonArticlePage
+        errorMessage="Verifique sua conexão e tente novamente."
+        onRetry={handleRefresh}
+      />
     );
   }
 
@@ -188,6 +169,7 @@ export function Article() {
 
             <ArticleContent
               title={article.title}
+              summary={article.summary}
               categories={article.categories}
               readingTime={article.readingTime}
               imageCoverURL={article.imageCoverURL}

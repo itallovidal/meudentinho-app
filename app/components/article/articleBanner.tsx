@@ -1,4 +1,5 @@
-import { Image, Platform, Pressable } from "react-native";
+import { RemoteImage } from "@/components/remoteImage";
+import { Platform, Pressable } from "react-native";
 import { ClockIcon } from "phosphor-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -51,9 +52,9 @@ export function ArticleBanner({
         direction="column"
         className="relative h-60 w-full overflow-hidden rounded-lg bg-base-200"
       >
-        <Image
-          source={{ uri: imageSrc }}
-          className="h-60 w-full rounded-lg"
+        <RemoteImage
+          uri={imageSrc}
+          className="h-60 w-full overflow-hidden rounded-lg"
           accessibilityLabel={`Capa do artigo: ${title}`}
         />
         <LinearGradient

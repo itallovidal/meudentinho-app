@@ -327,6 +327,9 @@ it("opens a full article preview with current form values without submitting", a
     categories: valid.categories,
     readingTime: 1,
   });
+  expect(renderer.root.findByType("ArticleContent").props).not.toHaveProperty(
+    "summary",
+  );
   expect(submit).not.toHaveBeenCalled();
 });
 
@@ -438,4 +441,34 @@ it("keeps url editing open if the check is pressed with an invalid address", asy
     await publishButton().props.onPress();
   });
   expect(submit).not.toHaveBeenCalled();
+});
+
+it("requires an explicit single category when editing legacy multiple categories", async () => {
+  await act(async () => {
+    renderer.unmount();
+    renderer = create(
+      <ArticleForm
+        onSubmit={submit}
+        defaultValues={{ ...valid, categories: ["Antiga", "Cuidados"] }}
+      />,
+    );
+  });
+  await changeField("title", "Novo título do artigo");
+  await advance();
+  await act(async () => {
+    renderer.root.findByType("Image").props.onLoad();
+    await publishButton().props.onPress();
+  });
+  expect(submit).not.toHaveBeenCalled();
+  await act(async () => {
+    renderer.root
+      .findByType("PropsBadge")
+      .props.onPress({ id: "category", name: "Cuidados", isSelected: true });
+  });
+  await act(async () => {
+    await publishButton().props.onPress();
+  });
+  expect(submit).toHaveBeenCalledWith(
+    expect.objectContaining({ categories: ["Cuidados"] }),
+  );
 });

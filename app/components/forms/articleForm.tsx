@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { FormInput } from "../formInput";
 import { ApiError } from "@/types/domain";
+import { normalizeArticleCategory } from "@/lib/articleUrls";
 import { articleSchema } from "@/lib/schemas/article";
 import type { ArticleCategory, ArticleRequestDTO } from "@/types/dtos/article";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -161,7 +162,19 @@ export function ArticleForm({
       });
       return;
     }
-    await onSubmit(data);
+    const category = categoriesData?.find(
+      (item) =>
+        normalizeArticleCategory(item.name) ===
+        normalizeArticleCategory(data.categories[0]),
+    );
+    if (!category) {
+      setError("categories", {
+        type: "validate",
+        message: "Escolha uma categoria disponível para salvar o artigo.",
+      });
+      return;
+    }
+    await onSubmit({ ...data, categories: [category.name] });
   }
 
   const {
@@ -183,7 +196,10 @@ export function ArticleForm({
     return categoriesData.map((cat) => ({
       id: cat.id,
       name: cat.name,
-      isSelected: currentCategories.includes(cat.name),
+      isSelected: currentCategories.some(
+        (name) =>
+          normalizeArticleCategory(name) === normalizeArticleCategory(cat.name),
+      ),
     }));
   }, [categoriesData, selectedCategories]);
 
@@ -194,25 +210,14 @@ export function ArticleForm({
   }) {
     const currentCategories = getValues("categories") || [];
 
-    if (currentCategories.includes(category.name)) {
-      const filtered = currentCategories.filter(
-        (name) => name !== category.name,
-      );
-
-      setValue("categories", filtered, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    } else {
-      if (currentCategories.length >= MAX_CATEGORIES) {
-        return;
-      }
-
-      setValue("categories", [...currentCategories, category.name], {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
+    const selected =
+      currentCategories.length === MAX_CATEGORIES &&
+      normalizeArticleCategory(currentCategories[0]) ===
+        normalizeArticleCategory(category.name);
+    setValue("categories", selected ? [] : [category.name], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   }
 
   return (
@@ -286,6 +291,25 @@ export function ArticleForm({
               <Text className="text-xs leading-5 text-base-500">
                 Escolha uma categoria para o artigo.
               </Text>
+              {categoriesData &&
+                (selectedCategories.length > 1 ||
+                  selectedCategories.some(
+                    (name) =>
+                      !categories.some(
+                        (category) =>
+                          normalizeArticleCategory(category.name) ===
+                          normalizeArticleCategory(name),
+                      ),
+                  )) && (
+                  <Text
+                    accessibilityRole="alert"
+                    className="text-xs text-destructive"
+                  >
+                    Este artigo possui categorias antigas:{" "}
+                    {selectedCategories.join(", ")}. Escolha uma categoria
+                    disponível para salvar.
+                  </Text>
+                )}
               <View
                 pointerEvents={isSubmitting ? "none" : "auto"}
                 className="w-full"
@@ -464,7 +488,15 @@ export function ArticleForm({
       >
         {(dismiss) => (
           <>
-            {previewArticle && <ArticleContent {...previewArticle} />}
+            {previewArticle && (
+              <ArticleContent
+                title={previewArticle.title}
+                categories={previewArticle.categories}
+                readingTime={previewArticle.readingTime}
+                imageCoverURL={previewArticle.imageCoverURL}
+                content={previewArticle.content}
+              />
+            )}
             <Button
               variant="outline"
               onPress={dismiss}
