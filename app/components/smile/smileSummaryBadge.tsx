@@ -76,7 +76,7 @@ export function SmileSummaryBadge({
       <Text
         onTextLayout={Platform.OS === "android" ? handleTextLayout : undefined}
         className="shrink-0 text-sm font-bold"
-        style={{ color: style.stroke, width: textWidth }}
+        style={{ color: colors.primary800, width: textWidth }}
       >
         {text}
       </Text>

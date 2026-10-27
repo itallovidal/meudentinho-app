@@ -37,7 +37,7 @@ export function ToothAlertItem({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       accessibilityLabel={`Revisar ${toothDentitionLabel(milestone.toothType, milestone.dentition)}, ${dentitionLabel(milestone.dentition)}, ${archLabel(milestone.arch)}, ${sideLabel(milestone.side)}`}
-      className="gap-3 rounded-2xl border border-base-200 bg-base-100 p-4 active:opacity-70 disabled:opacity-50"
+      className="gap-3 rounded-2xl border border-base-200 bg-base-100 p-4 active:opacity-90 disabled:opacity-50"
     >
       <View className="flex-row items-start gap-3">
         <View
@@ -52,7 +52,7 @@ export function ToothAlertItem({
               <Text className="text-sm font-semibold leading-5 text-primary-800">
                 {toothDentitionLabel(milestone.toothType, milestone.dentition)}
               </Text>
-              <Text className="text-xs leading-[18px] text-primary-400">
+              <Text className="text-xs leading-[18px] text-primary">
                 {dentitionLabel(milestone.dentition)} ·{" "}
                 {archLabel(milestone.arch)} · {sideLabel(milestone.side)}
               </Text>
@@ -68,14 +68,14 @@ export function ToothAlertItem({
             color={colors.primary400}
             weight="regular"
           />
-          <Text className="flex-1 text-xs leading-[18px] text-primary-400">
+          <Text className="flex-1 text-xs leading-[18px] text-primary">
             Limite estimado: {formatDatePtBR(milestone.limitDate ?? "")}
           </Text>
         </View>
         {snoozedUntil && (
           <View className="flex-row items-center gap-2">
             <ClockIcon size={15} color={colors.primary400} />
-            <Text className="flex-1 text-xs leading-[18px] text-primary-400">
+            <Text className="flex-1 text-xs leading-[18px] text-primary">
               Adiado até{" "}
               {new Date(snoozedUntil).toLocaleString("pt-BR", {
                 dateStyle: "short",

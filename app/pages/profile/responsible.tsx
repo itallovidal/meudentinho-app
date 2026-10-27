@@ -302,7 +302,7 @@ export function Responsible() {
           <Text variant="h4" className="text-destructive">
             Zona de perigo
           </Text>
-          <Text className="mt-1 text-sm text-base-500">
+          <Text className="mt-1 text-sm text-muted-foreground">
             Excluir sua conta apaga todos os dependentes e o histórico. Esta
             ação é irreversível.
           </Text>

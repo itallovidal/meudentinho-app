@@ -84,7 +84,7 @@ export function ToothEventCard({
             >
               {String(date.getDate()).padStart(2, "0")}
             </Text>
-            <Text className="mt-1 text-xs uppercase text-base-500">
+            <Text className="mt-1 text-xs uppercase text-muted-foreground">
               {month}
             </Text>
           </>
@@ -105,7 +105,7 @@ export function ToothEventCard({
         >
           {title}
         </Text>
-        <Text className="text-xs text-base-500">{position}</Text>
+        <Text className="text-xs text-muted-foreground">{position}</Text>
         <View className="flex-row items-center gap-2">
           <ToothSVG
             viewBox={LEGEND_TOOTH.viewBox}
@@ -119,7 +119,7 @@ export function ToothEventCard({
           />
           <Text
             className={cn(
-              "flex-1 text-base-500",
+              "flex-1 text-muted-foreground",
               size === "small" ? "text-xs" : "text-sm",
             )}
           >
@@ -127,7 +127,7 @@ export function ToothEventCard({
           </Text>
         </View>
         {event.note ? (
-          <Text className="text-xs text-base-500" numberOfLines={2}>
+          <Text className="text-xs text-muted-foreground" numberOfLines={2}>
             {event.note}
           </Text>
         ) : null}

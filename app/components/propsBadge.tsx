@@ -40,7 +40,7 @@ export function PropsBadge({
         gap="gap-2"
         className={` ${className || (wrap ? " flex-wrap " : " flex-nowrap ")} w-full`}
       >
-        <Text className="text-base-500">Erro ao carregar as informações.</Text>
+        <Text className="text-muted-foreground">Erro ao carregar as informações.</Text>
         <Button variant="outline" onPress={error.onPress}>
           <Text>Tentar novamente</Text>
         </Button>

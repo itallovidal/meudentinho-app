@@ -28,7 +28,7 @@ export function ErrorState({
       <Text className="mb-2 text-center text-2xl font-extrabold text-primary-800">
         {title}
       </Text>
-      <Text className="mb-4 text-center text-base text-base-500">
+      <Text className="mb-4 text-center text-base text-muted-foreground">
         {message}
       </Text>
       {onRetry && (

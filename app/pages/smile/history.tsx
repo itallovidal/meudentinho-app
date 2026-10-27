@@ -142,14 +142,14 @@ export function SmileHistory() {
     }
     if (isFetchingNextPage) {
       return (
-        <Text className="py-2 text-center text-sm text-base-500">
+        <Text className="py-2 text-center text-sm text-muted-foreground">
           Carregando mais registros...
         </Text>
       );
     }
     if (!hasNextPage && events.length > 0) {
       return (
-        <Text className="py-2 text-center text-sm text-base-500">
+        <Text className="py-2 text-center text-sm text-muted-foreground">
           Você chegou ao fim do histórico
         </Text>
       );
@@ -236,7 +236,7 @@ export function SmileHistory() {
                   Histórico de registros
                 </Text>
                 {!isPending && !isLoadingError && (
-                  <Text className="text-sm text-base-500">
+                  <Text className="text-sm text-muted-foreground">
                     {total === 1 ? "1 registro" : `${total} registros`}
                   </Text>
                 )}
@@ -291,7 +291,7 @@ export function SmileHistory() {
                 align="center"
                 justify="center"
               >
-                <Text className="text-center text-base-500">
+                <Text className="text-center text-muted-foreground">
                   Nenhum registro ainda. Os eventos aparecem aqui conforme forem
                   cadastrados no mapa.
                 </Text>

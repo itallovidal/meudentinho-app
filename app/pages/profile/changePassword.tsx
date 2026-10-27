@@ -188,7 +188,7 @@ export function ChangePassword() {
           <Text className="mt-4 text-center text-2xl font-bold">
             Alterar Senha
           </Text>
-          <Text className="mb-8 mt-1 text-center text-muted">
+          <Text className="mb-8 mt-1 text-center text-muted-foreground">
             Crie uma nova senha de acesso forte e segura.
           </Text>
         </View>
@@ -218,7 +218,7 @@ export function ChangePassword() {
           revealOnInput
         />
 
-        <Text className="mb-8 text-sm text-muted">
+        <Text className="mb-8 text-sm text-muted-foreground">
           • Mínimo de 8 caracteres
         </Text>
 

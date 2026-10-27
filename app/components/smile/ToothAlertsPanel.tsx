@@ -132,7 +132,7 @@ export function ToothAlertsPanel({
               accessibilityLabel={`${category.title}: ${category.items.length}`}
               trailing={
                 <View className="shrink-0 flex-row items-center gap-1">
-                  <Text className="text-sm font-semibold text-primary-400">
+                  <Text className="text-sm font-semibold text-primary">
                     {category.items.length}
                   </Text>
                   <CaretRightIcon
@@ -143,7 +143,7 @@ export function ToothAlertsPanel({
                 </View>
               }
             >
-              <Text className="text-xs leading-5 text-primary-400">
+              <Text className="text-xs leading-5 text-primary">
                 {category.description}
               </Text>
             </Card>

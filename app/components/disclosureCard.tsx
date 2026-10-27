@@ -31,7 +31,7 @@ export function DisclosureCard({
   return (
     <View className="w-full gap-3 rounded-2xl border border-base-200 bg-base-100 p-4">
       <SectionHeader title={title} trailing={badge} />
-      <Text className="text-xs leading-5 text-primary-400">{description}</Text>
+      <Text className="text-xs leading-5 text-primary">{description}</Text>
       <Button
         variant="outline"
         onPress={onToggle}

@@ -50,7 +50,7 @@ export function PasswordSheetForm({
   return (
     <View className="w-full gap-4">
       {description ? (
-        <Text className="text-base text-base-500">{description}</Text>
+        <Text className="text-base text-muted-foreground">{description}</Text>
       ) : null}
 
       <PasswordField

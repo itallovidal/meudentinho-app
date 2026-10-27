@@ -31,7 +31,7 @@ export function KidCard({ kid, onPress }: Props) {
   return (
     <TouchableOpacity
       onPress={() => onPress(kid)}
-      activeOpacity={0.7}
+      activeOpacity={0.9}
       className="w-full flex-row items-center gap-4 rounded-2xl bg-base-100 px-5 py-4 shadow-md shadow-base-300"
     >
       <View className="h-14 w-14 shrink-0 items-center justify-center rounded-full bg-base-300">
@@ -42,12 +42,12 @@ export function KidCard({ kid, onPress }: Props) {
           {kid.name}
         </Text>
         {subtitle ? (
-          <Text className="text-sm text-base-500" numberOfLines={1}>
+          <Text className="text-sm text-muted-foreground" numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
       </View>
-      <CaretRightIcon size={20} color={colors.base500} weight="regular" />
+      <CaretRightIcon size={20} color={colors.mutedForeground} weight="regular" />
     </TouchableOpacity>
   );
 }

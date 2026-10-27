@@ -68,7 +68,7 @@ export function BirthDateInput({
       gap="gap-2"
     >
       <Text
-        className="text-xs font-semibold uppercase tracking-wide text-primary-400"
+        className="text-xs font-semibold uppercase tracking-wide text-primary"
         {...labelProps}
       >
         {label}
@@ -87,7 +87,7 @@ export function BirthDateInput({
           pointerEvents="none"
           className="absolute bottom-0 right-3 top-0 justify-center"
         >
-          <CalendarBlankIcon size={20} color={colors.base500} weight="bold" />
+          <CalendarBlankIcon size={20} color={colors.mutedForeground} weight="bold" />
         </View>
       </View>
       {displayedError ? (

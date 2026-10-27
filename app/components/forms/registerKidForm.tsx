@@ -115,7 +115,7 @@ export function RegisterKidForm({
         label="Nome do dependente"
         labelProps={{
           className:
-            "mb-1 text-xs font-semibold uppercase tracking-wide text-primary-400",
+            "mb-1 text-xs font-semibold uppercase tracking-wide text-primary",
         }}
         inputProps={{
           placeholder: "Ex: Lucas Silva",
@@ -230,7 +230,7 @@ export function RegisterKidForm({
       ) : null}
 
       {submitError && (
-        <Text className="text-red-600">{submitError.message}</Text>
+        <Text className="text-destructive">{submitError.message}</Text>
       )}
 
       <Button

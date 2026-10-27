@@ -485,10 +485,10 @@ export function DentalMap({
       <View className="self-center" style={{ width: archWidth }}>
         {title === "Inferior" && renderOpenArch(right, left)}
         <Wrapper direction="row" justify="between" className="mb-1 w-full">
-          <Text className="text-xs font-bold text-base-500">
+          <Text className="text-xs font-bold text-muted-foreground">
             {`${title} · Direito`}
           </Text>
-          <Text className="text-xs font-bold text-base-500">
+          <Text className="text-xs font-bold text-muted-foreground">
             {`${title} · Esquerdo`}
           </Text>
         </Wrapper>
@@ -590,7 +590,7 @@ export function DentalMap({
                       <Text className="text-sm font-semibold text-base-600">
                         {entry.label}
                       </Text>
-                      <Text className="text-xs text-base-500">
+                      <Text className="text-xs text-muted-foreground">
                         {entry.description}
                       </Text>
                     </View>

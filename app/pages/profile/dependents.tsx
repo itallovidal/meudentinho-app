@@ -101,7 +101,7 @@ export function Dependents() {
                   Dependentes
                 </Text>
                 <Text
-                  className={`text-muted ${isEmptyState ? "text-center" : ""}`}
+                  className={`text-muted-foreground ${isEmptyState ? "text-center" : ""}`}
                 >
                   {isEmptyState
                     ? "Adicione o primeiro dependente para começar."

@@ -39,7 +39,7 @@ export function ArticleFeedFooter({
           </Button>
         </>
       ) : hasArticles ? (
-        <Text className="text-sm text-base-500">
+        <Text className="text-sm text-muted-foreground">
           Você chegou ao fim dos artigos
         </Text>
       ) : null}

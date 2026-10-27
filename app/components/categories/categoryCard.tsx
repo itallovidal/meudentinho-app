@@ -15,7 +15,7 @@ export function CategoryCard({ category, onPress }: Props) {
   return (
     <TouchableOpacity
       onPress={() => onPress(category)}
-      activeOpacity={0.7}
+      activeOpacity={0.9}
       accessibilityRole="button"
       accessibilityLabel={`Editar categoria ${category.name}`}
       accessibilityHint="Abre o formulário de edição"
@@ -28,9 +28,9 @@ export function CategoryCard({ category, onPress }: Props) {
         <Text className="text-lg font-bold text-primary-500" numberOfLines={1}>
           {category.name}
         </Text>
-        <Text className="text-sm text-base-500">Toque para editar</Text>
+        <Text className="text-sm text-muted-foreground">Toque para editar</Text>
       </View>
-      <CaretRightIcon size={20} color={colors.base500} weight="regular" />
+      <CaretRightIcon size={20} color={colors.mutedForeground} weight="regular" />
     </TouchableOpacity>
   );
 }

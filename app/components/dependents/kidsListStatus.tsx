@@ -40,7 +40,7 @@ export function KidsListStatus({
         <Text className="mb-2 text-center text-lg font-bold">
           Sessão expirada
         </Text>
-        <Text className="mb-5 text-center text-base-500">
+        <Text className="mb-5 text-center text-muted-foreground">
           Faça login novamente para gerenciar os dependentes.
         </Text>
         <Button onPress={onLoginAgain} className="h-12">
@@ -70,7 +70,7 @@ export function KidsListStatus({
         <Text className="mb-2 text-center text-lg font-bold">
           Nenhum dependente cadastrado
         </Text>
-        <Text className="text-center text-base-500">
+        <Text className="text-center text-muted-foreground">
           Toque no botão + para adicionar o primeiro dependente.
         </Text>
       </View>

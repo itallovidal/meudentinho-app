@@ -145,7 +145,7 @@ export function Signup() {
             <Text className="mb-0" variant={"h2"}>
               Crie sua conta
             </Text>
-            <Text className="mb-6 mt-0 text-muted">
+            <Text className="mb-6 mt-0 text-muted-foreground">
               Acompanhe a saúde bucal do seu filho com a tecnologia e o carinho
               que ele merece.
             </Text>
@@ -186,7 +186,7 @@ export function Signup() {
               <Text className="mb-0" variant={"h2"}>
                 Bem vindo à família
               </Text>
-              <Text className="mb-6 mt-0 text-muted">
+              <Text className="mb-6 mt-0 text-muted-foreground">
                 Preencha os dados abaixo para começar o acompanhamento.
               </Text>
             </Wrapper>

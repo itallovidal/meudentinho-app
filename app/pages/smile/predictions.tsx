@@ -297,7 +297,7 @@ export function SmilePredictions() {
                 align="center"
                 justify="center"
               >
-                <Text className="text-center text-base-500">
+                <Text className="text-center text-muted-foreground">
                   Este dependente não foi encontrado na sua conta.
                 </Text>
               </Wrapper>
@@ -312,7 +312,7 @@ export function SmilePredictions() {
                     align="center"
                     justify="center"
                   >
-                    <Text className="text-center text-base-500">
+                    <Text className="text-center text-muted-foreground">
                       {birthDate
                         ? "Nenhuma previsão futura nas referências avaliadas. Consulte os registros para revisar e o histórico incompleto."
                         : "Informe a data de nascimento do dependente para calcular as previsões."}
@@ -345,7 +345,7 @@ export function SmilePredictions() {
                         <Text variant="h4" className="text-primary-500">
                           Próximos marcos
                         </Text>
-                        <Text className="text-sm text-base-500">
+                        <Text className="text-sm text-muted-foreground">
                           Estas datas são estimativas com base na idade e na
                           cronologia média de erupção. Elas não substituem a
                           avaliação de um dentista.
@@ -373,17 +373,17 @@ export function SmilePredictions() {
                                   className={`rounded-full px-2 py-0.5 ${prediction.status === "current" ? "bg-primary-100" : "bg-base-200"}`}
                                 >
                                   <Text
-                                    className={`text-[10px] font-bold uppercase tracking-wide ${prediction.status === "current" ? "text-primary-800" : "text-base-500"}`}
+                                    className={`text-[10px] font-bold uppercase tracking-wide ${prediction.status === "current" ? "text-primary-800" : "text-muted-foreground"}`}
                                   >
                                     {PREDICTION_STATUS_LABEL[prediction.status]}
                                   </Text>
                                 </View>
                               </View>
-                              <Text className="text-xs font-medium text-primary-400">
+                              <Text className="text-xs font-medium text-primary">
                                 {`${formatMonthWindow(prediction.windowStart, prediction.windowEnd)} · ${prediction.pendingSides === 1 ? "1 lado pendente" : `${prediction.pendingSides} lados pendentes`}`}
                               </Text>
                               <Text
-                                className="text-xs leading-4 text-base-400"
+                                className="text-xs leading-4 text-muted-foreground"
                                 numberOfLines={2}
                               >
                                 {prediction.status === "current"

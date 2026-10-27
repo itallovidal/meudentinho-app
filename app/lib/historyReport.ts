@@ -173,6 +173,7 @@ export function buildHistoryReportHtml(input: HistoryReportInput): string {
   <style>
     * { box-sizing: border-box; }
     body {
+      background-color: ${colors.background};
       margin: 0;
       padding: 32px;
       color: ${colors.base700};
@@ -217,7 +218,7 @@ export function buildHistoryReportHtml(input: HistoryReportInput): string {
     }
     thead th {
       border-bottom: 2px solid ${colors.base300};
-      color: ${colors.base500};
+      color: ${colors.mutedForeground};
       font-size: 10px;
       letter-spacing: 0.06em;
       padding: 8px;
@@ -234,13 +235,13 @@ export function buildHistoryReportHtml(input: HistoryReportInput): string {
     .empty {
       border: 1px dashed ${colors.base300};
       border-radius: 12px;
-      color: ${colors.base500};
+      color: ${colors.mutedForeground};
       font-size: 13px;
       padding: 24px;
       text-align: center;
     }
     footer {
-      color: ${colors.base400};
+      color: ${colors.mutedForeground};
       font-size: 10px;
       margin-top: 24px;
     }

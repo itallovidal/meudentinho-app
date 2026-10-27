@@ -30,7 +30,7 @@ export function SessionNotice({
       <Text variant="h4" className="text-center text-primary-500">
         {title}
       </Text>
-      <Text className="text-center text-base-500">{message}</Text>
+      <Text className="text-center text-muted-foreground">{message}</Text>
       {actionLabel && onAction && (
         <Button onPress={onAction} className="w-full">
           <Text>{actionLabel}</Text>

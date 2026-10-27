@@ -53,7 +53,7 @@ export function CategoryForm({
         label="Nome da categoria"
         labelProps={{
           className:
-            "mb-1 text-xs font-semibold uppercase tracking-wide text-primary-400",
+            "mb-1 text-xs font-semibold uppercase tracking-wide text-primary",
         }}
         inputProps={{
           placeholder: "Ex: Higiene Oral",

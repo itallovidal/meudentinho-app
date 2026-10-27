@@ -156,7 +156,7 @@ export function ProfileForm({
       ) : null}
 
       {submitError && (
-        <Text className="text-red-600">{submitError.message}</Text>
+        <Text className="text-destructive">{submitError.message}</Text>
       )}
 
       <Separator className="my-4 max-w-5" />

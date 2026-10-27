@@ -51,7 +51,7 @@ export function SessionCard({
             {title}
           </Text>
           {illustration}
-          <Text className="text-center text-base-500">{message}</Text>
+          <Text className="text-center text-muted-foreground">{message}</Text>
         </Wrapper>
       ) : (
         <Wrapper
@@ -65,7 +65,7 @@ export function SessionCard({
             <Text variant="h4" className="text-primary-800">
               {title}
             </Text>
-            <Text className="text-base-500">{message}</Text>
+            <Text className="text-muted-foreground">{message}</Text>
           </Wrapper>
           {illustration}
         </Wrapper>

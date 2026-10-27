@@ -21,7 +21,7 @@ export function FeedbackSheet({
       onClose={onClose}
       header={<Text className="text-xl font-bold text-base-900">{title}</Text>}
     >
-      <Text className="text-base text-base-500">{message}</Text>
+      <Text className="text-base text-muted-foreground">{message}</Text>
       <Button onPress={onClose} className="w-full">
         <Text>{actionLabel}</Text>
       </Button>

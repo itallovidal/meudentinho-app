@@ -23,7 +23,7 @@ const MONTH_LABELS = [
 const MONTH_FULL_LABELS = new Intl.DateTimeFormat("pt-BR", { month: "long" });
 const WEEKDAY_LABELS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const BAND_RADIUS = 16;
-const PRESSED_OPACITY = 0.6;
+const PRESSED_OPACITY = 0.9;
 
 function pressedStyle(pressed: boolean) {
   return pressed ? { opacity: PRESSED_OPACITY } : undefined;
@@ -231,7 +231,7 @@ export function DentalCalendar({
         <View className="flex-row">
           {WEEKDAY_LABELS.map((label, index) => (
             <View key={index} className="flex-1 items-center py-1">
-              <Text className="text-xs font-semibold text-base-500">
+              <Text className="text-xs font-semibold text-muted-foreground">
                 {label}
               </Text>
             </View>
@@ -299,13 +299,13 @@ export function DentalCalendar({
           {hasWindowMark && (
             <View className="flex-row items-center gap-2">
               <View className="h-3 w-6 rounded-full bg-primary-100" />
-              <Text className="text-xs text-base-500">Janela de previsão</Text>
+              <Text className="text-xs text-muted-foreground">Janela de previsão</Text>
             </View>
           )}
           {hasRegisteredMark && (
             <View className="flex-row items-center gap-2">
               <View className="h-3 w-3 rounded-full bg-primary-500" />
-              <Text className="text-xs text-base-500">Marco registrado</Text>
+              <Text className="text-xs text-muted-foreground">Marco registrado</Text>
             </View>
           )}
         </View>

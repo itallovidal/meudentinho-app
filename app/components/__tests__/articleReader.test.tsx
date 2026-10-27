@@ -9,6 +9,7 @@ jest.mock("react-native-css-interop/jsx-runtime", () =>
 );
 jest.mock("react-native", () => ({
   View: "View",
+  ScrollView: "ScrollView",
   Image: "Image",
   Linking: { openURL: jest.fn() },
 }));
@@ -21,6 +22,9 @@ jest.mock("react-native-web/dist/exports/View", () => "View", {
   virtual: true,
 });
 jest.mock("react-native-web/dist/exports/Image", () => "Image", {
+  virtual: true,
+});
+jest.mock("react-native-web/dist/exports/ScrollView", () => "ScrollView", {
   virtual: true,
 });
 jest.mock("react-native-remark", () => ({
@@ -172,4 +176,23 @@ it("uses external links on the web and gives feedback for unsupported links", ()
   expect(showToast).toHaveBeenCalledWith(
     expect.stringContaining("não é permitido"),
   );
+});
+
+it("preserves code indentation and line breaks with the themed code renderer", () => {
+  act(() => {
+    renderer = create(<MarkdownContent content="Code" />);
+  });
+  const Code =
+    renderer.root.findByType("Markdown").props.customRenderers.CodeRenderer;
+  const value = "function example() {\n  return true;\n}";
+  act(() => {
+    renderer.update(<Code node={{ value, lang: "javascript" }} />);
+  });
+  const textNodes = renderer.root.findAllByType("Text");
+  expect(
+    textNodes.some(
+      (node: { props: { children: string; selectable?: boolean } }) =>
+        node.props.children === value && node.props.selectable,
+    ),
+  ).toBe(true);
 });
