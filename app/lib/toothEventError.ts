@@ -11,5 +11,11 @@ export function toothEventErrorMessage(
   if (isApiError(error) && error.code === "KID_NOT_LINKED_TO_PARENT") {
     return KID_NOT_LINKED_MESSAGE;
   }
+  if (isApiError(error) && error.code === "TOOTH_EVENT_OUT_OF_ORDER") {
+    return (
+      error.message ||
+      "A data não pode ser anterior ou posterior às datas das outras etapas deste dente."
+    );
+  }
   return errorMessage(error, fallback);
 }
