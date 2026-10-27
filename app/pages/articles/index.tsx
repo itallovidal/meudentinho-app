@@ -1,48 +1,42 @@
-import { ScreenContent } from "@/components/screenContent";
+import { useCallback, useContext, useRef, useState } from "react";
 import {
-  type ComponentRef,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from "react";
-import {
-  ScrollView,
+  FlatList,
   RefreshControl,
   ActivityIndicator,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   View,
 } from "react-native";
+import { ScreenContent } from "@/components/screenContent";
 import { Header } from "@/components/header";
 import { Wrapper } from "@/components/wrapper";
 import { useArticlesFeed } from "@/hooks/useArticlesFeed";
 import { useArticleSearch } from "@/hooks/useArticleSearch";
 import { errorMessage } from "@/lib/errorMessage";
-import { ArticleListSection } from "@/components/article/articleListSection";
+import { ArticleCard } from "@/components/article/articleCard";
 import { ArticleCategoriesFeed } from "@/components/article/articleCategoriesFeed";
+import { ArticleFeedFooter } from "@/components/article/articleFeedFooter";
 import { SearchInput } from "@/components/searchinput";
 import { ErrorState } from "@/components/errorState";
 import { Text } from "@/components/ui/text";
 import { FloatingActionButton } from "@/components/ui/floatingActionButton";
+import { SkeletonArticleListRender } from "@/skeletons/components/skeletonArticleListRender";
 import { UserContext } from "@/contexts/UserContext";
 import { THEME } from "@/lib/theme";
-import { ArticlesNavigationProp } from "@/navigation/ArticlesStack";
+import type { ArticlesNavigationProp } from "@/navigation/ArticlesStack";
+import type { ArticlePreviewDTO } from "@/types/dtos/article";
 import { useNavigation } from "@react-navigation/native";
 import { PlusIcon } from "phosphor-react-native";
-
-const LOAD_MORE_THRESHOLD = 200;
 
 export function Index() {
   const navigation = useNavigation<ArticlesNavigationProp>();
   const { user, hydrated } = useContext(UserContext)!;
-  const colors = THEME.light;
   const {
     latestArticle,
     categories,
     selectedCategory,
     selectCategory,
-    previews,
+    categoriesLoading,
+    categoriesError,
+    latestError,
     feed,
     isLoading,
     isError,
@@ -50,10 +44,8 @@ export function Index() {
     refetchError,
     onRefresh,
   } = useArticlesFeed();
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewportHeight, setViewportHeight] = useState(0);
-  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const listRef = useRef<FlatList<ArticlePreviewDTO>>(null);
   const {
     results: searchResults,
     isFetching: isSearching,
@@ -64,134 +56,137 @@ export function Index() {
 
   const handleSearchTermChange = useCallback((term: string) => {
     setSearchQuery(term);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
 
-  const searchErrorMessage = errorMessage(
-    searchError,
-    "Verifique sua conexão e tente novamente.",
-  );
+  const articles = isSearchActive
+    ? isSearching || searchError
+      ? []
+      : searchResults
+    : feed.articles;
+  const pending = isSearchActive ? isSearching : isLoading;
+  const failed = isSearchActive ? !!searchError : isError;
 
   function loadMore() {
-    if (isSearchActive) {
-      return;
-    }
-    feed.fetchNextPage();
-  }
-
-  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    if (
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - LOAD_MORE_THRESHOLD
-    ) {
-      loadMore();
+    if (!isSearchActive && !feed.isFetchNextPageError) {
+      feed.fetchNextPage();
     }
   }
 
   function handleSelectCategory(categoryId: string) {
     selectCategory(categoryId);
-    scrollRef.current?.scrollTo({ y: 0, animated: false });
-  }
-
-  function handleCreateArticle() {
-    navigation.navigate("NewArticle");
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }
 
   return (
-    <Wrapper
-      direction="column"
-      align="start"
-      justify="start"
-      className="flex-1 bg-base-200"
-    >
+    <Wrapper direction="column" className="flex-1 bg-base-200">
       <Header />
       <View className="relative w-full flex-1">
-        <ScrollView
-          ref={scrollRef}
+        <FlatList
+          ref={listRef}
+          data={articles}
+          keyExtractor={(article) => article.id}
           className="w-full flex-1"
-          onLayout={(event) =>
-            setViewportHeight(event.nativeEvent.layout.height)
-          }
-          onContentSizeChange={(_, height) => {
-            if (
-              !isSearchActive &&
-              viewportHeight > 0 &&
-              height <= viewportHeight
-            ) {
-              loadMore();
-            }
-          }}
-          onScroll={handleScroll}
-          scrollEventThrottle={200}
+          contentContainerStyle={{ paddingVertical: 16, paddingBottom: 96 }}
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={5}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing && !isLoading}
-              onRefresh={() => void onRefresh()}
+              onRefresh={() => {
+                void onRefresh();
+                if (isSearchActive) void retrySearch();
+              }}
             />
           }
-        >
-          <ScreenContent
-            className="my-4 flex-1"
-            direction="column"
-            align="start"
-            justify="start"
-            gap="gap-4"
-          >
-            <SearchInput onSearchTermChange={handleSearchTermChange} />
-
-            {isSearching && (
-              <Wrapper className="w-full items-center justify-center py-8">
-                <ActivityIndicator size="large" color="gray" />
-                <Text className="mt-2">Buscando artigos...</Text>
-              </Wrapper>
-            )}
-
-            {!isSearching && isSearchActive && !!searchError && (
-              <ErrorState
-                title="Não foi possível buscar os artigos"
-                message={searchErrorMessage}
-                onRetry={() => void retrySearch()}
-              />
-            )}
-
-            {!isSearching && isSearchActive && !searchError && (
-              <>
-                {searchResults.length === 0 ? (
-                  <Text className="py-8 text-center">
-                    {`Nenhum artigo encontrado para "${searchQuery}"`}
+          ListHeaderComponent={
+            <ScreenContent gap="gap-4" className="pb-4">
+              <SearchInput onSearchTermChange={handleSearchTermChange} />
+              {!isSearchActive && (
+                <ArticleCategoriesFeed
+                  latestArticle={latestArticle}
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={handleSelectCategory}
+                  categoriesLoading={categoriesLoading}
+                  categoriesError={categoriesError}
+                  latestError={latestError}
+                  refetchError={refetchError}
+                  onRetry={() => void onRefresh()}
+                />
+              )}
+            </ScreenContent>
+          }
+          renderItem={({ item }) => (
+            <ScreenContent className="pb-2">
+              <ArticleCard {...item} />
+            </ScreenContent>
+          )}
+          ListEmptyComponent={
+            <ScreenContent gap="gap-4">
+              {failed && (
+                <ErrorState
+                  title={
+                    isSearchActive
+                      ? "Não foi possível buscar os artigos"
+                      : "Não foi possível carregar os artigos"
+                  }
+                  message={errorMessage(
+                    searchError,
+                    "Verifique sua conexão e tente novamente.",
+                  )}
+                  onRetry={() =>
+                    void (isSearchActive ? retrySearch() : onRefresh())
+                  }
+                />
+              )}
+              {pending || failed ? (
+                <>
+                  {isSearchActive && pending && (
+                    <ActivityIndicator color={THEME.light.primary500} />
+                  )}
+                  <SkeletonArticleListRender showBanner={false} />
+                </>
+              ) : (
+                !(latestArticle && !selectedCategory && !isSearchActive) && (
+                  <Text className="w-full py-8 text-center text-base-500">
+                    {isSearchActive
+                      ? `Nenhum artigo encontrado para "${searchQuery}"`
+                      : selectedCategory
+                        ? "Nenhum artigo nesta categoria."
+                        : "Nenhum artigo disponível."}
                   </Text>
-                ) : (
-                  <ArticleListSection articles={searchResults} />
-                )}
-              </>
-            )}
-
-            {!isSearching && !isSearchActive && (
-              <ArticleCategoriesFeed
-                latestArticle={latestArticle}
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={handleSelectCategory}
-                previews={previews}
-                feed={feed}
-                isLoading={isLoading}
-                isError={isError}
-                refetchError={refetchError}
-                onRetry={() => void onRefresh()}
-              />
-            )}
-          </ScreenContent>
-        </ScrollView>
-
+                )
+              )}
+            </ScreenContent>
+          }
+          ListFooterComponent={
+            !isSearchActive && !isLoading && !isError ? (
+              <ScreenContent>
+                <ArticleFeedFooter
+                  isError={feed.isFetchNextPageError}
+                  isLoading={feed.isFetchingNextPage}
+                  hasNextPage={feed.hasNextPage}
+                  hasArticles={feed.articles.length > 0}
+                  onLoadMore={feed.fetchNextPage}
+                />
+              </ScreenContent>
+            ) : undefined
+          }
+        />
         {hydrated && user?.isAdmin && (
           <FloatingActionButton
             accessibilityLabel="Novo artigo"
-            onPress={handleCreateArticle}
+            onPress={() => navigation.navigate("NewArticle")}
             icon={
               <PlusIcon
                 size={24}
                 weight="bold"
-                color={colors.primaryForeground}
+                color={THEME.light.primaryForeground}
               />
             }
           />

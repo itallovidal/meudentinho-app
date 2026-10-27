@@ -9,7 +9,8 @@ export function useArticles() {
 
   const articlesQuery = useQuery({
     queryKey: HOME_ARTICLES_PAGE_KEY,
-    queryFn: () => getAllArticlePreview().then((res) => res.data),
+    queryFn: () =>
+      getAllArticlePreview({ page: 1, perPage: 5 }).then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     retry: retryQuery,
   });

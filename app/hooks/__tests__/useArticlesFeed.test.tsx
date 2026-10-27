@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ArticlePreviewDTO } from "@/types/dtos/article";
+import { ApiError } from "@/types/domain";
 import type { ResponsePayload } from "@/types/domain";
 import type { ArticlePreviewPageParams } from "@/api/article/getAllArticles";
 import { getAllArticlePreview } from "@/api/article/getAllArticles";
@@ -78,30 +79,17 @@ beforeEach(() => {
         total_pages: 1,
       });
     }
-    if (params.perPage === 4) {
-      if (params.category === CATEGORIES[0].name) {
-        return page(
-          [
+    return page(
+      params.page === 2
+        ? Array.from({ length: 5 }, (_, index) =>
+            article(`c${index + 21}`, [CATEGORIES[0].name]),
+          )
+        : [
             article("banner", [CATEGORIES[0].name]),
-            ...["a2", "a3", "a4"].map((id) =>
-              article(id, [CATEGORIES[0].name]),
+            ...Array.from({ length: 19 }, (_, index) =>
+              article(`c${index + 2}`, [CATEGORIES[0].name]),
             ),
           ],
-          { page: 1, per_page: 4, total: 4, total_pages: 1 },
-        );
-      }
-      return page(
-        ["b1", "b2", "b3"].map((id) => article(id, [CATEGORIES[1].name])),
-        { page: 1, per_page: 4, total: 3, total_pages: 1 },
-      );
-    }
-    return page(
-      [
-        article("banner", [CATEGORIES[0].name]),
-        ...Array.from({ length: 19 }, (_, index) =>
-          article(`c${index + 2}`, [CATEGORIES[0].name]),
-        ),
-      ],
       {
         page: (params.page ?? 1) as number,
         per_page: 20,
@@ -136,31 +124,47 @@ function renderFeed(cache: QueryClient) {
   };
 }
 
-it("keeps a global banner and lists five articles per category in Todos", async () => {
+it("loads Todos without a category filter and keeps legacy articles", async () => {
+  previewRequest.mockImplementation(async (params = {}) =>
+    page(
+      params.perPage === 1
+        ? [article("banner")]
+        : [
+            article("banner"),
+            article("orphan", ["Antiga"]),
+            article("lowercase", ["higiene oral"]),
+            article("uncategorized"),
+          ],
+      { page: 1, per_page: params.perPage ?? 20, total: 4, total_pages: 1 },
+    ),
+  );
   const cache = client();
   const feed = renderFeed(cache);
   await flush();
 
-  expect(feed.current.latestArticle?.id).toBe("banner");
-  expect(requests().some((params) => params.perPage === 1)).toBe(true);
-  for (const category of CATEGORIES) {
-    expect(
-      requests().some(
-        (params) => params.category === category.name && params.perPage === 4,
-      ),
-    ).toBe(true);
-  }
-
-  const byCategory = feed.current.previews.map((preview) => ({
-    id: preview.category.id,
-    articles: preview.articles.map((item) => item.id),
-  }));
-
-  expect(byCategory).toEqual([
-    { id: "cat-1", articles: ["a2", "a3", "a4"] },
-    { id: "cat-2", articles: ["b1", "b2", "b3"] },
+  expect(requests()).toContainEqual({ category: "", page: 1, perPage: 20 });
+  expect(requests().some((params) => params.category)).toBe(false);
+  expect(feed.current.feed.articles.map((item) => item.id)).toEqual([
+    "orphan",
+    "lowercase",
+    "uncategorized",
   ]);
 
+  feed.unmount();
+  cache.clear();
+});
+
+it("keeps Todos available when categories fail", async () => {
+  categoriesRequest.mockRejectedValue(
+    new ApiError("unavailable", "TIMEOUT", 408),
+  );
+  const cache = client();
+  const feed = renderFeed(cache);
+  await flush();
+
+  expect(feed.current.categoriesError).toBe(true);
+  expect(feed.current.isError).toBe(false);
+  expect(feed.current.feed.articles.length).toBeGreaterThan(0);
   feed.unmount();
   cache.clear();
 });
@@ -202,6 +206,23 @@ it("keeps the banner while paginating the selected category by twenty", async ()
     ),
   ).toBe(true);
 
+  expect(feed.current.feed.articles).toHaveLength(24);
+  feed.unmount();
+  cache.clear();
+});
+
+it("treats an empty catalog as empty data instead of a failed highlight", async () => {
+  previewRequest.mockResolvedValue(
+    page([], { page: 1, per_page: 20, total: 0, total_pages: 0 }),
+  );
+  const cache = client();
+  const feed = renderFeed(cache);
+  await flush();
+  expect(feed.current.latestArticle).toBeUndefined();
+  expect(feed.current.latestError).toBe(false);
+  expect(feed.current.isLoading).toBe(false);
+  expect(feed.current.isError).toBe(false);
+  expect(feed.current.feed.articles).toEqual([]);
   feed.unmount();
   cache.clear();
 });

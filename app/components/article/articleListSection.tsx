@@ -69,6 +69,11 @@ export function ArticleListSection({
           Dicas e Artigos
         </Text>
       )}
+      {!latestArticle && articles.length === 0 && (
+        <Text className="w-full py-8 text-center text-base-500">
+          Nenhum artigo disponível.
+        </Text>
+      )}
       <ArticleListRender
         latestArticle={latestArticle}
         articles={articles}
