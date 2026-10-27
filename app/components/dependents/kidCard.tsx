@@ -7,12 +7,13 @@ import { TouchableOpacity, View } from "react-native";
 
 interface Props {
   kid: KidResponseDTO;
+  referenceDate: Date;
   onPress: (kid: KidResponseDTO) => void;
 }
 
-function buildSubtitle(kid: KidResponseDTO): string {
+function buildSubtitle(kid: KidResponseDTO, referenceDate: Date): string {
   const parts: string[] = [];
-  const ageText = formatAgeFromBirthDate(kid.birthDate);
+  const ageText = formatAgeFromBirthDate(kid.birthDate, referenceDate);
   if (ageText) {
     parts.push(ageText);
   }
@@ -23,9 +24,9 @@ function buildSubtitle(kid: KidResponseDTO): string {
   return parts.join(" • ");
 }
 
-export function KidCard({ kid, onPress }: Props) {
+export function KidCard({ kid, referenceDate, onPress }: Props) {
   const colors = THEME.light;
-  const subtitle = buildSubtitle(kid);
+  const subtitle = buildSubtitle(kid, referenceDate);
   const initial = (kid.name.trim().charAt(0) || "?").toUpperCase();
 
   return (
@@ -47,7 +48,11 @@ export function KidCard({ kid, onPress }: Props) {
           </Text>
         ) : null}
       </View>
-      <CaretRightIcon size={20} color={colors.mutedForeground} weight="regular" />
+      <CaretRightIcon
+        size={20}
+        color={colors.mutedForeground}
+        weight="regular"
+      />
     </TouchableOpacity>
   );
 }

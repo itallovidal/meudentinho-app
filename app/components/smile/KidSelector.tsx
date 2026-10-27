@@ -12,6 +12,7 @@ export type KidOption = {
 
 type KidSelectorProps = {
   kids: KidOption[];
+  referenceDate: Date;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onOpen?: (id: string) => void;
@@ -20,6 +21,7 @@ type KidSelectorProps = {
 
 export function KidSelector({
   kids,
+  referenceDate,
   selectedId,
   onSelect,
   onOpen,
@@ -39,7 +41,7 @@ export function KidSelector({
         {kids.map((kid) => {
           const isSelected = kid.id === selectedId;
           const initial = (kid.name.trim().charAt(0) || "?").toUpperCase();
-          const age = formatAgeFromBirthDate(kid.birthDate);
+          const age = formatAgeFromBirthDate(kid.birthDate, referenceDate);
 
           return (
             <TouchableOpacity
@@ -65,9 +67,7 @@ export function KidSelector({
                   isSelected ? "bg-base-100" : "bg-muted",
                 )}
               >
-                <Text
-                  className="text-lg font-bold text-primary"
-                >
+                <Text className="text-lg font-bold text-primary">
                   {initial}
                 </Text>
               </View>

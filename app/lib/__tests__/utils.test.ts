@@ -1,6 +1,8 @@
 /// <reference types="jest" />
 import {
   ageInMonths,
+  calendarAgeInMonths,
+  formatAgeFromBirthDate,
   brDateToIsoKey,
   formatAgeMonthsFromBirthDate,
   localDateKeyToISO,
@@ -103,13 +105,62 @@ describe("formatAgeMonthsFromBirthDate", () => {
     expect(formatAgeMonthsFromBirthDate("2026-07-17")).toBe("3 meses");
   });
 
-  it("never reports a newborn as zero months", () => {
-    expect(formatAgeMonthsFromBirthDate("2026-10-17")).toBe("1 mês");
-    expect(formatAgeMonthsFromBirthDate("2026-10-10")).toBe("1 mês");
+  it("describes newborns as less than one month", () => {
+    expect(formatAgeMonthsFromBirthDate("2026-10-17")).toBe("menos de 1 mês");
+    expect(formatAgeMonthsFromBirthDate("2026-10-10")).toBe("menos de 1 mês");
   });
 
   it("returns null for invalid input", () => {
     expect(formatAgeMonthsFromBirthDate("")).toBeNull();
     expect(formatAgeMonthsFromBirthDate("not-a-date")).toBeNull();
+  });
+});
+
+describe("calendar age display", () => {
+  it.each([
+    ["2026-10-27", 0, "menos de 1 mês"],
+    ["2026-09-27", 1, "1 mês"],
+    ["2025-11-27", 11, "11 meses"],
+    ["2025-10-27", 12, "1 ano"],
+    ["2025-09-27", 13, "1 ano e 1 mês"],
+    ["2025-04-27", 18, "1 ano e 6 meses"],
+    ["2024-11-27", 23, "1 ano e 11 meses"],
+    ["2024-10-27", 24, "2 anos"],
+  ])("formats %s at midnight", (birth, months, label) => {
+    const reference = new Date("2026-10-27T00:00:00-03:00");
+    expect(calendarAgeInMonths(birth, reference)).toBe(months);
+    expect(formatAgeFromBirthDate(birth, reference)).toBe(label);
+  });
+
+  it.each([
+    ["2025-01-01", "2025-12-31", 11],
+    ["2025-01-01", "2026-01-01", 12],
+    ["2025-01-31", "2025-02-27", 0],
+    ["2025-01-31", "2025-02-28", 1],
+    ["2024-01-31", "2024-02-29", 1],
+    ["2024-02-29", "2025-02-27", 11],
+    ["2024-02-29", "2025-02-28", 12],
+    ["2024-02-29", "2028-02-28", 47],
+    ["2024-02-29", "2028-02-29", 48],
+    ["2025-01-31", "2025-03-30", 1],
+    ["2025-01-31", "2025-03-31", 2],
+  ])("uses calendar boundaries for %s on %s", (birth, today, months) => {
+    expect(
+      calendarAgeInMonths(birth, new Date(`${today}T00:00:00-03:00`)),
+    ).toBe(months);
+  });
+
+  it.each(["", "invalid", "2026-02-30", "2027-01-01"])(
+    "rejects invalid or future birth %s",
+    (birth) => {
+      const reference = new Date("2026-10-27T12:00:00-03:00");
+      expect(calendarAgeInMonths(birth, reference)).toBeNull();
+      expect(formatAgeFromBirthDate(birth, reference)).toBe("");
+      expect(formatAgeMonthsFromBirthDate(birth, reference)).toBeNull();
+    },
+  );
+
+  it("rejects an invalid reference date", () => {
+    expect(calendarAgeInMonths("2025-01-01", new Date(NaN))).toBeNull();
   });
 });

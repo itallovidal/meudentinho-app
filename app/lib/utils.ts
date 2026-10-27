@@ -181,8 +181,33 @@ export const MONTH_SHORT_NAMES_PT_BR = [
   "Dez",
 ];
 
-export function formatAgeFromBirthDate(birthDate: string): string {
-  const months = ageInMonths(birthDate);
+export function calendarAgeInMonths(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): number | null {
+  const birth = parseLocalDate(birthDate);
+  if (!birth || !Number.isFinite(referenceDate.getTime())) return null;
+  if (toLocalDateKey(birth) > toLocalDateKey(referenceDate)) return null;
+  const months =
+    (referenceDate.getFullYear() - birth.getFullYear()) * 12 +
+    referenceDate.getMonth() -
+    birth.getMonth();
+  const lastDay = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() + 1,
+    0,
+  ).getDate();
+  return (
+    months -
+    (referenceDate.getDate() < Math.min(birth.getDate(), lastDay) ? 1 : 0)
+  );
+}
+
+export function formatAgeFromBirthDate(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): string {
+  const months = calendarAgeInMonths(birthDate, referenceDate);
   if (months === null || Number.isNaN(months) || months < 0) {
     return "";
   }
@@ -194,15 +219,23 @@ export function formatAgeFromBirthDate(birthDate: string): string {
     return wholeMonths === 1 ? "1 mês" : `${wholeMonths} meses`;
   }
   const years = Math.floor(wholeMonths / 12);
+  const remainingMonths = wholeMonths % 12;
+  if (years === 1 && remainingMonths > 0) {
+    return `1 ano e ${remainingMonths === 1 ? "1 mês" : `${remainingMonths} meses`}`;
+  }
   return years === 1 ? "1 ano" : `${years} anos`;
 }
 
-export function formatAgeMonthsFromBirthDate(birthDate: string): string | null {
-  const months = ageInMonths(birthDate);
+export function formatAgeMonthsFromBirthDate(
+  birthDate: string,
+  referenceDate: Date = new Date(),
+): string | null {
+  const months = calendarAgeInMonths(birthDate, referenceDate);
   if (months === null || Number.isNaN(months) || months < 0) {
     return null;
   }
-  const wholeMonths = Math.max(1, Math.floor(months));
+  if (months < 1) return "menos de 1 mês";
+  const wholeMonths = Math.floor(months);
   return wholeMonths === 1 ? "1 mês" : `${wholeMonths} meses`;
 }
 
@@ -273,8 +306,7 @@ export function isAdultBirthDate(value: string): boolean {
   let age = today.getFullYear() - date.getFullYear();
   const hadBirthdayThisYear =
     today.getMonth() > date.getMonth() ||
-    (today.getMonth() === date.getMonth() &&
-      today.getDate() >= date.getDate());
+    (today.getMonth() === date.getMonth() && today.getDate() >= date.getDate());
   if (!hadBirthdayThisYear) {
     age -= 1;
   }

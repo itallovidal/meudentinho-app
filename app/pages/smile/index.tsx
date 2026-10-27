@@ -438,6 +438,7 @@ export function Smile() {
           gap="gap-4"
         >
           <KidSelector
+            referenceDate={alerts.referenceDate}
             kids={kids}
             selectedId={selectedKidId}
             onSelect={setSelectedKidId}
