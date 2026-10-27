@@ -1,7 +1,11 @@
 import { isToothEventDateUnknown } from "@/lib/toothIdentity";
 import { normalizePrimaryToothType } from "@/lib/toothIdentity";
 import { getChronology, type ChronologyGender } from "@/lib/toothChronology";
-import { parseLocalDate, toLocalDateKey } from "@/lib/utils";
+import {
+  calendarAgeInMonths,
+  parseLocalDate,
+  toLocalDateKey,
+} from "@/lib/utils";
 import type {
   Arch,
   Dentition,
@@ -80,6 +84,7 @@ export function buildToothMilestones({
   birthDate,
   events,
   gender = null,
+  prematureWeeks = null,
   referenceDate,
   trackingStartedAt = null,
 }: {
@@ -87,6 +92,7 @@ export function buildToothMilestones({
   birthDate: string | null;
   events: ToothEvent[];
   gender?: ChronologyGender | null;
+  prematureWeeks?: string | number | null;
   referenceDate: Date;
   trackingStartedAt?: string | null;
 }): ToothMilestone[] {
@@ -94,6 +100,13 @@ export function buildToothMilestones({
   if (!birth || !Number.isFinite(referenceDate.getTime())) return [];
   const today = toLocalDateKey(referenceDate);
   if (toLocalDateKey(birth) > today) return [];
+  // Idade corrigida (prematuridade): apoio ao desenvolvimento nos primeiros 24
+  // meses cronológicos. Estima-se em semanas (termo de 40 semanas) e desloca a
+  // data efetiva de nascimento. Não altera a data real nem as decisões de #32.
+  // Sem protocolo odontopediátrico aprovado, usa-se a orientação geral da AAP
+  // (idade corrigida até 2 anos); ver ADR dependent-registration.md.
+  if (gender !== "male" && gender !== "female") return [];
+  const effectiveBirth = correctedBirthDate(birth, prematureWeeks, referenceDate);
   const trackingDate = trackingStartedAt ? new Date(trackingStartedAt) : null;
   const trackingKey =
     trackingDate && Number.isFinite(trackingDate.getTime())
@@ -120,11 +133,11 @@ export function buildToothMilestones({
           const days =
             dentition === "primary" ? (info.deciduous?.limitDays ?? 0) : 0;
           const windowStart = toLocalDateKey(
-            dateAtDentalAge(birth, range.from),
+            dateAtDentalAge(effectiveBirth, range.from),
           );
           const expectedEnd = toLocalDateKey(
             dateAtDentalAge(
-              birth,
+              effectiveBirth,
               dentition === "primary" ? (range.limit ?? range.to) : range.to,
               days,
             ),
@@ -132,7 +145,7 @@ export function buildToothMilestones({
           const limitDate =
             toothType === "third_molar" || range.limit === null
               ? null
-              : toLocalDateKey(dateAtDentalAge(birth, range.limit, days));
+              : toLocalDateKey(dateAtDentalAge(effectiveBirth, range.limit, days));
           const mine =
             evidence.get(`${quadrant}:${toothType}:${dentition}`) ?? [];
           const eruption = mine.find((event) => event.eventType === "eruption");
@@ -150,7 +163,7 @@ export function buildToothMilestones({
             today >=
               toLocalDateKey(
                 dateAtDentalAge(
-                  birth,
+                  effectiveBirth,
                   getChronology(arch, "first_molar", side, gender)?.permanent
                     .from ?? info.permanent.from,
                 ),
@@ -229,4 +242,29 @@ export function partitionToothAlerts(
     else active.push(milestone);
   }
   return { active, historical, snoozed };
+}
+
+
+export function correctedBirthDate(
+  birth: Date,
+  prematureWeeks: string | number | null | undefined,
+  referenceDate: Date,
+): Date {
+  const weeks =
+    prematureWeeks == null
+      ? NaN
+      : typeof prematureWeeks === "string"
+        ? Number(prematureWeeks.trim())
+        : Number(prematureWeeks);
+  if (!Number.isFinite(weeks) || weeks <= 0 || weeks >= 40) {
+    return new Date(birth);
+  }
+  // idade corrigida só nos primeiros 24 meses cronológicos
+  const ageMonths = calendarAgeInMonths(toLocalDateKey(birth), referenceDate);
+  if (ageMonths === null || ageMonths >= 24) {
+    return new Date(birth);
+  }
+  const corrected = new Date(birth);
+  corrected.setDate(corrected.getDate() + Math.round((40 - weeks) * 7));
+  return corrected;
 }

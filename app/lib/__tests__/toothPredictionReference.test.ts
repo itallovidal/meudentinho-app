@@ -71,7 +71,7 @@ describe("PDF eruption reference", () => {
 
   it("predicts the primary predecessor at the premolar position and keeps molars permanent-only", () => {
     jest.setSystemTime(new Date("2026-10-22T12:00:00-03:00"));
-    const predictions = buildToothPredictions("2025-04-22", []);
+    const predictions = buildToothPredictions("2025-04-22", [], "male");
     expect(
       predictions.filter(
         (item) =>
@@ -98,7 +98,7 @@ describe("PDF eruption reference", () => {
 
   it("adds whole calendar months and source days to end-of-month births", () => {
     jest.setSystemTime(new Date("2025-11-30T12:00:00-03:00"));
-    const prediction = buildToothPredictions("2025-01-31", []).find(
+    const prediction = buildToothPredictions("2025-01-31", [], "male").find(
       (item) =>
         item.arch === "upper" &&
         item.toothType === "central_incisor" &&
@@ -115,7 +115,7 @@ describe("PDF eruption reference", () => {
 
   it("keeps the exact last limit day and removes the prediction the next day", () => {
     function hasUpperPrimaryIncisor() {
-      return buildToothPredictions("2025-01-31", []).some(
+      return buildToothPredictions("2025-01-31", [], "male").some(
         (item) =>
           item.arch === "upper" &&
           item.toothType === "central_incisor" &&
@@ -147,7 +147,7 @@ describe("PDF eruption reference", () => {
 
   it("starts the permanent period on the calendar birthday", () => {
     function status() {
-      return buildToothPredictions("2019-10-17", []).find(
+      return buildToothPredictions("2019-10-17", [], "male").find(
         (item) =>
           item.arch === "upper" &&
           item.toothType === "central_incisor" &&

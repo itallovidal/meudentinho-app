@@ -229,8 +229,15 @@ export function Smile() {
         events,
         kidGender,
         alerts.referenceDate,
+        selectedKidRecord?.prematureWeeks ?? null,
       ),
-    [kidBirthDate, kidGender, events, alerts.referenceDate],
+    [
+      kidBirthDate,
+      kidGender,
+      events,
+      alerts.referenceDate,
+      selectedKidRecord?.prematureWeeks,
+    ],
   );
 
   const editor = useToothEventEditor({
@@ -505,6 +512,7 @@ export function Smile() {
                 kidId={selectedKidId}
                 kidBirthDate={kidBirthDate}
                 kidGender={kidGender}
+                kidPrematureWeeks={selectedKidRecord?.prematureWeeks ?? null}
                 events={events}
                 referenceDate={alerts.referenceDate}
                 pendingMilestones={

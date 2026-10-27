@@ -1,5 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type {
+  Dentition,
+  Quadrant,
+  ToothEvent,
+  ToothEventType,
+  ToothType,
+} from "@/types/teeth";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -320,4 +327,121 @@ export function shortDisplayName(fullName: string): string {
   }
   const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
   return `${parts[0]} ${lastInitial}.`;
+}
+
+// Etapas do ciclo de um dente, na ordem de registro. Idêntico à API:
+// (decíduo nasceu, decíduo caiu, permanente nasceu, permanente caiu).
+// Terceiros molares e molares superiores entram só como permanentes.
+export function toothEventLifecycleStage(
+  dentition: Dentition,
+  eventType: ToothEventType,
+): number {
+  return (dentition === "permanent" ? 2 : 0) + (eventType === "exfoliation" ? 1 : 0);
+}
+
+function sameToothLifecycleChain(
+  toothType: ToothType,
+  left: Dentition,
+  right: Dentition,
+): boolean {
+  if (toothType === "first_molar" || toothType === "second_molar") {
+    return left === right;
+  }
+  return true;
+}
+
+function isToothEventDateUnknown(event: ToothEvent): boolean {
+  return event.recordKind === "presence" || event.recordKind === "undated";
+}
+
+function toothEventOccurrenceDay(value: string): string | null {
+  const key = eventDateKey(value);
+  return key || null;
+}
+
+function permanentHistoryIndependentForDateOrder(
+  events: ToothEvent[],
+  quadrant: Quadrant,
+  toothType: ToothType,
+): boolean {
+  return events.some(
+    (event) =>
+      event.quadrant === quadrant &&
+      event.toothType === toothType &&
+      event.dentition === "permanent" &&
+      event.eventType === "eruption" &&
+      (event.historyIncomplete === true ||
+        event.recordKind === "presence" ||
+        event.recordKind === "undated"),
+  );
+}
+
+export interface ToothEventDateOrderParams {
+  newDate: string;
+  newDentition: Dentition;
+  newEventType: ToothEventType;
+  newRecordKind?: ToothEvent["recordKind"];
+  quadrant: Quadrant;
+  toothType: ToothType;
+  events: ToothEvent[];
+  ignoreId?: string | null;
+}
+
+export function validateToothEventDateOrder(
+  params: ToothEventDateOrderParams,
+): string | null {
+  const {
+    newDate,
+    newDentition,
+    newEventType,
+    newRecordKind,
+    quadrant,
+    toothType,
+    events,
+    ignoreId,
+  } = params;
+
+  const newDay = toothEventOccurrenceDay(newDate);
+  if (!newDay) {
+    return null;
+  }
+  if (newRecordKind === "presence" || newRecordKind === "undated") {
+    return null;
+  }
+
+  const newStage = toothEventLifecycleStage(newDentition, newEventType);
+  const independent = permanentHistoryIndependentForDateOrder(events, quadrant, toothType);
+
+  for (const other of events) {
+    if (other.quadrant !== quadrant || other.toothType !== toothType) {
+      continue;
+    }
+    if (!sameToothLifecycleChain(toothType, newDentition, other.dentition)) {
+      continue;
+    }
+    if (ignoreId && other.id === ignoreId) {
+      continue;
+    }
+    if (independent && newDentition !== other.dentition) {
+      continue;
+    }
+    const otherDay = toothEventOccurrenceDay(other.occurrenceDate);
+    if (
+      !otherDay ||
+      isToothEventDateUnknown(other) ||
+      other.recordKind === "presence" ||
+      other.recordKind === "undated"
+    ) {
+      continue;
+    }
+
+    const otherStage = toothEventLifecycleStage(other.dentition, other.eventType);
+    if (otherStage < newStage && newDay < otherDay) {
+      return "A data não pode ser anterior à data de uma etapa anterior do ciclo deste dente.";
+    }
+    if (otherStage > newStage && newDay > otherDay) {
+      return "A data não pode ser posterior à data de uma etapa seguinte do ciclo deste dente.";
+    }
+  }
+  return null;
 }

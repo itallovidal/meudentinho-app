@@ -52,6 +52,7 @@ export type API_ERROR_CODES = {
   ToothEventsUpdateFailed: "TOOTH_EVENTS_UPDATE_FAILED";
   ToothEventsDeleteFailed: "TOOTH_EVENTS_DELETE_FAILED";
   ToothEventDuplicateError: "TOOTH_EVENT_DUPLICATE";
+  ToothEventOutOfOrderError: "TOOTH_EVENT_OUT_OF_ORDER";
   KidNotLinkedToParentError: "KID_NOT_LINKED_TO_PARENT";
   TooManyRequestsError: "TOO_MANY_REQUESTS";
   PayloadTooLargeError: "PAYLOAD_TOO_LARGE";

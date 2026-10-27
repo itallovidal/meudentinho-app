@@ -41,7 +41,7 @@ describe("buildToothPredictions", () => {
   });
 
   it("marks the open window as current for both sides", () => {
-    const predictions = buildToothPredictions("2025-11-01", [], null);
+    const predictions = buildToothPredictions("2025-11-01", [], "male");
     const current = predictions.find(
       (prediction) =>
         prediction.toothType === "central_incisor" &&
@@ -58,7 +58,7 @@ describe("buildToothPredictions", () => {
   it("drops a side once its event is registered", () => {
     const predictions = buildToothPredictions("2025-11-01", [
       buildEvent({ eventType: "eruption", dentition: "primary" }),
-    ]);
+    ], "male");
     const prediction = predictions.find(
       (item) =>
         item.toothType === "central_incisor" &&
@@ -101,7 +101,7 @@ describe("buildToothPredictions", () => {
   });
 
   it("sorts predictions by the window start within each status", () => {
-    const predictions = buildToothPredictions("2025-11-01", [], null);
+    const predictions = buildToothPredictions("2025-11-01", [], "male");
     for (const status of ["current", "tolerance", "upcoming"]) {
       const keys = predictions
         .filter((item) => item.status === status)

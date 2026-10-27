@@ -26,6 +26,7 @@ const request = jest.mocked(getToothAlertSnoozes);
 const kid = {
   id: "kid",
   birthDate: "2025-01-31",
+  gender: "male" as const,
   createdAt: "2025-02-01T12:00:00Z",
 };
 let result: ReturnType<typeof useToothPredictionAlerts>;
