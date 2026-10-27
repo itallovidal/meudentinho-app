@@ -1,4 +1,5 @@
 import { ScreenContent } from "@/components/screenContent";
+import { PwaSettings } from "@/components/pwaSettings";
 import { Wrapper } from "@/components/wrapper";
 import { Header } from "@/components/header";
 import { BottomSheet } from "@/components/ui/bottomSheet";
@@ -173,6 +174,7 @@ export function Index() {
       <Header />
       <ScrollView className="w-full bg-base-200 py-2">
         <ScreenContent>
+          <PwaSettings />
           {profileOptions.map((data, index) => {
             if (data.title.includes("Sair da conta") && !user) {
               return null;
