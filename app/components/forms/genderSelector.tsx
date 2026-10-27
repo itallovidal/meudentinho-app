@@ -50,7 +50,7 @@ export function GenderSelector({
         accessibilityRole="radiogroup"
         accessibilityLabel="Sexo"
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-        className="relative w-full flex-row rounded-lg bg-base-200 p-1"
+        className="relative h-14 w-full flex-row rounded-lg bg-base-200 p-1"
       >
         {gender ? (
           <Animated.View
@@ -67,7 +67,7 @@ export function GenderSelector({
             accessibilityState={{ checked: gender === option.value }}
             aria-checked={gender === option.value}
             accessibilityLabel={option.a11yLabel}
-            className="flex-1 items-center py-2"
+            className="flex-1 items-center justify-center"
           >
             <Text
               className={

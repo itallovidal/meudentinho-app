@@ -62,6 +62,7 @@ export function RegisterKidForm({
       ),
       accepted: false,
       ...defaultValues,
+      gender: defaultValues?.gender ?? "male",
     },
   });
 

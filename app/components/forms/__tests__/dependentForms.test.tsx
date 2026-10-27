@@ -176,7 +176,7 @@ it("keeps partial typing while clearing the stale form date and blocks saving", 
   });
 });
 
-it("requires an explicit sex selection", async () => {
+it("defaults to male and allows changing the selection", async () => {
   const onSubmit = jest.fn();
   let renderer: ReturnType<typeof create>;
   await act(async () => {
@@ -193,11 +193,14 @@ it("requires an explicit sex selection", async () => {
   });
   expect(
     renderer.root.findByType("GenderSelector").props.gender,
-  ).toBeUndefined();
+  ).toBe("male");
   await act(async () => {
     await renderer.root.findByType("Button").props.onPress();
   });
-  expect(onSubmit).not.toHaveBeenCalled();
+  expect(onSubmit).toHaveBeenCalledWith(
+    expect.objectContaining({ gender: "male" }),
+    undefined,
+  );
   await act(async () => {
     renderer.root.findByType("GenderSelector").props.onChange("female");
   });
@@ -343,7 +346,7 @@ it("reinitializes the actual edit form from A to B and then to creation", async 
   ).toBeUndefined();
   expect(
     renderer.root.findByType("GenderSelector").props.gender,
-  ).toBeUndefined();
+  ).toBe("male");
   expect(
     renderer.root
       .findAllByType("AnimatedCheckbox")
