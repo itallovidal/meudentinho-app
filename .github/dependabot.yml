@@ -5,8 +5,27 @@ updates:
     target-branch: "develop"
     schedule:
       interval: weekly
+    ignore:
+      # O app roda em uma toolchain Expo/React Native com versões alinhadas.
+      # Evita que o Dependabot proponha upgrades major automáticos que podem
+      # quebrar a build nativa ou exceções de versão da SDK.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-navigation/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native/*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     target-branch: "develop"
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "actions/checkout"
+        update-types: ["version-update:semver-major"]
