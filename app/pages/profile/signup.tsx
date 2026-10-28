@@ -49,14 +49,14 @@ export function Signup() {
     useCallback(() => {
       if (hydrated && user && authToken) {
         const returnTo = safeReturnPath(route.params?.returnTo);
-        if (returnTo) {
-          linkTo(returnTo);
-          return;
-        }
         navigation.reset({
           index: 0,
           routes: [{ name: "Index" }],
         });
+        if (returnTo) {
+          linkTo(returnTo);
+          return;
+        }
         const origin = route.params?.fromTab;
         if (origin) {
           navigation.getParent()?.navigate(origin);

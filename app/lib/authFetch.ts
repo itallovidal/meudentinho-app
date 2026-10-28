@@ -1,3 +1,4 @@
+import { usesCookieSession } from "@/api/auth/transport";
 import { refreshSession } from "@/api/auth/refresh";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { parseResponse } from "@/lib/parseResponse";
@@ -106,7 +107,7 @@ async function tryRefresh(
   const promise = (async (): Promise<RefreshResult> => {
     try {
       const { data } = await refreshSession(refreshToken);
-      if (!data?.token || !data.refreshToken) {
+      if (!data?.token || (!usesCookieSession && !data.refreshToken)) {
         throw new ApiError(
           "Resposta inválida ao renovar a sessão. Tente novamente.",
           "SESSION_REFRESH_FAILED",
@@ -114,7 +115,7 @@ async function tryRefresh(
       }
       await owner.onSessionRefreshed(
         data.token,
-        data.refreshToken,
+        usesCookieSession ? null : (data.refreshToken ?? null),
         {
           name: data.name,
           isAdmin: data.isAdmin,
@@ -198,7 +199,9 @@ export async function authFetch(
   const expiredMessage = await sessionExpiredMessage(response);
 
   const latest = currentSession();
-  const latestRefresh = latest.refreshToken ?? session.refreshToken;
+  const latestRefresh = usesCookieSession
+    ? latest.authToken
+    : (latest.refreshToken ?? session.refreshToken);
   if (!latestRefresh) {
     if (latest.authToken) {
       await owner?.onSessionExpired(latest.refreshToken);

@@ -1,3 +1,4 @@
+import { authRequestOptions } from "@/api/auth/transport";
 import { ENV } from "@/lib/env";
 import { authFetch } from "@/lib/authFetch";
 import { parseResponse } from "@/lib/parseResponse";
@@ -14,9 +15,7 @@ export async function changePassword(
     {
       method: "PATCH",
       body: JSON.stringify(passwords),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      ...authRequestOptions(),
     },
     token,
   );

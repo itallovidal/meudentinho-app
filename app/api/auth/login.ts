@@ -1,3 +1,5 @@
+import { confirmCookieSession } from "./confirmCookieSession";
+import { authRequestOptions } from "./transport";
 import { ENV } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { parseResponse } from "@/lib/parseResponse";
@@ -9,9 +11,7 @@ export async function login(
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/auth/login`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    ...authRequestOptions(),
     body: JSON.stringify(request),
   });
 
@@ -25,5 +25,5 @@ export async function login(
     );
   }
 
-  return payload;
+  return confirmCookieSession(payload);
 }

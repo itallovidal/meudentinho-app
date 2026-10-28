@@ -47,8 +47,25 @@ jest.mock("@/components/smile/ToothEventCard", () => ({
   eventToothState: () => "bornPermanent",
 }));
 jest.mock("@/components/ui/bottomSheet", () => ({
-  BottomSheet: ({ children }: { children: (dismiss: () => void) => unknown }) =>
-    children(mockDismiss),
+  BottomSheet: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode | ((dismiss: () => void) => React.ReactNode);
+    visible: boolean;
+    onDismiss?: () => void;
+  }) =>
+    jest
+      .requireActual<typeof import("react")>("react")
+      .createElement(
+        "BottomSheet",
+        props,
+        props.visible
+          ? typeof children === "function"
+            ? children(mockDismiss)
+            : children
+          : null,
+      ),
 }));
 jest.mock("@/lib/theme", () => jest.requireActual("@/lib/themeColors"));
 
@@ -247,7 +264,9 @@ describe("ToothEventModal independent permanent teeth", () => {
       expect(permanent.props.accessibilityState.selected).toBe(
         stage.dentition === "permanent",
       );
-      expect(permanent.props.disabled).toBe(stage.dentition === "primary");
+      expect(permanent.props.disabled).toBe(
+        stage.dentition === "primary" && stage.eventType === "exfoliation",
+      );
       expect(
         control(stage.eventType === "eruption" ? "Nasceu" : "Caiu").props
           .accessibilityState.selected,
@@ -363,6 +382,7 @@ it("submits a permanent confirmation without a fabricated date or primary histor
         events={[]}
         toothEvents={[]}
         initialDentition="permanent"
+        historyConfirmation="checkbox"
         initialDateUnknown
         onClose={() => {}}
         onSubmit={async (payload) => {
@@ -371,19 +391,33 @@ it("submits a permanent confirmation without a fabricated date or primary histor
       />,
     );
   });
-  const confirm = renderer.root
-    .findAllByType("Pressable")
-    .find((node: any) =>
-      node
-        .findAllByType("Text")
-        .some((text: any) => text.props.children === "Confirmar"),
-    );
-  expect(confirm.props.disabled).toBe(false);
+  function confirmButton() {
+    return renderer.root
+      .findAllByType("Pressable")
+      .find((node: any) =>
+        node
+          .findAllByType("Text")
+          .some((text: any) => text.props.children === "Confirmar"),
+      );
+  }
+  expect(confirmButton().props.disabled).toBe(true);
   await act(async () => {
-    confirm.props.onPress();
+    renderer.root
+      .findAllByType("AnimatedCheckbox")
+      .find(
+        (node: any) =>
+          node.props.accessibilityLabel ===
+          "Não tenho o histórico anterior de leite",
+      )
+      .props.onChange(true);
+  });
+  expect(confirmButton().props.disabled).toBe(false);
+  await act(async () => {
+    confirmButton().props.onPress();
   });
   expect(submitted).toEqual([
     expect.objectContaining({
+      historyIncomplete: true,
       recordKind: "undated",
       occurrenceDate: "",
       dentition: "permanent",
@@ -722,6 +756,7 @@ describe("snoozing from the registration sheet", () => {
       events: [],
       toothEvents: [],
       initialDentition: "permanent",
+      historyConfirmation: "checkbox",
       onClose: jest.fn(),
       onSubmit: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       onSnooze: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
@@ -751,9 +786,12 @@ describe("snoozing from the registration sheet", () => {
     expect(history.props.checked).toBe(false);
     expect(date.props.checked).toBe(false);
     expect(confirmButton().props.disabled).toBe(true);
+    await act(async () => date.props.onChange(true));
+    expect(confirmButton().props.disabled).toBe(true);
+    await act(async () => confirmButton().props.onPress());
+    expect(props.onSubmit).not.toHaveBeenCalled();
     await act(async () => history.props.onChange(true));
     expect(confirmButton().props.disabled).toBe(false);
-    await act(async () => date.props.onChange(true));
     await act(async () => confirmButton().props.onPress());
     expect(props.onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -856,4 +894,87 @@ describe("snoozing from the registration sheet", () => {
     );
     expect(renderer.root.findAllByType("Button")).toHaveLength(0);
   });
+});
+
+describe("registering a permanent tooth from the map", () => {
+  beforeEach(() => {
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  });
+
+  it.each([false, true])(
+    "requires confirmation without primary history when dateUnknown is %s",
+    async (dateUnknown) => {
+      const onSubmit = jest
+        .fn<(payload: ToothEventRequestDTO) => Promise<void>>()
+        .mockResolvedValue(undefined);
+      let renderer: ReturnType<typeof create>;
+      await act(async () => {
+        renderer = create(
+          <ToothEventModal
+            visible
+            toothId="upper_right_central_incisor"
+            kidId="kid"
+            kidBirthDate="2015-01-01"
+            kidGender={null}
+            toothEvents={[]}
+            events={[]}
+            onClose={() => {}}
+            onSubmit={onSubmit}
+          />,
+        );
+      });
+      function control(label: string, type = "Pressable") {
+        return renderer.root
+          .findAllByType(type)
+          .find((node: any) =>
+            node
+              .findAllByType("Text")
+              .some((text: any) => text.props.children === label),
+          );
+      }
+      expect(control("De leite").props.disabled).toBe(false);
+      expect(control("Permanente").props.disabled).toBe(false);
+      await act(async () => control("Permanente").props.onPress());
+      const unknown = renderer.root.findByType("AnimatedCheckbox");
+      expect(unknown.props.accessibilityLabel).toBe("Não sei informar");
+      await act(async () => unknown.props.onChange(dateUnknown));
+      expect(control("Confirmar").props.disabled).toBe(false);
+      await act(async () => control("Confirmar").props.onPress());
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(control("Registrar permanente", "Button")).toBeUndefined();
+      const sheets = () => renderer.root.findAllByType("BottomSheet");
+      expect(sheets().every((sheet: any) => !sheet.props.visible)).toBe(true);
+      await act(async () => sheets()[0].props.onDismiss());
+      expect(control("Registrar permanente", "Button").props.variant).toBe(
+        "outline",
+      );
+      expect(control("Voltar ao registro", "Button").props.variant).toBe(
+        "default",
+      );
+      await act(async () =>
+        control("Voltar ao registro", "Button").props.onPress(),
+      );
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(control("Permanente")).toBeUndefined();
+      expect(sheets().every((sheet: any) => !sheet.props.visible)).toBe(true);
+      await act(async () => sheets()[1].props.onDismiss());
+      expect(control("Permanente").props.accessibilityState.selected).toBe(
+        true,
+      );
+      await act(async () => control("Confirmar").props.onPress());
+      await act(async () => sheets()[0].props.onDismiss());
+      await act(async () =>
+        control("Registrar permanente", "Button").props.onPress(),
+      );
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dentition: "permanent",
+          eventType: "eruption",
+          historyIncomplete: true,
+          recordKind: dateUnknown ? "undated" : "dated",
+        }),
+      );
+      await act(async () => renderer.unmount());
+    },
+  );
 });

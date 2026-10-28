@@ -4,7 +4,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -19,6 +18,7 @@ import {
 import { XIcon } from "phosphor-react-native";
 import Animated, {
   runOnJS,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -54,6 +54,8 @@ export function BottomSheet({
   const { height: offscreenOffset } = useWindowDimensions();
   const translateY = useSharedValue(offscreenOffset);
   const backdropOpacity = useSharedValue(0);
+  const scrollOffset = useSharedValue(0);
+  const canDrag = useSharedValue(false);
   const [mounted, setMounted] = useState(false);
   const [popoverContainer, setPopoverContainer] = useState<HTMLElement | null>(
     null,
@@ -113,6 +115,7 @@ export function BottomSheet({
   }
 
   function handleShow() {
+    scrollOffset.value = 0;
     translateY.value = offscreenOffset;
     backdropOpacity.value = 0;
     translateY.value = withTiming(0, { duration: 250 });
@@ -135,21 +138,45 @@ export function BottomSheet({
     }
   }, [visible]);
 
-  const pan = Gesture.Pan()
-    .activeOffsetY(10)
-    .onUpdate((event) => {
-      translateY.value = Math.max(0, event.translationY);
-    })
-    .onEnd((event) => {
-      const shouldDismiss =
-        event.translationY > DISMISS_DISTANCE ||
-        event.velocityY > DISMISS_VELOCITY;
-      if (shouldDismiss) {
-        runOnJS(dismiss)();
-      } else {
-        translateY.value = withSpring(0);
-      }
-    });
+  const handleScroll = useAnimatedScrollHandler((event) => {
+    scrollOffset.value = Math.max(0, event.contentOffset.y);
+  });
+
+  function createDismissGesture(scrollable: boolean) {
+    return Gesture.Pan()
+      .activeOffsetY(10)
+      .failOffsetY(-10)
+      .onStart(() => {
+        canDrag.value = !scrollable || scrollOffset.value <= 0;
+      })
+      .onUpdate((event) => {
+        if (canDrag.value) {
+          translateY.value = Math.max(0, event.translationY);
+        }
+      })
+      .onEnd((event) => {
+        if (!canDrag.value) return;
+        const shouldDismiss =
+          event.translationY > DISMISS_DISTANCE ||
+          event.velocityY > DISMISS_VELOCITY;
+        if (shouldDismiss) {
+          runOnJS(dismiss)();
+        } else {
+          translateY.value = withSpring(0);
+        }
+      })
+      .onFinalize((_event, success) => {
+        if (!success && canDrag.value) {
+          translateY.value = withSpring(0);
+        }
+      });
+  }
+
+  const pan = createDismissGesture(false);
+  const contentPan = Gesture.Simultaneous(
+    createDismissGesture(true),
+    Gesture.Native(),
+  );
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -220,22 +247,28 @@ export function BottomSheet({
                       <View className="h-1 w-12 rounded-full bg-base-300" />
                     </View>
                   </GestureDetector>
-                  <ScrollView
-                    className="shrink"
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{
-                      paddingHorizontal: 24,
-                      paddingTop: 12,
-                      paddingBottom: 24,
-                      gap: 20,
-                    }}
-                  >
-                    {sheetHeader}
-                    {typeof children === "function"
-                      ? children(dismiss)
-                      : children}
-                  </ScrollView>
+                  <GestureDetector gesture={contentPan}>
+                    <Animated.ScrollView
+                      className="shrink"
+                      onScroll={handleScroll}
+                      scrollEventThrottle={16}
+                      bounces={false}
+                      overScrollMode="never"
+                      showsVerticalScrollIndicator={false}
+                      keyboardShouldPersistTaps="handled"
+                      contentContainerStyle={{
+                        paddingHorizontal: 24,
+                        paddingTop: 12,
+                        paddingBottom: 24,
+                        gap: 20,
+                      }}
+                    >
+                      {sheetHeader}
+                      {typeof children === "function"
+                        ? children(dismiss)
+                        : children}
+                    </Animated.ScrollView>
+                  </GestureDetector>
                 </SafeAreaView>
               </Animated.View>
               {portalHostName && (

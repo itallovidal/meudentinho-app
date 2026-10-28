@@ -30,7 +30,8 @@ export interface UserUpdateRequest {
 export interface UserAuthResponseDTO {
   name: string;
   token: string;
-  refreshToken: string;
+  refreshToken?: string;
+  email?: string;
   userId: string;
   isAdmin: boolean;
 }

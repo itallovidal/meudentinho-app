@@ -65,6 +65,7 @@ export type API_ERROR_CODES = {
   TimeoutError: "TIMEOUT";
   SessionRefreshFailed: "SESSION_REFRESH_FAILED";
   SessionStorageError: "SESSION_STORAGE_ERROR";
+  SessionCookieUnavailable: "SESSION_COOKIE_UNAVAILABLE";
   SessionChanged: "SESSION_CHANGED";
   LogoutFailed: "LOGOUT_FAILED";
 };

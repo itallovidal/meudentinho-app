@@ -40,60 +40,46 @@ afterEach(() => {
   }
 });
 
-it("starts anonymously without persisting credentials", async () => {
+it("removes legacy credentials instead of restoring the old token pair", async () => {
+  values.set(
+    sessionKey,
+    JSON.stringify({ session, pendingRevocations: ["old-refresh"] }),
+  );
+  values.set("@web-test_sessionInvalidated", "true");
+  values.set("unrelated", "preference");
   await expect(readSessionStorage()).resolves.toEqual({
     session: null,
     pendingRevocations: [],
   });
-  expect(storage.setItem).not.toHaveBeenCalled();
+  expect(values.has(sessionKey)).toBe(false);
+  expect(values.has("@web-test_sessionInvalidated")).toBe(false);
+  expect(values.get("unrelated")).toBe("preference");
 });
 
-it("restores the token pair and pending revocations after a reload", async () => {
-  const state = { session, pendingRevocations: ["previous-refresh"] };
-  await writeSessionStorage(state);
-  await expect(readSessionStorage()).resolves.toEqual(state);
-  expect(values.get(sessionKey)).toBe(JSON.stringify(state));
-});
-
-it("does not restore a token pair after an interrupted refresh", async () => {
+it("never persists credentials or revocation tokens", async () => {
   await writeSessionStorage({
     session,
     pendingRevocations: ["previous-refresh"],
   });
   await markSessionInvalidated();
+  expect(storage.setItem).not.toHaveBeenCalled();
   await expect(readSessionStorage()).resolves.toEqual({
     session: null,
-    pendingRevocations: ["previous-refresh", "refresh"],
+    pendingRevocations: [],
   });
-  await expect(readSessionStorage()).resolves.toMatchObject({ session: null });
 });
 
-it.each([
-  "{invalid",
-  "null",
-  '{"session":null}',
-  '{"session":{},"pendingRevocations":[]}',
-])("clears a corrupt record and reports the failure: %s", async (raw) => {
-  values.set(sessionKey, raw);
+it("discards corrupt legacy storage without trying to parse it", async () => {
+  values.set(sessionKey, "{invalid");
+  await expect(readSessionStorage()).resolves.toMatchObject({ session: null });
+  expect(values.has(sessionKey)).toBe(false);
+});
+
+it("reports a failure to remove legacy credentials", async () => {
+  jest.mocked(storage.removeItem).mockImplementation(() => {
+    throw new Error("Storage blocked");
+  });
   await expect(readSessionStorage()).rejects.toMatchObject({
     code: "SESSION_STORAGE_ERROR",
   });
-  expect(values.has(sessionKey)).toBe(false);
-  await expect(readSessionStorage()).resolves.toMatchObject({ session: null });
-});
-
-it("reports blocked browser storage instead of pretending to save a login", async () => {
-  jest.mocked(storage.setItem).mockImplementation(() => {
-    throw new Error("Storage blocked");
-  });
-  await expect(
-    writeSessionStorage({ session, pendingRevocations: [] }),
-  ).rejects.toMatchObject({ code: "SESSION_STORAGE_ERROR" });
-  expect(values.has(sessionKey)).toBe(false);
-});
-
-it("does not restore a session from another tab's storage", async () => {
-  await writeSessionStorage({ session, pendingRevocations: [] });
-  values = new Map();
-  await expect(readSessionStorage()).resolves.toMatchObject({ session: null });
 });

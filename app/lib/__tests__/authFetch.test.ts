@@ -5,6 +5,8 @@ import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { retryQuery } from "@/lib/queryRetry";
 import { ApiError } from "@/types/domain";
 
+jest.mock("@/api/auth/transport", () => ({ usesCookieSession: false }));
+
 jest.mock("@/lib/fetchWithTimeout", () => ({
   fetchWithTimeout: jest.fn(),
 }));

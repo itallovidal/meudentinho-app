@@ -125,40 +125,52 @@ beforeAll(async () => {
     })),
   });
   window.addEventListener("error", (event) => failures.push(event.message));
+  let cookieAuthenticated = false;
   Object.assign(window, {
     fetch: jest.fn(async (input: string | URL | Request) => {
       const pathname = new URL(String(input)).pathname;
-      const data = pathname.endsWith("/auth/login")
-        ? {
-            token: "test-access",
-            refreshToken: "test-refresh",
-            userId: "user-1",
-            name: "Responsável de teste",
-            email: "responsavel@example.com",
-            isAdmin: true,
-          }
-        : pathname.endsWith("/users/kids")
-          ? [kid, secondKid]
-          : pathname.endsWith("/odontogram")
-            ? {
-                events: toothEvents.map((event) => ({
-                  ...event,
-                  kidId: pathname.includes("kid-2") ? secondKid.id : kid.id,
-                })),
-              }
-            : pathname.endsWith("/articles/categories")
-              ? [{ id: "category-1", name: "Cuidados" }]
-              : pathname.endsWith("/articles/preview")
-                ? articles
-                : pathname.startsWith("/articles/")
-                  ? {
-                      ...articles.find((article) =>
-                        pathname.endsWith(`/${article.id}`),
-                      ),
-                      summary: "Resumo de teste",
-                      content: articleMarkdown,
-                    }
-                  : [];
+      if (pathname.endsWith("/auth/refresh") && !cookieAuthenticated) {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({
+            status: 401,
+            error: { code: "INVALID_CREDENTIALS", message: "Sessão inválida." },
+          }),
+        };
+      }
+      if (pathname.endsWith("/auth/login")) cookieAuthenticated = true;
+      const data =
+        pathname.endsWith("/auth/login") || pathname.endsWith("/auth/refresh")
+          ? {
+              token: "test-access",
+              userId: "user-1",
+              name: "Responsável de teste",
+              email: "responsavel@example.com",
+              isAdmin: true,
+            }
+          : pathname.endsWith("/users/kids")
+            ? [kid, secondKid]
+            : pathname.endsWith("/odontogram")
+              ? {
+                  events: toothEvents.map((event) => ({
+                    ...event,
+                    kidId: pathname.includes("kid-2") ? secondKid.id : kid.id,
+                  })),
+                }
+              : pathname.endsWith("/articles/categories")
+                ? [{ id: "category-1", name: "Cuidados" }]
+                : pathname.endsWith("/articles/preview")
+                  ? articles
+                  : pathname.startsWith("/articles/")
+                    ? {
+                        ...articles.find((article) =>
+                          pathname.endsWith(`/${article.id}`),
+                        ),
+                        summary: "Resumo de teste",
+                        content: articleMarkdown,
+                      }
+                    : [];
       return {
         ok: true,
         status: 200,
@@ -226,7 +238,7 @@ it("keeps the welcome illustration at its intended size on the web", async () =>
   expect(size).toEqual({ width: "128px", height: "128px" });
 });
 
-it("logs in through the shared API and persists the token pair for this tab", async () => {
+it("logs in with cookie transport without persisting credentials", async () => {
   fillInput("Digite seu email", "responsavel@example.com");
   fillInput("Digite sua senha", "senha-de-teste");
   await waitFor(() => {
@@ -246,13 +258,19 @@ it("logs in through the shared API and persists the token pair for this tab", as
   const key = Object.keys(window.sessionStorage).find((name) =>
     name.endsWith("_authSession"),
   );
-  expect(key).toBeDefined();
-  const stored = JSON.parse(window.sessionStorage.getItem(key!) ?? "null");
-  expect(stored.session).toMatchObject({
-    authToken: "test-access",
-    refreshToken: "test-refresh",
-  });
-  expect(window.localStorage.getItem(key!)).toBeNull();
+  expect(key).toBeUndefined();
+  expect(
+    Object.keys(window.localStorage).some((name) =>
+      name.endsWith("_authSession"),
+    ),
+  ).toBe(false);
+  expect(window.fetch).toHaveBeenCalledWith(
+    expect.stringContaining("/auth/login"),
+    expect.objectContaining({
+      credentials: "include",
+      headers: expect.objectContaining({ "X-Auth-Transport": "cookie" }),
+    }),
+  );
 });
 
 it("resolves an edit URL by ID without a navigation object payload", async () => {
@@ -567,23 +585,20 @@ it("snaps home cards and updates pagination and the active kid while scrolling",
   );
 });
 
-it(
-  "reserves enough icon space to contain the selected tab highlight",
-  async () => {
-    navigate("/app");
-    await waitFor(() => window.location.pathname === "/app");
-    await waitFor(() => {
-      const tab = document.querySelector('[role="tab"][aria-selected="true"]');
-      return tab?.textContent?.includes("Início") === true;
-    });
-    refreshStyles();
-    const tab = document.querySelector('[role="tab"][aria-selected="true"]')!;
-    const highlight = tab.querySelector("svg")!.parentElement!;
-    const iconContainer = highlight.parentElement!.parentElement!;
-    expect(getComputedStyle(iconContainer).width).toBe("64px");
-    expect(getComputedStyle(highlight).width).toBe("100%");
-  },
-);
+it("reserves enough icon space to contain the selected tab highlight", async () => {
+  navigate("/app");
+  await waitFor(() => window.location.pathname === "/app");
+  await waitFor(() => {
+    const tab = document.querySelector('[role="tab"][aria-selected="true"]');
+    return tab?.textContent?.includes("Início") === true;
+  });
+  refreshStyles();
+  const tab = document.querySelector('[role="tab"][aria-selected="true"]')!;
+  const highlight = tab.querySelector("svg")!.parentElement!;
+  const iconContainer = highlight.parentElement!.parentElement!;
+  expect(getComputedStyle(iconContainer).width).toBe("64px");
+  expect(getComputedStyle(highlight).width).toBe("100%");
+});
 
 it("keeps the error illustration at its intended size on the web", async () => {
   navigate("/app/pagina-inexistente");
