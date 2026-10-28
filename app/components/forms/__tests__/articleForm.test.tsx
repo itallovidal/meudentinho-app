@@ -322,14 +322,12 @@ it("opens a full article preview with current form values without submitting", a
   });
   expect(renderer.root.findByType("ArticleContent").props).toMatchObject({
     title: "Cuidados com o sorriso infantil",
+    summary: "Cuidados diários com os dentinhos.",
     content,
     imageCoverURL: valid.imageCoverURL,
     categories: valid.categories,
     readingTime: 1,
   });
-  expect(renderer.root.findByType("ArticleContent").props).not.toHaveProperty(
-    "summary",
-  );
   expect(submit).not.toHaveBeenCalled();
 });
 

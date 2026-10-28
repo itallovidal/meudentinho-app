@@ -105,6 +105,7 @@ export function ArticleForm({
     setPreviewArticle({
       ...values,
       title: values.title.trim() || "Título do artigo",
+      summary: values.summary.trim(),
       content: values.content.trim()
         ? values.content
         : "O conteúdo do artigo aparecerá aqui quando você começar a escrever.",
@@ -491,6 +492,7 @@ export function ArticleForm({
             {previewArticle && (
               <ArticleContent
                 title={previewArticle.title}
+                summary={previewArticle.summary}
                 categories={previewArticle.categories}
                 readingTime={previewArticle.readingTime}
                 imageCoverURL={previewArticle.imageCoverURL}
