@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/React-19.3.0-61dafb.svg?style=flat-square&logo=react&logoColor=white" alt="React 19.3.0"/>
     <img src="https://img.shields.io/badge/TypeScript-6.0.3-3178c6.svg?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6.0.3"/>
     <img src="https://img.shields.io/badge/Node-24-339933.svg?style=flat-square&logo=node.js&logoColor=white" alt="Node 24"/>
-    <img src="https://img.shields.io/badge/Licen%C3%AAncia-indefinida-lightgrey.svg?style=flat-square" alt="Licença: indefinida"/>
+    <img src="https://img.shields.io/badge/Licen%C3%AAncia-MIT-green.svg?style=flat-square" alt="Licença: MIT"/>
   </div>
   <br>
 </div>
