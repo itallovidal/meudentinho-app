@@ -68,6 +68,9 @@ export function useToothAlertActions(
           )
         : [],
       initialDentition: selected?.dentition,
+      historyConfirmation: selected?.historical
+        ? ("checkbox" as const)
+        : ("sheet" as const),
       actionsDisabledReason: options.disabledReason,
       onSnooze:
         selected && options.active.some((item) => item.id === selected.id)

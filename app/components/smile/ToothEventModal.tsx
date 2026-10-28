@@ -78,6 +78,7 @@ export function ToothEventModal({
   initialDentition,
   initialDateUnknown = false,
   initialHistoryIncomplete = false,
+  historyConfirmation = "sheet",
 }: {
   visible: boolean;
   toothId: string | null;
@@ -90,6 +91,7 @@ export function ToothEventModal({
   initialDentition?: Dentition;
   initialDateUnknown?: boolean;
   initialHistoryIncomplete?: boolean;
+  historyConfirmation?: "sheet" | "checkbox";
   onClose: () => void;
   onSubmit: (payload: ToothEventRequestDTO) => Promise<void>;
   onDelete?: () => void;
@@ -145,9 +147,12 @@ export function ToothEventModal({
     else form.clearErrors("root");
   }
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [sheetStage, setSheetStage] = useState<
+    "form" | "closingForm" | "confirmation" | "closingConfirmation"
+  >("form");
   const deleteRequestedRef = useRef(false);
   const popoverHost = useId();
-  const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}|${initialDentition ?? ""}|${initialDateUnknown}|${initialHistoryIncomplete}`;
+  const modalKey = `${visible}|${toothId}|${editingEvent?.id ?? ""}|${initialDentition ?? ""}|${initialDateUnknown}|${initialHistoryIncomplete}|${historyConfirmation}`;
   const prevModalKey = useRef<string | null>(null);
 
   const parsed = parseToothId(toothId);
@@ -217,6 +222,7 @@ export function ToothEventModal({
   useEffect(() => {
     if (modalKey === prevModalKey.current) return;
     prevModalKey.current = modalKey;
+    setSheetStage("form");
     if (!visible) return;
     const fallbackEventType = initialDentition ? "eruption" : initialEventType;
     form.reset({
@@ -285,13 +291,24 @@ export function ToothEventModal({
   const actionPendingRef = useRef(false);
   const isBusy = isSaving || isSnoozing;
 
-  async function performSave() {
+  const needsMilkHistory =
+    !editingEvent &&
+    eventType === "eruption" &&
+    dentition === "permanent" &&
+    milkStepPending !== null;
+  const requiresHistoryCheckbox =
+    needsMilkHistory && historyConfirmation === "checkbox";
+  const missingHistoryConsent = requiresHistoryCheckbox && !historyIncomplete;
+
+  async function performSave(historyConfirmed = false) {
     if (
       !parsed ||
       !kidId ||
       actionPendingRef.current ||
       actionsDisabledReason ||
-      dateError
+      dateError ||
+      missingHistoryConsent ||
+      (needsMilkHistory && historyConfirmation === "sheet" && !historyConfirmed)
     ) {
       return;
     }
@@ -313,7 +330,7 @@ export function ToothEventModal({
         historyIncomplete:
           eventType === "eruption" &&
           dentition === "permanent" &&
-          historyIncomplete,
+          (historyIncomplete || (needsMilkHistory && historyConfirmed)),
         dentition:
           editingEvent?.dentition ?? (milkAllowed ? dentition : "permanent"),
         arch: parsed.arch,
@@ -337,6 +354,11 @@ export function ToothEventModal({
   }
 
   function handleConfirmPress() {
+    if (confirmDisabled || isBusy || actionPendingRef.current) return;
+    if (needsMilkHistory && historyConfirmation === "sheet") {
+      setSheetStage("closingForm");
+      return;
+    }
     void performSave();
   }
 
@@ -384,12 +406,7 @@ export function ToothEventModal({
     !parsed ||
     alreadyRegistered ||
     !!dateError ||
-    (!editingEvent &&
-      eventType === "eruption" &&
-      milkStepPending !== null &&
-      !dateUnknown &&
-      !historyIncomplete &&
-      dentition === "permanent") ||
+    missingHistoryConsent ||
     (editingEvent !== null && !editChanged);
 
   const confirmDisabledReason =
@@ -400,13 +417,8 @@ export function ToothEventModal({
         ? "Este evento já está registrado para o dente."
         : dateError
           ? dateError
-          : !editingEvent &&
-              eventType === "eruption" &&
-              milkStepPending !== null &&
-              !dateUnknown &&
-              !historyIncomplete &&
-              dentition === "permanent"
-            ? "Registre primeiro o dente de leite deste local."
+          : missingHistoryConsent
+            ? "Confirme que não tem o histórico anterior de leite."
             : editingEvent !== null && !editChanged
               ? "Altere a data ou a observação para salvar."
               : null);
@@ -414,146 +426,146 @@ export function ToothEventModal({
   const editingState = editingEvent ? eventToothState(editingEvent) : null;
 
   return (
-    <BottomSheet
-      visible={visible}
-      portalHostName={popoverHost}
-      onClose={() => {
-        onClose();
-        if (deleteRequestedRef.current) {
-          deleteRequestedRef.current = false;
-          onDelete?.();
-        }
-      }}
-      header={
-        <View className="flex-1">
-          <Text className="text-xl font-bold text-base-900">
-            {parsed
-              ? `${toothDentitionLabel(parsed.toothType, dentition)} · ${parsed.arch === "upper" ? "Superior" : "Inferior"} ${parsed.side === "right" ? "Direito" : "Esquerdo"}`
-              : toothIdLabel(toothId)}
-          </Text>
-          {editingEvent && editingState && (
-            <View className="mt-1 flex-row items-center gap-2">
-              <ToothSVG
-                viewBox={LEGEND_TOOTH.viewBox}
-                contour={LEGEND_TOOTH.contour}
-                details={LEGEND_TOOTH.details}
-                fill={TOOTH_STYLE[editingState].fill}
-                stroke={TOOTH_STYLE[editingState].stroke}
-                strokeDasharray={
-                  isMilkSymbol(editingState) ? MILK_SYMBOL_DASH : undefined
-                }
-                width={20}
-                height={20}
-              />
-              <Text className="text-sm text-muted-foreground">
-                {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
-              </Text>
-            </View>
-          )}
-        </View>
-      }
-    >
-      {(dismiss) => (
-        <>
-          {actionsDisabledReason &&
-            (onRetry ? (
-              <QueryWarningBanner
-                message={actionsDisabledReason}
-                onRetry={onRetry}
-              />
-            ) : (
-              <Text accessibilityRole="alert" className="text-destructive">
-                {actionsDisabledReason}
-              </Text>
-            ))}
-          {!editingEvent && !initialDentition && (
-            <>
-              <View className="gap-3">
-                <Text className="text-base text-muted-foreground">
-                  O que aconteceu?
-                </Text>
-                <View className="flex-row flex-wrap gap-3">
-                  <Chip
-                    portalHost={popoverHost}
-                    label={toothEventVerb("eruption")}
-                    selected={eventType === "eruption"}
-                    disabled={exfoliationOnlyLeft}
-                    disabledReason={
-                      !milkAllowed
-                        ? "O nascimento permanente deste dente já foi registrado."
-                        : "Este dente já nasceu; registre a queda antes de uma nova erupção."
-                    }
-                    onPress={() => changeEventType("eruption")}
-                  />
-                  <Chip
-                    portalHost={popoverHost}
-                    label={toothEventVerb("exfoliation")}
-                    selected={eventType === "exfoliation"}
-                    disabled={
-                      !(milkEruptionRecorded || permanentErupted) ||
-                      lockedToPermanent
-                    }
-                    disabledReason={
-                      lockedToPermanent
-                        ? "A dentição de leite já caiu; registre a erupção permanente."
-                        : "Registre a erupção do dente antes da queda."
-                    }
-                    onPress={() => changeEventType("exfoliation")}
-                  />
-                </View>
-              </View>
-
-              <View className="gap-3">
-                <Text className="text-base text-muted-foreground">Dentição</Text>
-                <View className="flex-row flex-wrap gap-3">
-                  <Chip
-                    portalHost={popoverHost}
-                    label={dentitionLabel("primary")}
-                    selected={dentition === "primary"}
-                    disabled={
-                      !milkAllowed || lockedToPermanent || permanentErupted
-                    }
-                    disabledReason={
-                      !milkAllowed
-                        ? "Este dente permite apenas registros permanentes."
-                        : "O ciclo já avançou para a dentição permanente."
-                    }
-                    onPress={() => setDentition("primary")}
-                  />
-                  <Chip
-                    portalHost={popoverHost}
-                    label={dentitionLabel("permanent")}
-                    selected={dentition === "permanent"}
-                    disabled={
-                      eventType === "exfoliation"
-                        ? !permanentErupted
-                        : milkStepPending !== null &&
-                          !dateUnknown &&
-                          !historyIncomplete
-                    }
-                    disabledReason={
-                      eventType === "exfoliation" && !permanentErupted
-                        ? "Registre a erupção permanente antes da queda."
-                        : !editingEvent && milkStepPending !== null
-                          ? "Registre primeiro a erupção e a queda do dente de leite."
-                          : undefined
-                    }
-                    onPress={() => setDentition("permanent")}
-                  />
-                </View>
-              </View>
-            </>
-          )}
-
-          {initialDentition && (
-            <Text className="text-base font-bold text-primary-800">
-              {dentitionLabel(initialDentition)} · Nascimento
+    <>
+      <BottomSheet
+        visible={visible && sheetStage === "form"}
+        portalHostName={popoverHost}
+        onClose={() => {
+          onClose();
+          if (deleteRequestedRef.current) {
+            deleteRequestedRef.current = false;
+            onDelete?.();
+          }
+        }}
+        onDismiss={() => {
+          if (!visible) return;
+          setSheetStage((current) =>
+            current === "closingForm" ? "confirmation" : current,
+          );
+        }}
+        header={
+          <View className="flex-1">
+            <Text className="text-xl font-bold text-base-900">
+              {parsed
+                ? `${toothDentitionLabel(parsed.toothType, dentition)} · ${parsed.arch === "upper" ? "Superior" : "Inferior"} ${parsed.side === "right" ? "Direito" : "Esquerdo"}`
+                : toothIdLabel(toothId)}
             </Text>
-          )}
-          {!editingEvent &&
-            dentition === "permanent" &&
-            eventType === "eruption" &&
-            milkStepPending !== null && (
+            {editingEvent && editingState && (
+              <View className="mt-1 flex-row items-center gap-2">
+                <ToothSVG
+                  viewBox={LEGEND_TOOTH.viewBox}
+                  contour={LEGEND_TOOTH.contour}
+                  details={LEGEND_TOOTH.details}
+                  fill={TOOTH_STYLE[editingState].fill}
+                  stroke={TOOTH_STYLE[editingState].stroke}
+                  strokeDasharray={
+                    isMilkSymbol(editingState) ? MILK_SYMBOL_DASH : undefined
+                  }
+                  width={20}
+                  height={20}
+                />
+                <Text className="text-sm text-muted-foreground">
+                  {`${toothEventVerb(editingEvent.eventType)} (${dentitionLabel(editingEvent.dentition).toLowerCase()})`}
+                </Text>
+              </View>
+            )}
+          </View>
+        }
+      >
+        {(dismiss) => (
+          <>
+            {actionsDisabledReason &&
+              (onRetry ? (
+                <QueryWarningBanner
+                  message={actionsDisabledReason}
+                  onRetry={onRetry}
+                />
+              ) : (
+                <Text accessibilityRole="alert" className="text-destructive">
+                  {actionsDisabledReason}
+                </Text>
+              ))}
+            {!editingEvent && !initialDentition && (
+              <>
+                <View className="gap-3">
+                  <Text className="text-base text-muted-foreground">
+                    O que aconteceu?
+                  </Text>
+                  <View className="flex-row flex-wrap gap-3">
+                    <Chip
+                      portalHost={popoverHost}
+                      label={toothEventVerb("eruption")}
+                      selected={eventType === "eruption"}
+                      disabled={exfoliationOnlyLeft}
+                      disabledReason={
+                        !milkAllowed
+                          ? "O nascimento permanente deste dente já foi registrado."
+                          : "Este dente já nasceu; registre a queda antes de uma nova erupção."
+                      }
+                      onPress={() => changeEventType("eruption")}
+                    />
+                    <Chip
+                      portalHost={popoverHost}
+                      label={toothEventVerb("exfoliation")}
+                      selected={eventType === "exfoliation"}
+                      disabled={
+                        !(milkEruptionRecorded || permanentErupted) ||
+                        lockedToPermanent
+                      }
+                      disabledReason={
+                        lockedToPermanent
+                          ? "A dentição de leite já caiu; registre a erupção permanente."
+                          : "Registre a erupção do dente antes da queda."
+                      }
+                      onPress={() => changeEventType("exfoliation")}
+                    />
+                  </View>
+                </View>
+
+                <View className="gap-3">
+                  <Text className="text-base text-muted-foreground">
+                    Dentição
+                  </Text>
+                  <View className="flex-row flex-wrap gap-3">
+                    <Chip
+                      portalHost={popoverHost}
+                      label={dentitionLabel("primary")}
+                      selected={dentition === "primary"}
+                      disabled={
+                        !milkAllowed || lockedToPermanent || permanentErupted
+                      }
+                      disabledReason={
+                        !milkAllowed
+                          ? "Este dente permite apenas registros permanentes."
+                          : "O ciclo já avançou para a dentição permanente."
+                      }
+                      onPress={() => setDentition("primary")}
+                    />
+                    <Chip
+                      portalHost={popoverHost}
+                      label={dentitionLabel("permanent")}
+                      selected={dentition === "permanent"}
+                      disabled={
+                        eventType === "exfoliation" && !permanentErupted
+                      }
+                      disabledReason={
+                        eventType === "exfoliation" && !permanentErupted
+                          ? "Registre a erupção permanente antes da queda."
+                          : undefined
+                      }
+                      onPress={() => setDentition("permanent")}
+                    />
+                  </View>
+                </View>
+              </>
+            )}
+
+            {initialDentition && (
+              <Text className="text-base font-bold text-primary-800">
+                {dentitionLabel(initialDentition)} · Nascimento
+              </Text>
+            )}
+            {requiresHistoryCheckbox && (
               <View className="flex-row items-start gap-3 rounded-xl border border-base-200 bg-base-100 p-4">
                 <AnimatedCheckbox
                   checked={historyIncomplete}
@@ -573,153 +585,202 @@ export function ToothEventModal({
                 </Pressable>
               </View>
             )}
-          <View className="gap-3">
-            <Text className="text-base text-muted-foreground">
-              Data do acontecimento
-            </Text>
-            <View className="flex-row items-center gap-2">
-              <Input
-                editable={false}
-                value={dateUnknown ? "" : (formatDatePtBR(date) ?? date)}
-                placeholder={dateUnknown ? "Data não informada" : undefined}
-                accessibilityLabel="Data do acontecimento"
-                accessibilityState={{ disabled: dateUnknown }}
-                className={cn("flex-1", dateUnknown && "opacity-50")}
+            <View className="gap-3">
+              <Text className="text-base text-muted-foreground">
+                Data do acontecimento
+              </Text>
+              <View className="flex-row items-center gap-2">
+                <Input
+                  editable={false}
+                  value={dateUnknown ? "" : (formatDatePtBR(date) ?? date)}
+                  placeholder={dateUnknown ? "Data não informada" : undefined}
+                  accessibilityLabel="Data do acontecimento"
+                  accessibilityState={{ disabled: dateUnknown }}
+                  className={cn("flex-1", dateUnknown && "opacity-50")}
+                />
+                <Pressable
+                  onPress={() => setPickerOpen(true)}
+                  disabled={dateUnknown}
+                  accessibilityRole="button"
+                  accessibilityLabel="Abrir calendário"
+                  accessibilityState={{ disabled: dateUnknown }}
+                  className={cn(
+                    "h-14 w-14 items-center justify-center rounded-md bg-primary-500",
+                    dateUnknown && "opacity-50",
+                  )}
+                >
+                  <CalendarBlankIcon
+                    size={22}
+                    color={colors.base200}
+                    weight="regular"
+                  />
+                </Pressable>
+              </View>
+              <View className="flex-row items-center gap-3">
+                <AnimatedCheckbox
+                  checked={dateUnknown}
+                  onChange={setDateUnknown}
+                  accessibilityLabel="Não sei informar"
+                />
+                <Pressable
+                  onPress={() => setDateUnknown(!dateUnknown)}
+                  hitSlop={4}
+                  className="flex-1"
+                >
+                  <Text className="text-sm text-muted-foreground">
+                    Não sei informar
+                  </Text>
+                </Pressable>
+              </View>
+              {dateError ? (
+                <Text className="text-destructive" variant="small">
+                  {dateError}
+                </Text>
+              ) : null}
+            </View>
+            <View className="gap-3">
+              <Text className="text-base text-muted-foreground">
+                Observação
+              </Text>
+              <Textarea
+                value={note}
+                onChangeText={setNote}
+                placeholder="Escreva uma observação (opcional)"
+                maxLength={500}
+                numberOfLines={3}
+                className="min-h-28 rounded-2xl bg-base-200/60 px-4 py-3"
               />
+            </View>
+
+            {submitError && (
+              <Text accessibilityRole="alert" className="text-destructive">
+                {submitError}
+              </Text>
+            )}
+            <View className="relative">
               <Pressable
-                onPress={() => setPickerOpen(true)}
-                disabled={dateUnknown}
+                onPress={handleConfirmPress}
+                disabled={confirmDisabled || isBusy}
                 accessibilityRole="button"
-                accessibilityLabel="Abrir calendário"
-                accessibilityState={{ disabled: dateUnknown }}
+                accessibilityHint={confirmDisabledReason ?? undefined}
                 className={cn(
-                  "h-14 w-14 items-center justify-center rounded-md bg-primary-500",
-                  dateUnknown && "opacity-50",
+                  "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
+                  (confirmDisabled || isBusy) && "opacity-50",
                 )}
               >
-                <CalendarBlankIcon
-                  size={22}
-                  color={colors.base200}
-                  weight="regular"
-                />
+                <Text className="text-base font-bold text-base-100">
+                  {isSaving
+                    ? "Salvando..."
+                    : editingEvent
+                      ? "Salvar alterações"
+                      : "Confirmar"}
+                </Text>
               </Pressable>
+              {(confirmDisabled || isBusy) && confirmDisabledReason ? (
+                <View className="absolute -right-1 -top-1 z-10 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
+                  <InfoPopover
+                    accessibilityLabel="Por que não posso salvar?"
+                    message={confirmDisabledReason}
+                    portalHost={popoverHost}
+                    iconSize={20}
+                  />
+                </View>
+              ) : null}
             </View>
-            <View className="flex-row items-center gap-3">
-              <AnimatedCheckbox
-                checked={dateUnknown}
-                onChange={setDateUnknown}
-                accessibilityLabel="Não sei informar"
-              />
-              <Pressable
-                onPress={() => setDateUnknown(!dateUnknown)}
-                hitSlop={4}
-                className="flex-1"
-              >
-                <Text className="text-sm text-muted-foreground">Não sei informar</Text>
-              </Pressable>
-            </View>
-            {dateError ? (
-              <Text className="text-destructive" variant="small">
-                {dateError}
-              </Text>
-            ) : null}
-          </View>
-          <View className="gap-3">
-            <Text className="text-base text-muted-foreground">Observação</Text>
-            <Textarea
-              value={note}
-              onChangeText={setNote}
-              placeholder="Escreva uma observação (opcional)"
-              maxLength={500}
-              numberOfLines={3}
-              className="min-h-28 rounded-2xl bg-base-200/60 px-4 py-3"
-            />
-          </View>
 
+            {!editingEvent && (onSnooze || isSnoozing) && (
+              <Button
+                variant="ghost"
+                disabled={isBusy || !!actionsDisabledReason}
+                onPress={() => void performSnooze(dismiss)}
+                accessibilityLabel="Adiar por 7 dias"
+                accessibilityState={{
+                  disabled: isBusy || !!actionsDisabledReason,
+                  busy: isSnoozing,
+                }}
+                className="min-h-12 w-full gap-2 rounded-full"
+              >
+                <ClockIcon size={18} color={colors.primary400} />
+                <Text className="text-sm font-semibold text-primary">
+                  {isSnoozing ? "Adiando..." : "Adiar por 7 dias"}
+                </Text>
+              </Button>
+            )}
+
+            {editingEvent && onDelete && (
+              <Pressable
+                onPress={() => {
+                  deleteRequestedRef.current = true;
+                  dismiss();
+                }}
+                accessibilityRole="button"
+                className="h-14 w-full items-center justify-center rounded-full active:opacity-90"
+              >
+                <Text className="text-base font-bold text-destructive">
+                  Excluir registro
+                </Text>
+              </Pressable>
+            )}
+
+            <DatePickerSheet
+              visible={pickerOpen}
+              value={date}
+              minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
+              maxDate={toLocalDateKey(new Date())}
+              onConfirm={(dateKey) => {
+                setDate(dateKey);
+                setPickerOpen(false);
+              }}
+              onCancel={() => setPickerOpen(false)}
+            />
+          </>
+        )}
+      </BottomSheet>
+      <BottomSheet
+        visible={visible && sheetStage === "confirmation"}
+        onClose={onClose}
+        onDismiss={() => {
+          if (!visible) return;
+          setSheetStage((current) =>
+            current === "closingConfirmation" ? "form" : current,
+          );
+        }}
+        header={
+          <Text className="text-xl font-bold text-base-900">
+            Registrar sem o histórico de leite?
+          </Text>
+        }
+      >
+        <>
+          <Text className="text-base text-muted-foreground">
+            Tem certeza de que deseja registrar o nascimento do dente permanente
+            sem o histórico completo de nascimento e queda do dente de leite?
+            Esse registro ficará marcado com histórico anterior incompleto.
+          </Text>
           {submitError && (
             <Text accessibilityRole="alert" className="text-destructive">
               {submitError}
             </Text>
           )}
-          <View className="relative">
-            <Pressable
-              onPress={handleConfirmPress}
-              disabled={confirmDisabled || isBusy}
-              accessibilityRole="button"
-              accessibilityHint={confirmDisabledReason ?? undefined}
-              className={cn(
-                "h-14 w-full items-center justify-center rounded-full bg-primary-500 active:opacity-90",
-                (confirmDisabled || isBusy) && "opacity-50",
-              )}
-            >
-              <Text className="text-base font-bold text-base-100">
-                {isSaving
-                  ? "Salvando..."
-                  : editingEvent
-                    ? "Salvar alterações"
-                    : "Confirmar"}
-              </Text>
-            </Pressable>
-            {(confirmDisabled || isBusy) && confirmDisabledReason ? (
-              <View className="absolute -right-1 -top-1 z-10 h-6 w-6 items-center justify-center rounded-full bg-base-100 shadow-sm shadow-base-400">
-                <InfoPopover
-                  accessibilityLabel="Por que não posso salvar?"
-                  message={confirmDisabledReason}
-                  portalHost={popoverHost}
-                  iconSize={20}
-                />
-              </View>
-            ) : null}
-          </View>
-
-          {!editingEvent && (onSnooze || isSnoozing) && (
-            <Button
-              variant="ghost"
-              disabled={isBusy || !!actionsDisabledReason}
-              onPress={() => void performSnooze(dismiss)}
-              accessibilityLabel="Adiar por 7 dias"
-              accessibilityState={{
-                disabled: isBusy || !!actionsDisabledReason,
-                busy: isSnoozing,
-              }}
-              className="min-h-12 w-full gap-2 rounded-full"
-            >
-              <ClockIcon size={18} color={colors.primary400} />
-              <Text className="text-sm font-semibold text-primary">
-                {isSnoozing ? "Adiando..." : "Adiar por 7 dias"}
-              </Text>
-            </Button>
-          )}
-
-          {editingEvent && onDelete && (
-            <Pressable
-              onPress={() => {
-                deleteRequestedRef.current = true;
-                dismiss();
-              }}
-              accessibilityRole="button"
-              className="h-14 w-full items-center justify-center rounded-full active:opacity-90"
-            >
-              <Text className="text-base font-bold text-destructive">
-                Excluir registro
-              </Text>
-            </Pressable>
-          )}
-
-          <DatePickerSheet
-            visible={pickerOpen}
-            value={date}
-            minDate={kidBirthDate ? eventDateKey(kidBirthDate) : undefined}
-            maxDate={toLocalDateKey(new Date())}
-            onConfirm={(dateKey) => {
-              setDate(dateKey);
-              setPickerOpen(false);
-            }}
-            onCancel={() => setPickerOpen(false)}
-          />
+          <Button
+            variant="outline"
+            disabled={confirmDisabled || isBusy}
+            onPress={() => void performSave(true)}
+            className="h-14 w-full rounded-full"
+          >
+            <Text>{isSaving ? "Salvando..." : "Registrar permanente"}</Text>
+          </Button>
+          <Button
+            variant="default"
+            disabled={isBusy}
+            onPress={() => setSheetStage("closingConfirmation")}
+            className="h-14 w-full rounded-full"
+          >
+            <Text>Voltar ao registro</Text>
+          </Button>
         </>
-      )}
-    </BottomSheet>
+      </BottomSheet>
+    </>
   );
 }
 
