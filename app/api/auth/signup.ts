@@ -1,3 +1,5 @@
+import { confirmCookieSession } from "./confirmCookieSession";
+import { authRequestOptions } from "./transport";
 import { ENV } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { parseResponse } from "@/lib/parseResponse";
@@ -9,9 +11,7 @@ export async function signup(
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/auth/signup`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    ...authRequestOptions(),
     body: JSON.stringify(SignupRequest),
   });
 
@@ -25,5 +25,8 @@ export async function signup(
     );
   }
 
-  return payload;
+  return confirmCookieSession(
+    payload,
+    "A conta foi criada, mas não foi possível manter a sessão neste navegador. Verifique se os cookies estão permitidos e entre pela tela de login.",
+  );
 }

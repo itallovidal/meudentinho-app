@@ -1,3 +1,4 @@
+import { authRequestOptions, usesCookieSession } from "./transport";
 import { ENV } from "@/lib/env";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { parseResponse } from "@/lib/parseResponse";
@@ -5,14 +6,12 @@ import { ApiError, ResponsePayload } from "@/types/domain";
 import type { UserAuthResponseDTO } from "@/types/dtos/user";
 
 export async function refreshSession(
-  refreshToken: string,
+  refreshToken = "",
 ): Promise<ResponsePayload<UserAuthResponseDTO>> {
   const response = await fetchWithTimeout(`${ENV.BASE_API_URL}/auth/refresh`, {
     method: "POST",
-    body: JSON.stringify({ refreshToken }),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    body: JSON.stringify(usesCookieSession ? {} : { refreshToken }),
+    ...authRequestOptions(),
   });
 
   const payload = await parseResponse<UserAuthResponseDTO>(response);

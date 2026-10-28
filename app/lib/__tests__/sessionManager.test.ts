@@ -1,5 +1,5 @@
 import { logout } from "@/api/auth/logout";
-import { createSessionManager } from "@/lib/sessionManager";
+import { createSessionManager } from "@/lib/sessionManager.native";
 import {
   markSessionInvalidated,
   readSessionStorage,

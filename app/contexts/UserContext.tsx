@@ -44,6 +44,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<StoredSession | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [manager] = useState(() =>
     createSessionManager({
@@ -72,8 +74,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     async function restoreSession() {
       try {
         await manager.restore();
+        if (active) setRestoreFailed(false);
       } catch (error) {
         if (active) {
+          setRestoreFailed(true);
           showSessionError(error);
         }
       } finally {
@@ -95,7 +99,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       active = false;
       subscription.remove();
     };
-  }, [manager, showSessionError]);
+  }, [manager, showSessionError, restoreAttempt]);
 
   const updateAppUser = useCallback(
     async (
@@ -120,6 +124,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             : (refreshToken ?? null),
         userId: nextUserId,
       });
+      setRestoreFailed(false);
     },
     [manager],
   );
@@ -197,7 +202,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
       <FeedbackSheet
         title="Não foi possível concluir a operação"
         message={sessionError}
-        onClose={() => setSessionError(null)}
+        actionLabel={restoreFailed ? "Tentar novamente" : "Entendi"}
+        onClose={() => {
+          setSessionError(null);
+          if (restoreFailed) {
+            setHydrated(false);
+            setRestoreAttempt((attempt) => attempt + 1);
+          }
+        }}
       />
     </UserContext.Provider>
   );
