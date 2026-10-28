@@ -223,13 +223,16 @@
           <section id="armazenamento" aria-labelledby="titulo-armazenamento">
             <h2 id="titulo-armazenamento">5. Sessão e armazenamento</h2>
             <p>
-              No navegador, as informações necessárias à sessão, incluindo dados
-              básicos da conta e tokens, ficam no armazenamento de sessão. Isso permite recarregar a página mantendo
-              o acesso. A restauração da sessão e o comportamento de abas
-              duplicadas dependem do navegador.
+              No navegador e no PWA instalado, o token de renovação da sessão é
+              mantido em cookie HttpOnly. O token de acesso e os dados básicos da
+              conta ficam em memória e são recuperados pelo servidor ao reabrir o
+              app, quando houver conexão e a sessão ainda estiver válida. A
+              renovação tem validade de sete dias, estendida a cada renovação,
+              e pode ser revogada antes desse prazo. O usuário ou navegador pode
+              apagar o cookie a qualquer momento.
             </p>
             <p>
-              No aplicativo instalado, a sessão utiliza o armazenamento seguro
+              Nos aplicativos nativos Android e iOS, a sessão utiliza o armazenamento seguro
               disponibilizado pelo sistema do dispositivo. Sair da conta encerra
               a sessão naquele ambiente; isso não exclui a conta nem o
               histórico.
