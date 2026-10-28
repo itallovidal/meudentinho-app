@@ -6,20 +6,10 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # O app roda em uma toolchain Expo/React Native com versões alinhadas.
-      # Evita que o Dependabot proponha upgrades major automáticos que podem
-      # quebrar a build nativa ou exceções de versão da SDK.
-      - dependency-name: "expo"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "expo-*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-native"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-native-*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@react-navigation/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@react-native/*"
+      # Evita upgrades major automáticos em todas as dependências.
+      # Mantém propostas minor/patch, mas impede mudanças que possam quebrar
+      # a toolchain Expo/React Native, o TypeScript suportado e o Node fixo no app.
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
@@ -27,5 +17,5 @@ updates:
     schedule:
       interval: monthly
     ignore:
-      - dependency-name: "actions/checkout"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
