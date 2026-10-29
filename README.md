@@ -109,7 +109,9 @@ O service worker mantém somente os arquivos estáticos da interface, permitindo
 
 Cada publicação gera uma versão do cache a partir do conteúdo exportado. Atualizações aguardam o fechamento das instâncias abertas ou a ação Atualizar aplicativo no Perfil; essa ação pede que o usuário salve suas alterações antes de recarregar. O registro verifica novas versões quando a página volta a ficar visível. A landing e a política pública continuam usando a rede, sem fallback para o aplicativo.
 
-Os arquivos-fonte ficam em `web/pwa`, e `scripts/finalize-web.mts` integra o PWA à saída exportada. O servidor do Expo não executa essa etapa; para validar instalação, rotas offline e atualização, use a saída de um build autorizado com `npm run preview:web`. Na Vercel, `vercel.ts` configura o tipo do manifest e a revalidação do service worker.
+Os arquivos-fonte ficam em `web/pwa`, e `scripts/finalize-web.mts` integra o PWA à saída exportada. O servidor do Expo não executa essa etapa; para validar instalação, rotas offline e atualização, use a saída de um build autorizado com `npm run preview:web`. Na Vercel, `vercel.json` configura o tipo do manifest e a revalidação do service worker.
+
+Os rewrites de `/auth`, `/users`, `/articles` e `/tooth-events` encaminham as chamadas para a API usando `API_PROXY_TARGET`. Configure essa variável no projeto da Vercel para cada ambiente utilizado, com a origem HTTPS da API, sem barra final, caminho, credenciais, query ou fragmento (ex.: `https://sua-api.onrender.com`). O campo `env` dos rewrites permite à Vercel expandir `$API_PROXY_TARGET` ao processar as requisições, sem executar um arquivo de configuração TypeScript. A variável precisa estar definida na Vercel; o `vercel.json` não carrega arquivos `.env`. Para usar esse proxy na aplicação web, `EXPO_PUBLIC_API_BASE_URL` deve apontar para a origem HTTPS do frontend.
 
 Para gerar e conferir a saída publicada:
 
