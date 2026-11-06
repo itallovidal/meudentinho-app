@@ -174,9 +174,6 @@ export function localDateKeyToISO(value: string): string | null {
   if (!date) {
     return null;
   }
-  // Midday keeps the calendar day stable, and the offset tells the API which
-  // day is "today" for this device (it must never reject the current day just
-  // because the encoded time of day is still ahead of the server clock).
   date.setHours(12, 0, 0, 0);
   return toLocalRfc3339(date);
 }
