@@ -156,13 +156,26 @@ export function toLocalDateKey(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+export function toLocalRfc3339(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const offsetMinutes = -date.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+  const offsetRemainder = Math.abs(offsetMinutes) % 60;
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` +
+    `${sign}${pad(offsetHours)}:${pad(offsetRemainder)}`
+  );
+}
+
 export function localDateKeyToISO(value: string): string | null {
   const date = parseLocalDate(value);
   if (!date) {
     return null;
   }
   date.setHours(12, 0, 0, 0);
-  return date.toISOString();
+  return toLocalRfc3339(date);
 }
 
 export function ageInMonths(birthDate: string): number | null {

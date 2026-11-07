@@ -46,8 +46,10 @@ describe("toLocalDateKey", () => {
 });
 
 describe("localDateKeyToISO", () => {
-  it("keeps midday so the day does not drift", () => {
-    expect(localDateKeyToISO("2026-10-17")).toBe("2026-10-17T15:00:00.000Z");
+  it("keeps midday and the local offset so the day does not drift", () => {
+    expect(localDateKeyToISO("2026-10-17")).toBe(
+      "2026-10-17T12:00:00-03:00",
+    );
   });
 
   it("returns null for an invalid key", () => {
